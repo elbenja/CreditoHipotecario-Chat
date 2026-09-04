@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractCandidates } from './fallback';
+import { extractCandidates } from './fallback.ts';
 
 describe('extractCandidates', () => {
   it('extracts a down payment percentage', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatNumber, formatSoles, isValidSoles, normalizeSoles } from './format';
+import { formatNumber, formatSoles, isValidSoles, normalizeSoles } from './format.ts';
 
 describe('formatSoles', () => {
   it('formats with a space and comma thousands', () => {

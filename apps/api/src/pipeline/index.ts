@@ -14,16 +14,23 @@ export type PipelineResult =
 const MAX_PROSE = 3;
 const MAX_FOLLOW_UPS = 3;
 
+/** A value we may rewrite: the WHOLE string is a soles amount, nothing else. */
+const CURRENCY_ONLY = /^[+-]?\s*S\/\.?\s*[\d.,]+$/;
+
 /** Models wrap JSON in markdown fences often enough to handle it rather than fail. */
 function stripFences(raw: string): string {
   const fenced = /```(?:json)?\s*([\s\S]*?)\s*```/.exec(raw);
   return (fenced?.[1] ?? raw).trim();
 }
 
-/** Repair any soles-looking string into house format; leave everything else alone. */
+/**
+ * Repair a soles amount into house format. Anything that is not wholly a soles
+ * amount is returned untouched: '6.2%' is a yield, '↑ 1.0 pt' is a delta, and
+ * turning either into money would be worse than leaving it alone.
+ */
 function repairAmount(value: string): string {
   if (isValidSoles(value)) return value;
-  if (!/S\/|^\s*[+-]?\d/.test(value)) return value;
+  if (!CURRENCY_ONLY.test(value.trim())) return value;
   return normalizeSoles(value) ?? value;
 }
 

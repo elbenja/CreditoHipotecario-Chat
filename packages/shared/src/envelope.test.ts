@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AnalysisEnvelopeSchema } from './envelope';
+import { AnalysisEnvelopeSchema } from './envelope.ts';
 
 const valid = {
   verdict: 'Regular como negocio — depende de cuánta inicial pongas.',

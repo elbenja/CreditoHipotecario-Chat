@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { runPipeline } from './index';
+import { runPipeline } from './index.ts';
 
 const base = {
   verdict: 'Regular como negocio.',
@@ -73,5 +73,50 @@ describe('runPipeline', () => {
   it('falls back when JSON parses but fails the schema', () => {
     const r = runPipeline(JSON.stringify({ verdict: 'hola' }), turns);
     expect(r.ok).toBe(false);
+  });
+
+  it('leaves a percentage metric untouched', () => {
+    const env = { ...base, metrics: [{ label: 'Yield neto', value: '6.2%', delta: null, context: 'bruto 8.4%' }] };
+    const r = runPipeline(JSON.stringify(env), turns);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.metrics[0]!.value).toBe('6.2%');
+  });
+
+  it('leaves a point-delta untouched', () => {
+    const env = { ...base, metrics: [{ label: 'Yield', value: '6.2%', delta: '↑ 1.0 pt', context: '' }] };
+    const r = runPipeline(JSON.stringify(env), turns);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.metrics[0]!.delta).toBe('↑ 1.0 pt');
+  });
+
+  it('leaves a signed percentage delta untouched', () => {
+    const env = { ...base, metrics: [{ label: 'Tasa', value: '8.0%', delta: '+0.25%', context: '' }] };
+    const r = runPipeline(JSON.stringify(env), turns);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.metrics[0]!.delta).toBe('+0.25%');
+  });
+
+  it('leaves a decorated currency delta untouched', () => {
+    const env = { ...base, metrics: [{ label: 'Ingreso', value: 'S/ 1,400', delta: '↓ S/ 443 bajo tu cuota', context: '' }] };
+    const r = runPipeline(JSON.stringify(env), turns);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.metrics[0]!.delta).toBe('↓ S/ 443 bajo tu cuota');
+  });
+
+  it('still repairs a bare soles amount', () => {
+    const env = { ...base, metrics: [{ label: 'Cuota', value: 'S/1434', delta: null, context: '' }] };
+    const r = runPipeline(JSON.stringify(env), turns);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.metrics[0]!.value).toBe('S/ 1,434');
+  });
+
+  it('preserves a signed scenario value', () => {
+    const env = {
+      ...base,
+      scenarios: [{ id: 'amoblado', cause: 'Si lo amueblas', value: '+S/ 250', unit: '/mes', tone: 'good', note: 'Rango 200-300.' }],
+    };
+    const r = runPipeline(JSON.stringify(env), turns);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.scenarios[0]!.value).toBe('+S/ 250');
   });
 });

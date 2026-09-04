@@ -1,6 +1,6 @@
 import type { PinnedField } from '@chat/shared';
 import { describe, expect, it } from 'vitest';
-import { enforceProvenance } from './provenance';
+import { enforceProvenance } from './provenance.ts';
 
 function field(over: Partial<PinnedField> = {}): PinnedField {
   return {
