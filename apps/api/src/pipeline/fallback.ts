@@ -24,7 +24,11 @@ const RULES: Rule[] = [
   {
     key: 'precio',
     label: 'Precio de compra',
-    pattern: /S\/\.?\s*(\d{1,3}(?:,\d{3})+|\d{5,})/,
+    // Must be cued by purchase vocabulary. Without this, "la cuota baja a
+    // S/ 1,434" is offered as a purchase price and the user pins nonsense.
+    // Fails safe: an uncued amount yields no chip rather than a wrong one.
+    pattern:
+      /(?:precio|cuesta|cuestan|vale|valen|compra|piden|depa de|departamento de)[^.]{0,30}?S\/\.?\s*(\d{1,3}(?:,\d{3})+|\d{5,})/i,
   },
 ];
 
