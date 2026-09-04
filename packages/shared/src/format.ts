@@ -31,22 +31,25 @@ export function normalizeSoles(s: string): string | null {
   const trimmed = s.trim();
   if (isValidSoles(trimmed)) return trimmed;
 
-  const signMatch = /^([+-])/.exec(trimmed);
-  const sign = signMatch ? signMatch[1] : '';
+  // The sign may sit before or after the currency marker: "-S/ 443", "S/-443".
+  const signChar = /^[^\d]*([+-])/.exec(trimmed)?.[1];
+  const sign = signChar === '-' ? '-' : signChar === '+' ? '+' : '';
 
-  // Strip sign, currency marker and whitespace; keep digits and separators.
-  let body = trimmed.replace(/^[+-]/, '').replace(/S\/\.?/gi, '').trim();
+  let body = trimmed.replace(/S\/\.?/gi, '').replace(/[+-]/g, '').trim();
   if (!/\d/.test(body)) return null;
   if (/\b(mil|millones?)\b/i.test(body) || /\d\s*[MK]\b/.test(body)) return null;
 
-  // Disambiguate separators. A dot used as a thousands separator always has
-  // exactly three digits after it and no other decimal marker present.
   const hasComma = body.includes(',');
   const hasDot = body.includes('.');
-  if (hasDot && !hasComma && /\.\d{3}\b/.test(body)) {
+
+  if (hasComma && hasDot) {
+    // Both present: the separator appearing LAST is the decimal separator.
+    // "1.750,50" is European (1750.50); "1,750.50" is US (also 1750.50).
+    const decimal = body.lastIndexOf(',') > body.lastIndexOf('.') ? ',' : '.';
+    const thousands = decimal === ',' ? '.' : ',';
+    body = body.split(thousands).join('').replace(decimal, '.');
+  } else if (hasDot && /\.\d{3}\b/.test(body)) {
     body = body.replace(/\./g, '');
-  } else if (hasComma && hasDot) {
-    body = body.replace(/,/g, '');
   } else if (hasComma && /,\d{3}\b/.test(body)) {
     body = body.replace(/,/g, '');
   } else if (hasComma) {
