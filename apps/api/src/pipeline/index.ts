@@ -4,8 +4,8 @@ import {
   normalizeSoles,
   type AnalysisEnvelope,
 } from '@chat/shared';
-import { extractCandidates, type Candidate } from './fallback';
-import { enforceProvenance } from './provenance';
+import { extractCandidates, type Candidate } from './fallback.ts';
+import { enforceProvenance } from './provenance.ts';
 
 export type PipelineResult =
   | { ok: true; envelope: AnalysisEnvelope }
