@@ -1,3 +1,7 @@
+// Must be first: BASE_URL/MODEL below are read at module-evaluation time, and
+// the repo-root .env is invisible from apps/api without this.
+import './env.ts';
+
 import OpenAI from 'openai';
 import type { ChatMessage } from './prompt.ts';
 
@@ -18,7 +22,9 @@ export async function callKimi(messages: ChatMessage[]): Promise<string> {
   const res = await getClient().chat.completions.create({
     model: MODEL,
     messages,
-    temperature: 0.3,
+    // No temperature: kimi-k2.6 rejects anything but 1
+    // ("invalid temperature: only 1 is allowed for this model"), so let the
+    // model default apply rather than sending a value it refuses.
     response_format: { type: 'json_object' },
   });
   return res.choices[0]?.message?.content ?? '';

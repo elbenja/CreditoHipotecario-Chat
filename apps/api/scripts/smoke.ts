@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { callKimi } from '../src/kimi.ts';
 import { runPipeline } from '../src/pipeline/index.ts';
 import { buildMessages } from '../src/prompt.ts';

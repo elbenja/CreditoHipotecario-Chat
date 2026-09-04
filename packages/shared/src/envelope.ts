@@ -16,10 +16,16 @@ export const PinnedFieldSchema = z.object({
   key: z.enum(FIELD_KEYS),
   label: z.string().min(1),
   value: z.string().min(1),
-  prefix: z.string().optional(),
-  suffix: z.string().optional(),
+  // kimi-k2.6 sends either an absent key or an explicit null for "no value",
+  // varying between calls. .optional() rejects null and .nullable() rejects
+  // omission, so accept both and normalise.
+  prefix: z.string().nullish().transform((v) => v ?? undefined),
+  suffix: z.string().nullish().transform((v) => v ?? undefined),
   provenance: ProvenanceSchema,
-  note: z.string(),
+  // kimi-k2.6 emits `null` for a field with no note. Accept null/absent and
+  // normalise to '' — the pipeline is the trust boundary and should tolerate
+  // this rather than discard an otherwise-valid analysis.
+  note: z.string().nullish().transform((v) => v ?? ''),
 });
 
 export const ScenarioSchema = z.object({
@@ -35,7 +41,7 @@ export const ScenarioSchema = z.object({
 export const MetricSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),
-  delta: z.string().nullable(),
+  delta: z.string().nullish().transform((v) => v ?? null),
   context: z.string(),
 });
 
