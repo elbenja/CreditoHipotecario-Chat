@@ -81,4 +81,35 @@ describe('enforceProvenance', () => {
     const plazo = field({ key: 'plazo', value: '20', provenance: 'user' });
     expect(enforceProvenance([plazo], turns)[0]!.provenance).toBe('user');
   });
+
+  // "Ate" is a real Lima district and a substring of "atender".
+  it('does not match a district name buried inside another word', () => {
+    const f = field({ key: 'ubicacion', value: 'Ate' });
+    expect(enforceProvenance([f], ['Quiero atender esto rápido'])[0]!.provenance).toBe('assumed');
+  });
+
+  it('matches a district the user actually named', () => {
+    const f = field({ key: 'ubicacion', value: 'Ate' });
+    expect(enforceProvenance([f], ['Un depa en Ate, Lima'])[0]!.provenance).toBe('user');
+  });
+
+  it('does not match a district inside an unrelated longer word', () => {
+    const f = field({ key: 'ubicacion', value: 'Surco' });
+    expect(enforceProvenance([f], ['El terreno esta surcado'])[0]!.provenance).toBe('assumed');
+  });
+
+  it('matches a numeric value carrying a foreign currency symbol', () => {
+    const f = field({ value: '$250,000' });
+    expect(enforceProvenance([f], ['Depa de 250,000 soles'])[0]!.provenance).toBe('user');
+  });
+
+  it('matches a numeric value carrying the soles marker', () => {
+    const f = field({ value: 'S/ 250,000' });
+    expect(enforceProvenance([f], ['Depa de 250,000 soles'])[0]!.provenance).toBe('user');
+  });
+
+  it('still downgrades a district the user never mentioned', () => {
+    const f = field({ key: 'ubicacion', value: 'Lince' });
+    expect(enforceProvenance([f], ['Vivo cerca, me interesa'])[0]!.provenance).toBe('assumed');
+  });
 });

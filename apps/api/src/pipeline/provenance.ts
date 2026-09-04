@@ -25,21 +25,30 @@ function numbersIn(text: string): Set<string> {
   return new Set(runs.map((r) => normalizeNumber(r.replace(/[.,]+$/, ''))));
 }
 
+/** Collapse to letters, digits and single spaces so word boundaries are meaningful. */
+function words(s: string): string {
+  return normalizeText(s)
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+}
+
 /**
- * A numeric value must match a WHOLE number the user wrote — never a substring.
- * Without this, a plazo of "50" matches the "50" inside "250,000" and an
- * assumed value renders as fact, which the design treats as a bug.
+ * A numeric value must match a WHOLE number the user wrote, and a textual value
+ * must match on word boundaries. Without the latter, the district "Ate" matches
+ * inside "atender" and an assumed location renders as fact.
  */
 function appearsIn(value: string, text: string, numbers: Set<string>): boolean {
   if (!value.trim()) return false;
 
-  if (/^[\d.,]+$/.test(value)) {
-    return numbers.has(normalizeNumber(value));
+  // A model may fold a currency marker into the value itself; strip before testing.
+  const bare = value.replace(/S\/\.?/gi, '').replace(/[$€]/g, '').trim();
+  if (/^[\d.,]+$/.test(bare)) {
+    return numbers.has(normalizeNumber(bare));
   }
 
-  // Textual values (a district name) compare loosely on punctuation.
-  const loose = (s: string) => normalizeText(s).replace(/[.,\s]/g, '');
-  return loose(text).includes(loose(value));
+  const needle = words(value);
+  if (!needle) return false;
+  return new RegExp(`(?<![\\p{L}\\p{N}])${needle}(?![\\p{L}\\p{N}])`, 'u').test(words(text));
 }
 
 /**
