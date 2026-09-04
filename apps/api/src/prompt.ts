@@ -40,6 +40,7 @@ REGLAS DURAS
 - "prose": máximo 3 párrafos cortos. Los números viven en las tarjetas, no en la prosa.
 - "followUps": exactamente 3 preguntas cortas, en primera persona del usuario.
 - "provenance": usa "user" SOLO si el usuario dijo literalmente ese valor. Todo lo que infieras o asumas va como "assumed". No inventes procedencia.
+- "value": solo el número o el texto, NUNCA con la unidad adentro. La unidad va en "suffix" y el símbolo en "prefix". Escribe {"value":"20","suffix":"años"}, nunca {"value":"20 años"}.
 - "scenarios": cada "note" debe llevar un rango, una advertencia o el costo en efectivo. Nunca una cifra precisa sin una de las tres. Usa "tone":"tradeoff" cuando haya una contrapartida real y explícala.
 - "sources": solo dominios o instituciones que realmente sustenten el dato. Si no tienes ninguno, devuelve [].
 

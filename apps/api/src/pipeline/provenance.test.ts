@@ -112,4 +112,38 @@ describe('enforceProvenance', () => {
     const f = field({ key: 'ubicacion', value: 'Lince' });
     expect(enforceProvenance([f], ['Vivo cerca, me interesa'])[0]!.provenance).toBe('assumed');
   });
+
+  const LIVE = 'Depa de 250 mil en Pueblo Libre, 40 m², tasa 8%. ¿A cuánto lo alquilo?';
+
+  it('matches a price the user wrote with the word mil', () => {
+    const f = field({ key: 'precio', value: '250,000' });
+    expect(enforceProvenance([f], [LIVE])[0]!.provenance).toBe('user');
+  });
+
+  it('matches a price the user wrote with the word millones', () => {
+    const f = field({ key: 'precio', value: '1,500,000' });
+    expect(enforceProvenance([f], ['Una casa de 1.5 millones'])[0]!.provenance).toBe('user');
+  });
+
+  it('matches a district the model expanded with the city', () => {
+    const f = field({ key: 'ubicacion', value: 'Pueblo Libre, Lima' });
+    expect(enforceProvenance([f], [LIVE])[0]!.provenance).toBe('user');
+  });
+
+  it('does not let an expanded value match on its trailing segment alone', () => {
+    const f = field({ key: 'ubicacion', value: 'Ate, Lima' });
+    expect(enforceProvenance([f], ['Un depa en Lima'])[0]!.provenance).toBe('assumed');
+  });
+
+  it('still downgrades a value the model invented for that same turn', () => {
+    const inicial = field({ key: 'inicial', value: '20' });
+    expect(enforceProvenance([inicial], [LIVE])[0]!.provenance).toBe('assumed');
+  });
+
+  it('matches the area and rate from that same turn', () => {
+    const area = field({ key: 'area', value: '40' });
+    const tasa = field({ key: 'tasa', value: '8' });
+    expect(enforceProvenance([area], [LIVE])[0]!.provenance).toBe('user');
+    expect(enforceProvenance([tasa], [LIVE])[0]!.provenance).toBe('user');
+  });
 });
