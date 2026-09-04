@@ -23,6 +23,7 @@
 - **Fixed layout values:** panel 372px, transcript max 640px, top nav 60px.
 - **`prose` capped at 3 items, `followUps` capped at exactly 3.**
 - **Do not port `support.js` or any `.dc.html` runtime.** Those files are visual reference only.
+- **In `packages/shared` and `apps/api`, every relative import MUST carry an explicit `.ts` extension** (`from './foo.ts'`). Verified on Node 25: `node --experimental-strip-types` — which is how the API server and the smoke script run — rejects both extensionless and `.js` specifiers. Vitest hides this because it uses bundler resolution. `apps/web` goes through Vite and is exempt.
 
 ---
 
@@ -1671,9 +1672,9 @@ Expected: FAIL — `Cannot find module './chat'`.
 import { PinnedFieldSchema } from '@chat/shared';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { runPipeline } from '../pipeline/index.js';
-import { REFUSAL_ENVELOPE, isOutOfScope } from '../pipeline/scope.js';
-import { buildMessages, type ChatMessage } from '../prompt.js';
+import { runPipeline } from '../pipeline/index.ts';
+import { REFUSAL_ENVELOPE, isOutOfScope } from '../pipeline/scope.ts';
+import { buildMessages, type ChatMessage } from '../prompt.ts';
 
 const BodySchema = z.object({
   messages: z
@@ -1764,8 +1765,8 @@ Expected: PASS, 63 tests across the API package.
 
 ```ts
 import 'dotenv/config';
-import { callKimi } from './kimi.js';
-import { buildServer } from './routes/chat.js';
+import { callKimi } from './kimi.ts';
+import { buildServer } from './routes/chat.ts';
 
 const port = Number(process.env.API_PORT ?? 8787);
 const app = buildServer({ callModel: callKimi });
