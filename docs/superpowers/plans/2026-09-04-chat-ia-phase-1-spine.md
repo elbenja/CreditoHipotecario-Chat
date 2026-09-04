@@ -3249,8 +3249,11 @@ export function PinnedFieldRow({
   onAcceptProposal?: (key: string) => void;
   onRejectProposal?: (key: string) => void;
 }) {
-  // Provenance is the whole point: an assumed value must never read as fact.
-  const assumed = field.provenance === 'assumed';
+  // Provenance is the whole point: a value the user did not state must never
+  // read as fact. Anything that is not 'user' gets the accent dot — the live
+  // model also returns 'market', and testing `=== 'assumed'` would render a
+  // market estimate as "Lo dijiste tú".
+  const notFromUser = field.provenance !== 'user';
 
   return (
     <div className="rounded-[10px] border border-transparent px-3 py-[11px] transition-colors duration-180 ease-ch hover:border-ch-border">
@@ -3259,8 +3262,8 @@ export function PinnedFieldRow({
           {field.label}
         </span>
         <span
-          className={`h-[6px] w-[6px] rounded-full ${assumed ? 'bg-ch-accent' : 'bg-slate-400'}`}
-          title={assumed ? 'Lo asumí yo' : 'Lo dijiste tú'}
+          className={`h-[6px] w-[6px] rounded-full ${notFromUser ? 'bg-ch-accent' : 'bg-slate-400'}`}
+          title={notFromUser ? 'Lo asumí yo' : 'Lo dijiste tú'}
         />
         <div className="flex-1" />
         <Icon name="edit-01" size={13} className="text-slate-500" />
