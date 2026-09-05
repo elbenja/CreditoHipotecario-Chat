@@ -6,7 +6,11 @@ import OpenAI from 'openai';
 import type { ChatMessage } from './prompt.ts';
 
 const BASE_URL = process.env.MOONSHOT_BASE_URL ?? 'https://api.moonshot.ai/v1';
-const MODEL = process.env.MOONSHOT_MODEL ?? 'kimi-k2.6';
+// kimi-k2.7-code-highspeed, not kimi-k2.6: measured on this workload, k2.6
+// spends ~112s "thinking" before its first token while highspeed answers in
+// ~16s, for identical envelope quality and identical (exact) mortgage
+// arithmetic. See docs/superpowers/specs — latency section.
+const MODEL = process.env.MOONSHOT_MODEL ?? 'kimi-k2.7-code-highspeed';
 
 let client: OpenAI | null = null;
 
@@ -22,7 +26,7 @@ export async function callKimi(messages: ChatMessage[]): Promise<string> {
   const res = await getClient().chat.completions.create({
     model: MODEL,
     messages,
-    // No temperature: kimi-k2.6 rejects anything but 1
+    // No temperature: the Moonshot models used here reject anything but 1
     // ("invalid temperature: only 1 is allowed for this model"), so let the
     // model default apply rather than sending a value it refuses.
     response_format: { type: 'json_object' },

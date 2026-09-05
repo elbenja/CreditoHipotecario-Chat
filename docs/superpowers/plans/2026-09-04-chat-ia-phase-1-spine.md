@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- **Model id is `kimi-k2.6`.** The `kimi-k2` series was retired 2026-05-25. Base URL `https://api.moonshot.ai/v1`.
+- **Model id is `kimi-k2.7-code-highspeed`.** Measured 2026-09-05: `kimi-k2.6` spends ~112s thinking before its first token on this workload (128s total); highspeed answers in ~20s with identical envelope quality and exact arithmetic. Base URL `https://api.moonshot.ai/v1`.
 - **`MOONSHOT_API_KEY` lives only in `apps/api`.** It must never appear in `apps/web`, in any `VITE_`-prefixed variable, or in a committed file.
 - **Currency is PEN (`S/`), market is Peru, UI language is Spanish (Peru register).** Not Chile, no UF, no CLP.
 - **Number format: `S/ 1,750`** — space after `S/`, comma thousands separator, dot decimal, never "mil"/"M".

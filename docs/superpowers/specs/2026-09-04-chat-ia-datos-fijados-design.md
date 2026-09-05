@@ -6,7 +6,7 @@
 
 ## 1. What this is
 
-A conversational interface for CréditoHipotecar.io. The user describes a property in prose; Kimi 2.6 (Moonshot) answers with a financial analysis. The distinguishing feature is not the chat — it is the **right-hand panel**: every fact the model extracts or assumes is pinned there as an editable field with visible provenance, and every "cause → effect" insight can be saved as a scenario card.
+A conversational interface for CréditoHipotecar.io. The user describes a property in prose; Kimi (Moonshot) answers with a financial analysis. The distinguishing feature is not the chat — it is the **right-hand panel**: every fact the model extracts or assumes is pinned there as an editable field with visible provenance, and every "cause → effect" insight can be saved as a scenario card.
 
 ### What this POC is for
 
