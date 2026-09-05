@@ -1,4 +1,4 @@
-import type { AnalysisEnvelope, PinnedField } from '@chat/shared';
+import type { AnalysisEnvelope, PinnedField, Scenario } from '@chat/shared';
 
 export interface Candidate {
   key: string;
@@ -30,7 +30,10 @@ export interface ChatState {
   changes: FieldChange[];
   /** Model values blocked because the user owns that field. */
   proposals: Record<string, PinnedField>;
-  savedScenarios: string[];
+  /** Whole objects, not ids: the model reuses ids across turns. */
+  savedScenarios: Scenario[];
+  /** The most recent deletion, held so the undo bar can restore it. */
+  lastDeleted: Scenario | null;
   status: Status;
   analyzeSteps: { label: string; done: boolean }[];
   error: string | null;
@@ -48,7 +51,11 @@ export type Action =
   | { type: 'acceptProposal'; key: string }
   | { type: 'rejectProposal'; key: string }
   | { type: 'dismissChanges' }
-  | { type: 'pinCandidate'; key: string; label: string; value: string };
+  | { type: 'pinCandidate'; key: string; label: string; value: string }
+  | { type: 'saveScenario'; scenario: Scenario }
+  | { type: 'deleteScenario'; id: string }
+  | { type: 'undoDelete' }
+  | { type: 'recalculate' };
 
 export const initialState: ChatState = {
   messages: [],
@@ -58,6 +65,7 @@ export const initialState: ChatState = {
   changes: [],
   proposals: {},
   savedScenarios: [],
+  lastDeleted: null,
   status: 'idle',
   analyzeSteps: [],
   error: null,
@@ -227,6 +235,45 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
           : [...state.userEdited, action.key],
       };
     }
+
+    case 'saveScenario': {
+      // Saving is staging, not persistence — it reaches a database only when
+      // the property is saved. Re-saving the same id keeps the first value.
+      if (state.savedScenarios.some((s) => s.id === action.scenario.id)) return state;
+      return { ...state, savedScenarios: [...state.savedScenarios, action.scenario] };
+    }
+
+    case 'deleteScenario': {
+      const victim = state.savedScenarios.find((s) => s.id === action.id);
+      if (!victim) return state;
+      return {
+        ...state,
+        savedScenarios: state.savedScenarios.filter((s) => s.id !== action.id),
+        lastDeleted: victim,
+      };
+    }
+
+    case 'undoDelete': {
+      if (!state.lastDeleted) return state;
+      return {
+        ...state,
+        savedScenarios: [...state.savedScenarios, state.lastDeleted],
+        lastDeleted: null,
+      };
+    }
+
+    case 'recalculate':
+      // Clear the dirty set as the request goes out, so the band disappears
+      // immediately rather than lingering through the wait. Messages are
+      // untouched — the new answer arrives as its own 'envelope' action.
+      return {
+        ...state,
+        baseline: deriveBaseline(state.fields),
+        changes: [],
+        status: 'thinking',
+        analyzeSteps: [],
+        error: null,
+      };
 
     default:
       return state;

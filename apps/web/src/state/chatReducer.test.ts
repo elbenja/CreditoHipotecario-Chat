@@ -1,4 +1,4 @@
-import type { AnalysisEnvelope } from '@chat/shared';
+import type { AnalysisEnvelope, Scenario } from '@chat/shared';
 import { describe, expect, it } from 'vitest';
 import { chatReducer, initialState, selectDirtyKeys } from './chatReducer';
 
@@ -233,5 +233,115 @@ describe('pinCandidate', () => {
       type: 'pinCandidate', key: 'inicial', label: 'Cuota inicial', value: '30',
     });
     expect(selectDirtyKeys(s)).toEqual([]);
+  });
+});
+
+describe('saved scenarios', () => {
+  const scen = (id: string, value = '+S/ 250'): Scenario => ({
+    id,
+    cause: 'Si lo amueblas',
+    value,
+    unit: '/mes de alquiler',
+    tone: 'good',
+    note: 'Rango 200-300.',
+  });
+
+  it('saves a scenario', () => {
+    const s = chatReducer(initialState, { type: 'saveScenario', scenario: scen('amoblado') });
+    expect(s.savedScenarios).toHaveLength(1);
+    expect(s.savedScenarios[0]!.id).toBe('amoblado');
+  });
+
+  it('does not save the same id twice', () => {
+    let s = chatReducer(initialState, { type: 'saveScenario', scenario: scen('amoblado') });
+    s = chatReducer(s, { type: 'saveScenario', scenario: scen('amoblado') });
+    expect(s.savedScenarios).toHaveLength(1);
+  });
+
+  it('keeps the first value when the same id is saved again', () => {
+    let s = chatReducer(initialState, { type: 'saveScenario', scenario: scen('amoblado', '+S/ 250') });
+    s = chatReducer(s, { type: 'saveScenario', scenario: scen('amoblado', '+S/ 900') });
+    expect(s.savedScenarios[0]!.value).toBe('+S/ 250');
+  });
+
+  it('preserves save order', () => {
+    let s = chatReducer(initialState, { type: 'saveScenario', scenario: scen('a') });
+    s = chatReducer(s, { type: 'saveScenario', scenario: scen('b') });
+    expect(s.savedScenarios.map((x) => x.id)).toEqual(['a', 'b']);
+  });
+
+  it('deletes a scenario', () => {
+    let s = chatReducer(initialState, { type: 'saveScenario', scenario: scen('a') });
+    s = chatReducer(s, { type: 'deleteScenario', id: 'a' });
+    expect(s.savedScenarios).toEqual([]);
+  });
+
+  it('remembers the deleted scenario so it can be undone', () => {
+    let s = chatReducer(initialState, { type: 'saveScenario', scenario: scen('a') });
+    s = chatReducer(s, { type: 'deleteScenario', id: 'a' });
+    expect(s.lastDeleted?.id).toBe('a');
+  });
+
+  it('restores a deleted scenario on undo', () => {
+    let s = chatReducer(initialState, { type: 'saveScenario', scenario: scen('a') });
+    s = chatReducer(s, { type: 'deleteScenario', id: 'a' });
+    s = chatReducer(s, { type: 'undoDelete' });
+    expect(s.savedScenarios.map((x) => x.id)).toEqual(['a']);
+    expect(s.lastDeleted).toBeNull();
+  });
+
+  it('undo is a no-op when nothing was deleted', () => {
+    const s = chatReducer(initialState, { type: 'undoDelete' });
+    expect(s.savedScenarios).toEqual([]);
+  });
+
+  it('deleting an unknown id changes nothing', () => {
+    const s = chatReducer(initialState, { type: 'deleteScenario', id: 'nope' });
+    expect(s.savedScenarios).toEqual([]);
+    expect(s.lastDeleted).toBeNull();
+  });
+});
+
+describe('recalculate', () => {
+  const envelopeWithTasa: AnalysisEnvelope = {
+    ...envelope,
+    fields: [
+      { key: 'tasa', label: 'Tasa TEA', value: '8.0', suffix: '%', provenance: 'user', note: 'n' },
+    ],
+  };
+
+  it('clears the dirty set', () => {
+    let s = chatReducer(initialState, { type: 'envelope', envelope: envelopeWithTasa });
+    s = chatReducer(s, { type: 'editField', key: 'tasa', value: '7.24' });
+    expect(selectDirtyKeys(s)).toEqual(['tasa']);
+    s = chatReducer(s, { type: 'recalculate' });
+    expect(selectDirtyKeys(s)).toEqual([]);
+  });
+
+  it('keeps the edited value as the new baseline', () => {
+    let s = chatReducer(initialState, { type: 'envelope', envelope: envelopeWithTasa });
+    s = chatReducer(s, { type: 'editField', key: 'tasa', value: '7.24' });
+    s = chatReducer(s, { type: 'recalculate' });
+    expect(s.fields.tasa!.value).toBe('7.24');
+    expect(s.baseline.tasa).toBe('7.24');
+  });
+
+  it('enters the thinking state', () => {
+    const s = chatReducer(initialState, { type: 'recalculate' });
+    expect(s.status).toBe('thinking');
+  });
+
+  it('does not append or mutate any message', () => {
+    let s = chatReducer(initialState, { type: 'envelope', envelope: envelopeWithTasa });
+    const before = s.messages;
+    s = chatReducer(s, { type: 'recalculate' });
+    expect(s.messages).toBe(before);
+  });
+
+  it('keeps a field locked after recalculating', () => {
+    let s = chatReducer(initialState, { type: 'envelope', envelope: envelopeWithTasa });
+    s = chatReducer(s, { type: 'editField', key: 'tasa', value: '7.24' });
+    s = chatReducer(s, { type: 'recalculate' });
+    expect(s.userEdited).toContain('tasa');
   });
 });
