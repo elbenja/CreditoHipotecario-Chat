@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-ch-bg font-inter text-[14.5px] leading-relaxed text-slate-300 antialiased;
+    margin: 0;
+  }
+  /* All numerics are tabular so columns of figures do not shift. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
