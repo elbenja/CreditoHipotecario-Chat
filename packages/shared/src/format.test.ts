@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { formatNumber, formatSoles, isValidSoles, normalizeSoles } from './format.ts';
+import {
+  formatNumber,
+  formatSoles,
+  groupFieldValue,
+  isValidSoles,
+  normalizeSoles,
+} from './format.ts';
 
 describe('formatSoles', () => {
   it('formats with a space and comma thousands', () => {
@@ -82,5 +88,31 @@ describe('normalizeSoles', () => {
 
   it('handles repeated thousands separators', () => {
     expect(normalizeSoles('1.234.567,89')).toBe('S/ 1,234,567.89');
+  });
+});
+
+describe('groupFieldValue', () => {
+  it('groups a six-figure price', () => {
+    expect(groupFieldValue('300000')).toBe('300,000');
+  });
+
+  it('groups a four-figure rent', () => {
+    expect(groupFieldValue('2000')).toBe('2,000');
+  });
+
+  it('leaves a rate alone', () => {
+    expect(groupFieldValue('7.5')).toBe('7.5');
+  });
+
+  it('leaves a small integer alone', () => {
+    expect(groupFieldValue('55')).toBe('55');
+  });
+
+  it('leaves an already-grouped value alone', () => {
+    expect(groupFieldValue('250,000')).toBe('250,000');
+  });
+
+  it('leaves a textual value alone', () => {
+    expect(groupFieldValue('Pueblo Libre, Lima')).toBe('Pueblo Libre, Lima');
   });
 });

@@ -119,4 +119,24 @@ describe('runPipeline', () => {
     if (!r.ok) throw new Error('expected ok');
     expect(r.envelope.scenarios[0]!.value).toBe('+S/ 250');
   });
+
+  it('groups thousands in a pinned field value', () => {
+    const env = {
+      ...base,
+      fields: [{ key: 'precio', label: 'Precio de compra', value: '300000', prefix: 'S/', provenance: 'user', note: '' }],
+    };
+    const r = runPipeline(JSON.stringify(env), ['Depa de 300000 en Miraflores']);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.fields[0]!.value).toBe('300,000');
+  });
+
+  it('does not group a rate', () => {
+    const env = {
+      ...base,
+      fields: [{ key: 'tasa', label: 'Tasa TEA', value: '7.5', suffix: '%', provenance: 'user', note: '' }],
+    };
+    const r = runPipeline(JSON.stringify(env), ['tasa 7.5%']);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.fields[0]!.value).toBe('7.5');
+  });
 });

@@ -14,6 +14,22 @@ export function formatNumber(n: number): string {
   });
 }
 
+/**
+ * Group thousands in a pinned field's value. Field values are bare numbers —
+ * the currency marker lives in the field's `prefix` — so this only adds
+ * separators, never a `S/`.
+ *
+ * Deliberately limited to integers >= 1000: grouping every numeric would turn
+ * a rate of "7.5" into "7.50" and an area of "55" into something the design
+ * never shows. Textual values pass through untouched.
+ */
+export function groupFieldValue(value: string): string {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return value;
+  const n = Number(trimmed);
+  return Number.isFinite(n) && n >= 1000 ? formatNumber(n) : value;
+}
+
 export function formatSoles(n: number): string {
   const sign = n < 0 ? '-' : '';
   return `${sign}S/ ${formatNumber(n)}`;

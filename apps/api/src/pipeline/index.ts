@@ -1,5 +1,6 @@
 import {
   AnalysisEnvelopeSchema,
+  groupFieldValue,
   isValidSoles,
   normalizeSoles,
   type AnalysisEnvelope,
@@ -51,7 +52,12 @@ export function runPipeline(raw: string, userTurns: string[]): PipelineResult {
   const envelope = result.data;
 
   // 2. Enforce provenance. The model does not get to promote a guess.
-  const fields = enforceProvenance(envelope.fields, userTurns);
+  // Provenance first, then presentation: the panel shows "S/ 300,000", never
+  // "S/ 300000". The prefix is a separate property, so only grouping is added.
+  const fields = enforceProvenance(envelope.fields, userTurns).map((f) => ({
+    ...f,
+    value: groupFieldValue(f.value),
+  }));
 
   // 3. Cap. The cards carry the numbers, so truncate silently.
   const prose = envelope.prose.slice(0, MAX_PROSE);

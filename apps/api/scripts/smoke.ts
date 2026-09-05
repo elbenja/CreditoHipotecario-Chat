@@ -2,7 +2,12 @@ import { callKimi } from '../src/kimi.ts';
 import { runPipeline } from '../src/pipeline/index.ts';
 import { buildMessages } from '../src/prompt.ts';
 
-const turn = 'Depa de 250 mil en Pueblo Libre, 40 m², tasa 8%. ¿A cuánto lo alquilo?';
+// Ask your own question: pass it as arguments, or omit for the default.
+const turn =
+  process.argv.slice(2).join(' ') ||
+  'Depa de 250 mil en Pueblo Libre, 40 m², tasa 8%. ¿A cuánto lo alquilo?';
+
+console.log(`\nTú: ${turn}\n`);
 
 const raw = await callKimi(buildMessages([{ role: 'user', content: turn }], []));
 const result = runPipeline(raw, [turn]);
