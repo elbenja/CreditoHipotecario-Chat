@@ -1,9 +1,11 @@
 import { TopNav } from './components/TopNav';
+import { EmptyState } from './screens/EmptyState';
 
 export default function App() {
   return (
     <div className="flex h-full flex-col">
-      <TopNav context="Depa Pueblo Libre · sin guardar" />
+      <TopNav />
+      <EmptyState onSubmit={(t) => console.log('submit', t)} />
     </div>
   );
 }
