@@ -1,35 +1,63 @@
-import { useState } from 'react';
-import { PinnedPanel } from './components/PinnedPanel';
+import { useCallback, useReducer } from 'react';
+import { streamChat } from './api/streamChat';
 import { TopNav } from './components/TopNav';
-import type { PinnedField } from '@chat/shared';
+import { Conversation } from './screens/Conversation';
+import { EmptyState } from './screens/EmptyState';
+import { chatReducer, initialState, type Message } from './state/chatReducer';
 
-const initialFields: PinnedField[] = [
-  { key: 'ubicacion', label: 'Ubicación', value: 'Pueblo Libre, Lima', provenance: 'user', note: '' },
-  { key: 'precio', label: 'Precio', value: '250,000', prefix: 'S/', provenance: 'user', note: '' },
-  { key: 'area', label: 'Área', value: '40', suffix: 'm²', provenance: 'user', note: '' },
-  { key: 'tasa', label: 'Tasa TEA', value: '8.0', suffix: '%', provenance: 'user', note: '' },
-  { key: 'inicial', label: 'Cuota inicial', value: '10', suffix: '%', provenance: 'assumed', note: '' },
-  { key: 'plazo', label: 'Plazo', value: '20', suffix: 'años', provenance: 'assumed', note: '' },
-  { key: 'alquiler', label: 'Alquiler estimado', value: '1,750', prefix: 'S/', suffix: '/mes', provenance: 'assumed', note: '' },
-];
-
-const proposals: Record<string, PinnedField> = {
-  tasa: { key: 'tasa', label: 'Tasa TEA', value: '8.5', suffix: '%', provenance: 'market', note: '' },
-};
+function toTurns(messages: Message[]) {
+  return messages.flatMap((m) =>
+    m.role === 'user' ? [{ role: 'user' as const, content: m.content }] : [],
+  );
+}
 
 export default function App() {
-  const [fields, setFields] = useState(initialFields);
+  const [state, dispatch] = useReducer(chatReducer, initialState);
 
-  const onEdit = (key: string, value: string) =>
-    setFields((prev) => prev.map((f) => (f.key === key ? { ...f, value } : f)));
+  const send = useCallback(
+    async (text: string) => {
+      dispatch({ type: 'send', content: text });
+
+      const history = [...toTurns(state.messages), { role: 'user' as const, content: text }];
+      await streamChat({ messages: history, fields: Object.values(state.fields) }, (e) => {
+        const data = e.data as Record<string, any>;
+        if (e.event === 'status') dispatch({ type: 'status', phase: data.phase });
+        else if (e.event === 'analyzeStep') dispatch({ type: 'analyzeStep', label: data.label });
+        else if (e.event === 'envelope') dispatch({ type: 'envelope', envelope: data.envelope });
+        else if (e.event === 'fallback')
+          dispatch({ type: 'fallback', prose: data.prose, candidates: data.candidates });
+        else if (e.event === 'error') dispatch({ type: 'error', message: data.message });
+      });
+    },
+    [state.messages, state.fields],
+  );
+
+  const edit = useCallback((key: string, value: string) => {
+    dispatch({ type: 'editField', key, value });
+  }, []);
+
+  const acceptProposal = useCallback((key: string) => {
+    dispatch({ type: 'acceptProposal', key });
+  }, []);
+
+  const rejectProposal = useCallback((key: string) => {
+    dispatch({ type: 'rejectProposal', key });
+  }, []);
 
   return (
     <div className="flex h-full flex-col">
-      <TopNav />
-      <div className="flex min-h-0 flex-1">
-        <div className="flex-1" />
-        <PinnedPanel fields={fields} proposals={proposals} onEdit={onEdit} />
-      </div>
+      <TopNav context={state.messages.length > 0 ? 'Depa Pueblo Libre · sin guardar' : undefined} />
+      {state.messages.length === 0 ? (
+        <EmptyState onSubmit={send} />
+      ) : (
+        <Conversation
+          state={state}
+          onSend={send}
+          onEdit={edit}
+          onAcceptProposal={acceptProposal}
+          onRejectProposal={rejectProposal}
+        />
+      )}
     </div>
   );
 }
