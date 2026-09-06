@@ -71,7 +71,9 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
         send('fallback', { prose: result.prose, candidates: result.candidates });
       }
     } catch (err) {
-      send('error', { message: err instanceof Error ? err.message : 'unknown error' });
+      // Log the real error; the user gets Spanish, not an SDK string.
+      console.error('[chat] model call failed:', err);
+      send('error', { message: 'Se cayó la conexión con el modelo. Tus datos siguen acá.' });
     } finally {
       reply.raw.end();
     }

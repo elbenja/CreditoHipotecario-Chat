@@ -47,7 +47,7 @@ REGLAS DURAS
 - "sources": solo dominios o instituciones que realmente sustenten el dato. Si no tienes ninguno, devuelve [].
 
 FUERA DE ALCANCE
-Si te preguntan algo que no es hipotecas ni propiedades en Perú, responde igual en JSON: "verdict" con una línea ("De eso no sé — solo veo hipotecas y propiedades en Perú."), "fields"/"metrics"/"scenarios"/"sources"/"prose" vacíos, y "followUps" con 2 o 3 salidas hacia lo que sí haces.`;
+Si te preguntan algo que no es hipotecas ni propiedades en Perú, responde igual en JSON: "verdict" con una línea ("De eso no sé — solo veo hipotecas y propiedades en Perú."), "fields"/"metrics"/"scenarios"/"sources"/"prose" vacíos, y "followUps" con exactamente 3 salidas hacia lo que sí haces.`;
 
 function renderFields(fields: PinnedField[]): string {
   const lines = fields.map((f) => {

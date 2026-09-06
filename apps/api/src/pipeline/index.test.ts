@@ -139,4 +139,47 @@ describe('runPipeline', () => {
     if (!r.ok) throw new Error('expected ok');
     expect(r.envelope.fields[0]!.value).toBe('7.5');
   });
+
+  it('never shows raw JSON when the schema rejects the envelope', () => {
+    const bad = { ...base, scenarios: [{ id: '', cause: 'x', value: 'y', unit: 'u', tone: 'good', note: 'n' }] };
+    const r = runPipeline(JSON.stringify(bad), turns);
+    if (r.ok) throw new Error('expected fallback');
+    expect(r.prose).not.toContain('{');
+    expect(r.prose).not.toContain('"verdict"');
+  });
+
+  it('salvages the verdict and prose from a rejected envelope', () => {
+    const bad = { ...base, verdict: 'Regular como negocio.', prose: ['Un párrafo útil.'], scenarios: [{ id: '' }] };
+    const r = runPipeline(JSON.stringify(bad), turns);
+    if (r.ok) throw new Error('expected fallback');
+    expect(r.prose).toContain('Regular como negocio.');
+    expect(r.prose).toContain('Un párrafo útil.');
+  });
+
+  it('still shows the model text when the response was not JSON at all', () => {
+    const r = runPipeline('Con 30% de inicial la cuota baja.', turns);
+    if (r.ok) throw new Error('expected fallback');
+    expect(r.prose).toBe('Con 30% de inicial la cuota baja.');
+  });
+
+  it('does not double a currency marker folded into the value', () => {
+    const env = { ...base, fields: [{ key: 'precio', label: 'P', value: 'S/ 250,000', prefix: 'S/', provenance: 'assumed', note: '' }] };
+    const r = runPipeline(JSON.stringify(env), turns);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.fields[0]!.value).toBe('250,000');
+  });
+
+  it('does not double a unit folded into the value', () => {
+    const env = { ...base, fields: [{ key: 'plazo', label: 'T', value: '20 años', suffix: 'años', provenance: 'assumed', note: '' }] };
+    const r = runPipeline(JSON.stringify(env), turns);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.fields[0]!.value).toBe('20');
+  });
+
+  it('caps metrics at three', () => {
+    const many = Array.from({ length: 5 }, (_, i) => ({ label: `M${i}`, value: 'S/ 1', delta: null, context: '' }));
+    const r = runPipeline(JSON.stringify({ ...base, metrics: many }), turns);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.envelope.metrics).toHaveLength(3);
+  });
 });

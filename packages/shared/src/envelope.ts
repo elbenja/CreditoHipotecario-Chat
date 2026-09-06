@@ -29,13 +29,14 @@ export const PinnedFieldSchema = z.object({
 });
 
 export const ScenarioSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().trim().min(1),
   cause: z.string().min(1),
   value: z.string().min(1),
   unit: z.string(),
   tone: z.enum(['good', 'tradeoff', 'bad']),
-  // The design rule: a note must always carry a range, caveat or cash cost.
-  note: z.string().min(1),
+  // A note must carry a range, caveat or cash cost — but tolerate the model's
+  // null the way PinnedField does, rather than discarding a whole analysis.
+  note: z.string().nullish().transform((v) => v ?? ''),
 });
 
 export const MetricSchema = z.object({

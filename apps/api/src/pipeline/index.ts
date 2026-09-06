@@ -14,6 +14,7 @@ export type PipelineResult =
 
 const MAX_PROSE = 3;
 const MAX_FOLLOW_UPS = 3;
+const MAX_METRICS = 3;
 
 /** A value we may rewrite: the WHOLE string is a soles amount, nothing else. */
 const CURRENCY_ONLY = /^[+-]?\s*S\/\.?\s*[\d.,]+$/;
@@ -22,6 +23,29 @@ const CURRENCY_ONLY = /^[+-]?\s*S\/\.?\s*[\d.,]+$/;
 function stripFences(raw: string): string {
   const fenced = /```(?:json)?\s*([\s\S]*?)\s*```/.exec(raw);
   return (fenced?.[1] ?? raw).trim();
+}
+
+const SCHEMA_FALLBACK =
+  'Tengo el análisis pero no pude estructurarlo esta vez. Puedes fijar los datos a mano acá abajo.';
+
+/** Rescue the readable parts of an envelope that failed validation. */
+function salvageProse(parsed: unknown): string | null {
+  if (typeof parsed !== 'object' || parsed === null) return null;
+  const v = parsed as Record<string, unknown>;
+  const parts: string[] = [];
+  if (typeof v.verdict === 'string') parts.push(v.verdict);
+  if (Array.isArray(v.prose)) parts.push(...v.prose.filter((p): p is string => typeof p === 'string'));
+  return parts.length > 0 ? parts.slice(0, 4).join('\n\n') : null;
+}
+
+/** The model sometimes folds the prefix/suffix into `value` despite the prompt. */
+function stripAffixes(field: { value: string; prefix?: string; suffix?: string }): string {
+  let v = field.value.trim();
+  const prefix = field.prefix?.trim();
+  const suffix = field.suffix?.trim();
+  if (prefix && v.toLowerCase().startsWith(prefix.toLowerCase())) v = v.slice(prefix.length).trim();
+  if (suffix && v.toLowerCase().endsWith(suffix.toLowerCase())) v = v.slice(0, -suffix.length).trim();
+  return v || field.value;
 }
 
 /**
@@ -46,7 +70,14 @@ export function runPipeline(raw: string, userTurns: string[]): PipelineResult {
 
   const result = AnalysisEnvelopeSchema.safeParse(parsed);
   if (!result.success) {
-    return { ok: false, prose: raw, candidates: extractCandidates(raw) };
+    // It parsed as JSON but did not match the contract. Never show the user
+    // raw JSON — salvage the readable parts, or say something written.
+    const salvaged = salvageProse(parsed);
+    return {
+      ok: false,
+      prose: salvaged ?? SCHEMA_FALLBACK,
+      candidates: extractCandidates(salvaged ?? ''),
+    };
   }
 
   const envelope = result.data;
@@ -56,7 +87,7 @@ export function runPipeline(raw: string, userTurns: string[]): PipelineResult {
   // "S/ 300000". The prefix is a separate property, so only grouping is added.
   const fields = enforceProvenance(envelope.fields, userTurns).map((f) => ({
     ...f,
-    value: groupFieldValue(f.value),
+    value: groupFieldValue(stripAffixes(f)),
   }));
 
   // 3. Cap. The cards carry the numbers, so truncate silently.
@@ -64,7 +95,7 @@ export function runPipeline(raw: string, userTurns: string[]): PipelineResult {
   const followUps = envelope.followUps.slice(0, MAX_FOLLOW_UPS);
 
   // 4. Format to house convention rather than trusting the model's.
-  const metrics = envelope.metrics.map((m) => ({
+  const metrics = envelope.metrics.slice(0, MAX_METRICS).map((m) => ({
     ...m,
     value: repairAmount(m.value),
     delta: m.delta === null ? null : repairAmount(m.delta),

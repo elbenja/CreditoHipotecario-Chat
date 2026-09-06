@@ -51,9 +51,13 @@ describe('AnalysisEnvelopeSchema', () => {
     expect(AnalysisEnvelopeSchema.safeParse(rest).success).toBe(false);
   });
 
-  it('rejects a scenario note that is empty', () => {
-    const bad = { ...valid, scenarios: [{ ...valid.scenarios[0], note: '' }] };
-    expect(AnalysisEnvelopeSchema.safeParse(bad).success).toBe(false);
+  // Tolerating null means tolerating empty — both say "no note". Discarding an
+  // entire valid analysis over one missing note is worse than shipping without
+  // it. The rule that a note carries a range, caveat or cash cost is enforced
+  // by the system prompt, which .min(1) never actually checked anyway.
+  it('accepts a scenario note that is empty', () => {
+    const ok = { ...valid, scenarios: [{ ...valid.scenarios[0], note: '' }] };
+    expect(AnalysisEnvelopeSchema.safeParse(ok).success).toBe(true);
   });
 
   it('accepts a field whose note is null and normalises it to an empty string', () => {
@@ -76,8 +80,13 @@ describe('AnalysisEnvelopeSchema', () => {
     expect(parsed.fields[0]!.note).toBe(valid.fields[0]!.note);
   });
 
-  it('still rejects a scenario whose note is null', () => {
-    const bad = { ...valid, scenarios: [{ ...valid.scenarios[0], note: null }] };
+  it('accepts a scenario whose note is null and normalises it', () => {
+    const withNull = { ...valid, scenarios: [{ ...valid.scenarios[0], note: null }] };
+    expect(AnalysisEnvelopeSchema.parse(withNull).scenarios[0]!.note).toBe('');
+  });
+
+  it('rejects a scenario with an empty id', () => {
+    const bad = { ...valid, scenarios: [{ ...valid.scenarios[0], id: '   ' }] };
     expect(AnalysisEnvelopeSchema.safeParse(bad).success).toBe(false);
   });
 
