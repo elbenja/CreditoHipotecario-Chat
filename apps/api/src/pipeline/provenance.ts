@@ -19,40 +19,6 @@ function normalizeNumber(s: string): string {
     .replace(/\.0+$/, ''); // 8.0 -> 8
 }
 
-/** Spanish scale words that follow a number: "250 mil" means 250,000. */
-const MULTIPLIERS: [RegExp, number][] = [
-  [/^millones?$/, 1_000_000],
-  [/^mil$/, 1_000],
-];
-
-/**
- * Every standalone number the user wrote, in canonical form — including the
- * scaled value when a Spanish scale word follows, so "250 mil" also records
- * 250000 and matches a model that normalised it to "250,000".
- */
-function numbersIn(text: string): Set<string> {
-  const out = new Set<string>();
-  const tokens = text.match(/\d[\d.,]*|[a-zñ]+/gi) ?? [];
-
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i]!;
-    if (!/^\d/.test(token)) continue;
-
-    const base = normalizeNumber(token.replace(/[.,]+$/, ''));
-    out.add(base);
-
-    const next = tokens[i + 1]?.toLowerCase();
-    if (!next) continue;
-    for (const [pattern, multiplier] of MULTIPLIERS) {
-      if (!pattern.test(next)) continue;
-      const scaled = Number(base) * multiplier;
-      if (Number.isFinite(scaled)) out.add(normalizeNumber(String(scaled)));
-    }
-  }
-
-  return out;
-}
-
 /** Collapse to letters, digits and single spaces so word boundaries are meaningful. */
 function words(s: string): string {
   return normalizeText(s)
@@ -60,20 +26,76 @@ function words(s: string): string {
     .trim();
 }
 
-/**
- * A numeric value must match a WHOLE number the user wrote, and a textual value
- * must match on word boundaries. Without the latter, the district "Ate" matches
- * inside "atender" and an assumed location renders as fact.
- */
-function appearsIn(value: string, text: string, numbers: Set<string>): boolean {
-  if (!value.trim()) return false;
+/** A negator close before a number or name means the user was ruling it out. */
+const NEGATOR = /\b(no|ni|tampoco|nunca)\b/;
 
-  // A model may fold a currency marker into the value itself; strip before testing.
-  const bare = value.replace(/S\/\.?/gi, '').replace(/[$€]/g, '').trim();
-  if (/^[\d.,]+$/.test(bare)) {
-    return numbers.has(normalizeNumber(bare));
+interface NumberMention {
+  value: string;
+  before: string;
+  after: string;
+}
+
+/**
+ * Every number the user wrote, WITH the text around it. The context is the
+ * point: a bare set of numbers cannot tell whether "20" was said about the
+ * term or the down payment.
+ */
+function numberMentions(text: string): NumberMention[] {
+  const out: NumberMention[] = [];
+  const re = /\d[\d.,]*/g;
+  let m: RegExpExecArray | null;
+
+  while ((m = re.exec(text)) !== null) {
+    const raw = m[0].replace(/[.,]+$/, '');
+    if (!raw) continue;
+    const end = m.index + m[0].length;
+    const before = text.slice(Math.max(0, m.index - 24), m.index);
+    const after = text.slice(end, end + 18);
+
+    const base = normalizeNumber(raw);
+    out.push({ value: base, before, after });
+
+    // "250 mil" also means 250000.
+    const scale = /^\s*(millones?|mil)\b/i.exec(after);
+    if (scale) {
+      const multiplier = /millon/i.test(scale[1]!) ? 1_000_000 : 1_000;
+      const scaled = Number(base) * multiplier;
+      if (Number.isFinite(scaled)) {
+        out.push({ value: normalizeNumber(String(scaled)), before, after });
+      }
+    }
   }
 
+  return out;
+}
+
+/**
+ * What the surrounding text must contain for a number to count as evidence for
+ * a given field. Without this, any number the user wrote validates any field.
+ */
+const CUE: Record<string, RegExp> = {
+  precio:
+    /s\/|soles|dolares|precio|cuesta|cuestan|vale|valen|compra|piden|depa de|casa de|departamento de|dpto de|mil|millon/,
+  area: /m2|m²|metros|area/,
+  tasa: /%|por ciento|tea|tasa|interes/,
+  inicial: /%|por ciento|inicial|adelanto|enganche/,
+  plazo: /a[nñ]os?|plazo|cuotas/,
+  alquiler: /alquil|renta|arriendo|s\/|soles|mes/,
+};
+
+function numericMatch(key: string, needle: string, mentions: NumberMention[]): boolean {
+  const cue = CUE[key];
+  if (!cue) return false;
+
+  return mentions.some((mention) => {
+    if (mention.value !== needle) return false;
+    if (!cue.test(normalizeText(`${mention.before} ${mention.after}`))) return false;
+    // "No tengo 250 mil" is not a claim that the price is 250 mil.
+    return !NEGATOR.test(normalizeText(mention.before).slice(-20));
+  });
+}
+
+function textualMatch(value: string, text: string): boolean {
   const haystack = words(text);
   // The model often expands what the user said ("Pueblo Libre" -> "Pueblo
   // Libre, Lima"), so also try the first comma-segment. FIRST segment only:
@@ -82,11 +104,33 @@ function appearsIn(value: string, text: string, numbers: Set<string>): boolean {
   for (const candidate of [value, value.split(',')[0] ?? '']) {
     const needle = words(candidate);
     if (!needle) continue;
-    if (new RegExp(`(?<![\\p{L}\\p{N}])${needle}(?![\\p{L}\\p{N}])`, 'u').test(haystack)) {
-      return true;
-    }
+    const hit = new RegExp(`(?<![\\p{L}\\p{N}])${needle}(?![\\p{L}\\p{N}])`, 'u').exec(haystack);
+    if (!hit) continue;
+    if (NEGATOR.test(haystack.slice(Math.max(0, hit.index - 20), hit.index))) continue;
+    return true;
   }
   return false;
+}
+
+/**
+ * A numeric value must match a whole number the user wrote ABOUT THIS FIELD;
+ * a textual value must match on word boundaries. Neither counts when the user
+ * was negating it.
+ */
+function appearsIn(
+  key: string,
+  value: string,
+  text: string,
+  mentions: NumberMention[],
+): boolean {
+  if (!value.trim()) return false;
+
+  // A model may fold a currency marker into the value itself; strip before testing.
+  const bare = value.replace(/S\/\.?/gi, '').replace(/[$€]/g, '').trim();
+  if (/^[\d.,]+$/.test(bare)) {
+    return numericMatch(key, normalizeNumber(bare), mentions);
+  }
+  return textualMatch(value, text);
 }
 
 /**
@@ -94,11 +138,11 @@ function appearsIn(value: string, text: string, numbers: Set<string>): boolean {
  * actually stated. Never upgrades — the model does not get to promote a guess.
  */
 export function enforceProvenance(fields: PinnedField[], userTurns: string[]): PinnedField[] {
-  const text = normalizeText(userTurns.join(' '));
-  const numbers = numbersIn(text);
+  const text = userTurns.join(' ');
+  const mentions = numberMentions(text);
 
   return fields.map((f) => {
     if (f.provenance !== 'user') return f;
-    return appearsIn(f.value, text, numbers) ? f : { ...f, provenance: 'assumed' as const };
+    return appearsIn(f.key, f.value, text, mentions) ? f : { ...f, provenance: 'assumed' as const };
   });
 }

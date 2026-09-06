@@ -146,4 +146,61 @@ describe('enforceProvenance', () => {
     expect(enforceProvenance([area], [LIVE])[0]!.provenance).toBe('user');
     expect(enforceProvenance([tasa], [LIVE])[0]!.provenance).toBe('user');
   });
+
+  const CROSS = 'Depa de 250 mil en Pueblo Libre, 40 m2, plazo 20 años';
+
+  it('does not let a term the user gave validate a down payment', () => {
+    const f = field({ key: 'inicial', value: '20' });
+    expect(enforceProvenance([f], [CROSS])[0]!.provenance).toBe('assumed');
+  });
+
+  it('does not let an area the user gave validate a rate', () => {
+    const f = field({ key: 'tasa', value: '40' });
+    expect(enforceProvenance([f], [CROSS])[0]!.provenance).toBe('assumed');
+  });
+
+  it('does not let the base of a scaled number validate an area', () => {
+    const f = field({ key: 'area', value: '250' });
+    expect(enforceProvenance([f], [CROSS])[0]!.provenance).toBe('assumed');
+  });
+
+  it('still credits the term and area the user actually gave', () => {
+    expect(enforceProvenance([field({ key: 'plazo', value: '20' })], [CROSS])[0]!.provenance).toBe('user');
+    expect(enforceProvenance([field({ key: 'area', value: '40' })], [CROSS])[0]!.provenance).toBe('user');
+  });
+
+  it('does not treat quoted savings as a down payment', () => {
+    const f = field({ key: 'inicial', value: '90,000' });
+    expect(enforceProvenance([f], ['Tengo S/ 90,000 ahorrados'])[0]!.provenance).toBe('assumed');
+  });
+
+  it('does not treat a street number as a price', () => {
+    const f = field({ key: 'precio', value: '2500' });
+    expect(enforceProvenance([f], ['Vivo en la Av. Arequipa 2500'])[0]!.provenance).toBe('assumed');
+  });
+
+  it('does not credit a district the user ruled out', () => {
+    const f = field({ key: 'ubicacion', value: 'Miraflores' });
+    expect(enforceProvenance([f], ['No es en Miraflores, es en Ate'])[0]!.provenance).toBe('assumed');
+  });
+
+  it('does not credit a price the user ruled out', () => {
+    const f = field({ key: 'precio', value: '250,000' });
+    expect(enforceProvenance([f], ['No tengo 250 mil, solo 200 mil'])[0]!.provenance).toBe('assumed');
+  });
+
+  it('still credits the value the user affirmed in that same correction', () => {
+    const f = field({ key: 'precio', value: '200,000' });
+    expect(enforceProvenance([f], ['No tengo 250 mil, solo 200 mil'])[0]!.provenance).toBe('user');
+  });
+
+  it('is not poisoned by an unrelated negation elsewhere in the turn', () => {
+    const f = field({ key: 'precio', value: '250,000' });
+    expect(enforceProvenance([f], ['Un depa que no está amoblado, cuesta 250 mil'])[0]!.provenance).toBe('user');
+  });
+
+  it('credits a down payment stated as a percentage', () => {
+    const f = field({ key: 'inicial', value: '30' });
+    expect(enforceProvenance([f], ['Puedo poner 30% de inicial'])[0]!.provenance).toBe('user');
+  });
 });
