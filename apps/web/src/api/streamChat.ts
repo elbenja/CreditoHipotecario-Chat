@@ -51,17 +51,34 @@ export async function streamChat(
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let sawTerminal = false;
 
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
 
-    // Keep the trailing partial block in the buffer.
-    const lastBreak = buffer.lastIndexOf('\n\n');
-    if (lastBreak === -1) continue;
-    const complete = buffer.slice(0, lastBreak + 2);
-    buffer = buffer.slice(lastBreak + 2);
-    for (const e of parseSSE(complete)) onEvent(e);
+      // Keep the trailing partial block in the buffer.
+      const lastBreak = buffer.lastIndexOf('\n\n');
+      if (lastBreak === -1) continue;
+      const complete = buffer.slice(0, lastBreak + 2);
+      buffer = buffer.slice(lastBreak + 2);
+      for (const e of parseSSE(complete)) {
+        if (e.event === 'envelope' || e.event === 'fallback' || e.event === 'error') {
+          sawTerminal = true;
+        }
+        onEvent(e);
+      }
+    }
+  } finally {
+    reader.releaseLock?.();
+  }
+
+  if (!sawTerminal) {
+    onEvent({
+      event: 'error',
+      data: { message: 'Se cortó la conexión antes de terminar. Intenta de nuevo.' },
+    });
   }
 }

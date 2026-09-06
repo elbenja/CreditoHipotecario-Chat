@@ -180,3 +180,58 @@ describe('value-change arbitration', () => {
     expect(selectDirtyKeys(s)).toEqual([]);
   });
 });
+
+describe('user-typed provenance', () => {
+  const assumedTasa: AnalysisEnvelope = {
+    ...envelope,
+    fields: [{ key: 'tasa', label: 'Tasa TEA', value: '8.0', suffix: '%', provenance: 'assumed', note: 'n' }],
+  };
+
+  it('marks a field the user typed as user-stated', () => {
+    let s = chatReducer(initialState, { type: 'envelope', envelope: assumedTasa });
+    expect(s.fields.tasa!.provenance).toBe('assumed');
+    s = chatReducer(s, { type: 'editField', key: 'tasa', value: '7.24' });
+    expect(s.fields.tasa!.provenance).toBe('user');
+  });
+
+  it('does not let the model downgrade a value the user typed', () => {
+    let s = chatReducer(initialState, { type: 'envelope', envelope: assumedTasa });
+    s = chatReducer(s, { type: 'editField', key: 'tasa', value: '7.24' });
+    // The model echoes the same value back, still calling it assumed.
+    const echoed: AnalysisEnvelope = {
+      ...envelope,
+      fields: [{ key: 'tasa', label: 'Tasa TEA', value: '7.24', suffix: '%', provenance: 'assumed', note: 'n' }],
+    };
+    s = chatReducer(s, { type: 'envelope', envelope: echoed });
+    expect(s.fields.tasa!.provenance).toBe('user');
+  });
+
+  it('still adopts the model provenance for a field the user never touched', () => {
+    const s = chatReducer(initialState, { type: 'envelope', envelope: assumedTasa });
+    expect(s.fields.tasa!.provenance).toBe('assumed');
+  });
+});
+
+describe('pinCandidate', () => {
+  it('pins a candidate as user-stated', () => {
+    const s = chatReducer(initialState, {
+      type: 'pinCandidate', key: 'inicial', label: 'Cuota inicial', value: '30',
+    });
+    expect(s.fields.inicial!.value).toBe('30');
+    expect(s.fields.inicial!.provenance).toBe('user');
+  });
+
+  it('locks the pinned field against model overwrite', () => {
+    const s = chatReducer(initialState, {
+      type: 'pinCandidate', key: 'inicial', label: 'Cuota inicial', value: '30',
+    });
+    expect(s.userEdited).toContain('inicial');
+  });
+
+  it('leaves the panel undirty after pinning', () => {
+    const s = chatReducer(initialState, {
+      type: 'pinCandidate', key: 'inicial', label: 'Cuota inicial', value: '30',
+    });
+    expect(selectDirtyKeys(s)).toEqual([]);
+  });
+});

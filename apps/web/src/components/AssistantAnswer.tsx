@@ -8,11 +8,13 @@ export function AssistantAnswer({
   onFollowUp,
   onSaveScenario,
   savedIds = [],
+  disabled,
 }: {
   envelope: AnalysisEnvelope;
   onFollowUp: (text: string) => void;
   onSaveScenario?: (id: string) => void;
   savedIds?: string[];
+  disabled?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -79,7 +81,7 @@ export function AssistantAnswer({
       {envelope.followUps.length > 0 && (
         <div className="flex flex-wrap gap-[9px]">
           {envelope.followUps.map((f) => (
-            <Pill key={f} onClick={() => onFollowUp(f)} className="text-[12.5px]">
+            <Pill key={f} onClick={() => onFollowUp(f)} className="text-[12.5px]" disabled={disabled}>
               {f}
             </Pill>
           ))}

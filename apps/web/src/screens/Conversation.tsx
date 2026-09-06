@@ -14,12 +14,14 @@ export function Conversation({
   onEdit,
   onAcceptProposal,
   onRejectProposal,
+  onPinCandidate,
 }: {
   state: ChatState;
   onSend: (text: string) => void;
   onEdit: (key: string, value: string) => void;
   onAcceptProposal: (key: string) => void;
   onRejectProposal: (key: string) => void;
+  onPinCandidate: (key: string, label: string, value: string) => void;
 }) {
   const [value, setValue] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
@@ -52,16 +54,30 @@ export function Conversation({
               if (m.role === 'assistant') {
                 return (
                   <div key={m.id} className="ch-line">
-                    <AssistantAnswer envelope={m.envelope} onFollowUp={send} />
+                    <AssistantAnswer envelope={m.envelope} onFollowUp={send} disabled={busy} />
                   </div>
                 );
               }
               return (
                 <div key={m.id} className="ch-line flex flex-col gap-3">
-                  <p className="text-[14.5px] leading-[1.6] text-slate-300">{m.prose}</p>
+                  <p className="break-words text-[14.5px] leading-[1.6] text-slate-300">{m.prose}</p>
                   {m.candidates.length > 0 && (
-                    <div className="rounded-[10px] border border-ch-border p-[14px] text-[12px] text-slate-400">
-                      No pude fijar estos datos automáticamente esta vez.
+                    <div className="rounded-[10px] border border-ch-border p-[14px]">
+                      <p className="text-[12px] font-medium text-slate-400">
+                        No pude fijar estos datos solo. ¿Los agrego?
+                      </p>
+                      <div className="mt-[10px] flex flex-wrap gap-2">
+                        {m.candidates.map((c) => (
+                          <button
+                            key={`${c.key}-${c.value}`}
+                            type="button"
+                            onClick={() => onPinCandidate(c.key, c.label, c.value)}
+                            className="rounded-full border border-ch-border-hover px-[11px] py-[6px] text-[11.5px] font-medium text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
+                          >
+                            {c.label}: {c.value}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

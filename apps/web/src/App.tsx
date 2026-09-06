@@ -44,6 +44,10 @@ export default function App() {
     dispatch({ type: 'rejectProposal', key });
   }, []);
 
+  const pinCandidate = useCallback((key: string, label: string, value: string) => {
+    dispatch({ type: 'pinCandidate', key, label, value });
+  }, []);
+
   return (
     <div className="flex h-full flex-col">
       <TopNav context={state.messages.length > 0 ? 'Depa Pueblo Libre · sin guardar' : undefined} />
@@ -56,6 +60,7 @@ export default function App() {
           onEdit={edit}
           onAcceptProposal={acceptProposal}
           onRejectProposal={rejectProposal}
+          onPinCandidate={pinCandidate}
         />
       )}
     </div>

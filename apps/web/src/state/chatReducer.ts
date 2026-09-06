@@ -47,7 +47,8 @@ export type Action =
   | { type: 'revertChange'; key: string }
   | { type: 'acceptProposal'; key: string }
   | { type: 'rejectProposal'; key: string }
-  | { type: 'dismissChanges' };
+  | { type: 'dismissChanges' }
+  | { type: 'pinCandidate'; key: string; label: string; value: string };
 
 export const initialState: ChatState = {
   messages: [],
@@ -109,7 +110,11 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         }
 
         if (prev.value === f.value) {
-          fields[f.key] = f; // note/provenance may still have improved
+          // The user typed this value; panel edits never reach the server's
+          // provenance check, so do not let the model's 'assumed' overwrite it.
+          fields[f.key] = state.userEdited.includes(f.key)
+            ? { ...f, provenance: prev.provenance }
+            : f;
           continue;
         }
 
@@ -190,8 +195,33 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
       if (!existing) return state;
       return {
         ...state,
-        fields: { ...state.fields, [action.key]: { ...existing, value: action.value } },
+        fields: {
+          ...state.fields,
+          [action.key]: { ...existing, value: action.value, provenance: 'user' },
+        },
         // Typing into a field claims it: the model may propose, not overwrite.
+        userEdited: state.userEdited.includes(action.key)
+          ? state.userEdited
+          : [...state.userEdited, action.key],
+      };
+    }
+
+    case 'pinCandidate': {
+      // The user chose this value from a chip, so it is user-stated by
+      // definition, and it counts as an edit: the model may propose, not
+      // overwrite.
+      const field: PinnedField = {
+        key: action.key as PinnedField['key'],
+        label: action.label,
+        value: action.value,
+        provenance: 'user',
+        note: '',
+      };
+      const fields = { ...state.fields, [action.key]: field };
+      return {
+        ...state,
+        fields,
+        baseline: deriveBaseline(fields),
         userEdited: state.userEdited.includes(action.key)
           ? state.userEdited
           : [...state.userEdited, action.key],
