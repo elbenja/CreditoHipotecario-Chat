@@ -1,18 +1,23 @@
-import type { PinnedField } from '@chat/shared';
+import type { PinnedField, Scenario } from '@chat/shared';
 import { PinnedFieldRow } from './PinnedField';
+import { SavedScenarios } from './SavedScenarios';
 
 export function PinnedPanel({
   fields,
   proposals = {},
+  savedScenarios = [],
   onEdit,
   onAcceptProposal,
   onRejectProposal,
+  onDeleteScenario,
 }: {
   fields: PinnedField[];
   proposals?: Record<string, PinnedField>;
+  savedScenarios?: Scenario[];
   onEdit: (key: string, value: string) => void;
   onAcceptProposal?: (key: string) => void;
   onRejectProposal?: (key: string) => void;
+  onDeleteScenario?: (id: string) => void;
 }) {
   return (
     <aside className="flex w-panel flex-none flex-col border-l border-ch-border">
@@ -46,6 +51,7 @@ export function PinnedPanel({
             onRejectProposal={onRejectProposal}
           />
         ))}
+        <SavedScenarios scenarios={savedScenarios} onDelete={(id) => onDeleteScenario?.(id)} />
       </div>
 
       <div className="flex-none border-t border-ch-border px-[22px] pb-6 pt-4">
