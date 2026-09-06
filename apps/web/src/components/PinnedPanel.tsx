@@ -1,4 +1,6 @@
 import type { PinnedField, Scenario } from '@chat/shared';
+import type { FieldChange } from '../state/chatReducer';
+import { ChangesStrip } from './ChangesStrip';
 import { DirtyBand } from './DirtyBand';
 import { PinnedFieldRow } from './PinnedField';
 import { SavedScenarios } from './SavedScenarios';
@@ -8,23 +10,29 @@ export function PinnedPanel({
   proposals = {},
   savedScenarios = [],
   dirtyKeys = [],
+  changes = [],
   busy = false,
   onEdit,
   onAcceptProposal,
   onRejectProposal,
   onDeleteScenario,
   onRecalculate,
+  onRevertChange,
+  onDismissChanges,
 }: {
   fields: PinnedField[];
   proposals?: Record<string, PinnedField>;
   savedScenarios?: Scenario[];
   dirtyKeys?: string[];
+  changes?: FieldChange[];
   busy?: boolean;
   onEdit: (key: string, value: string) => void;
   onAcceptProposal?: (key: string) => void;
   onRejectProposal?: (key: string) => void;
   onDeleteScenario?: (id: string) => void;
   onRecalculate?: () => void;
+  onRevertChange?: (key: string) => void;
+  onDismissChanges?: () => void;
 }) {
   const fieldsByKey = Object.fromEntries(fields.map((f) => [f.key, f]));
 
@@ -50,6 +58,11 @@ export function PinnedPanel({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-[10px] py-2">
+        <ChangesStrip
+          changes={changes}
+          onRevert={(k) => onRevertChange?.(k)}
+          onDismiss={() => onDismissChanges?.()}
+        />
         {fields.map((f) => (
           <PinnedFieldRow
             key={f.key}
