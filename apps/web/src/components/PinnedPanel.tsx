@@ -1,4 +1,5 @@
 import type { PinnedField, Scenario } from '@chat/shared';
+import { DirtyBand } from './DirtyBand';
 import { PinnedFieldRow } from './PinnedField';
 import { SavedScenarios } from './SavedScenarios';
 
@@ -6,19 +7,27 @@ export function PinnedPanel({
   fields,
   proposals = {},
   savedScenarios = [],
+  dirtyKeys = [],
+  busy = false,
   onEdit,
   onAcceptProposal,
   onRejectProposal,
   onDeleteScenario,
+  onRecalculate,
 }: {
   fields: PinnedField[];
   proposals?: Record<string, PinnedField>;
   savedScenarios?: Scenario[];
+  dirtyKeys?: string[];
+  busy?: boolean;
   onEdit: (key: string, value: string) => void;
   onAcceptProposal?: (key: string) => void;
   onRejectProposal?: (key: string) => void;
   onDeleteScenario?: (id: string) => void;
+  onRecalculate?: () => void;
 }) {
+  const fieldsByKey = Object.fromEntries(fields.map((f) => [f.key, f]));
+
   return (
     <aside className="flex w-panel flex-none flex-col border-l border-ch-border">
       <div className="flex-none border-b border-ch-border px-[22px] pb-4 pt-[22px]">
@@ -55,6 +64,12 @@ export function PinnedPanel({
       </div>
 
       <div className="flex-none border-t border-ch-border px-[22px] pb-6 pt-4">
+        <DirtyBand
+          fields={fieldsByKey}
+          dirtyKeys={dirtyKeys}
+          onRecalculate={() => onRecalculate?.()}
+          busy={busy}
+        />
         <button
           type="button"
           className="flex h-[46px] w-full items-center justify-center gap-2 rounded-full bg-slate-50 text-[13.5px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px"
