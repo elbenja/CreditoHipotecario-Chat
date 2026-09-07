@@ -33,6 +33,34 @@ async function post(callModel: () => Promise<{ content: string; truncated: boole
   return res;
 }
 
+describe('CORS on the streamed reply', () => {
+  // reply.hijack() detaches the reply, so headers staged by @fastify/cors are
+  // easily lost — and only cross-origin browsers notice, never local dev.
+  async function postFrom(origin: string) {
+    process.env.CORS_ORIGIN = 'https://example.vercel.app';
+    const app = buildServer({ callModel: async () => ({ content: JSON.stringify(envelope), truncated: false }) });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat',
+      headers: { origin },
+      payload: { messages: [{ role: 'user', content: 'hola' }], fields: [] },
+    });
+    await app.close();
+    delete process.env.CORS_ORIGIN;
+    return res;
+  }
+
+  it('sets allow-origin on the stream itself, not just the preflight', async () => {
+    const res = await postFrom('https://example.vercel.app');
+    expect(res.headers['access-control-allow-origin']).toBe('https://example.vercel.app');
+  });
+
+  it('withholds allow-origin from an origin outside the allowlist', async () => {
+    const res = await postFrom('https://evil.example.com');
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+  });
+});
+
 describe('POST /api/chat', () => {
   it('responds with an event stream', async () => {
     const res = await post(async () => ({ content: JSON.stringify(envelope), truncated: false }));

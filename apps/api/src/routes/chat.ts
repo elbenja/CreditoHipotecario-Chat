@@ -24,6 +24,12 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     }
 
     reply.hijack();
+    // hijack() detaches the reply, so headers staged by plugins — the CORS
+    // allow-origin among them — are never flushed. Carry them onto the raw
+    // response, or a cross-origin browser blocks every streamed reply.
+    for (const [key, value] of Object.entries(reply.getHeaders())) {
+      if (value !== undefined) reply.raw.setHeader(key, value);
+    }
     reply.raw.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
