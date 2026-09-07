@@ -54,7 +54,11 @@ describe('persistence', () => {
   });
 
   it('never persists analyze steps or errors', () => {
-    saveState({ ...populated, analyzeSteps: [{ label: 'x', done: false }], error: 'boom' });
+    saveState({
+      ...populated,
+      analyzeSteps: [{ label: 'x', done: false }],
+      error: { kind: 'api', message: 'boom', retry: null },
+    });
     const back = loadState();
     expect(back.analyzeSteps).toEqual([]);
     expect(back.error).toBeNull();

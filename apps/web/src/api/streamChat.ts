@@ -39,12 +39,12 @@ export async function streamChat(
       body: JSON.stringify(body),
     });
   } catch {
-    onEvent({ event: 'error', data: { message: 'Se cayó la conexión con el modelo.' } });
+    onEvent({ event: 'error', data: { kind: 'api', message: 'Se cayó la conexión con el modelo.' } });
     return;
   }
 
   if (!res.ok || !res.body) {
-    onEvent({ event: 'error', data: { message: 'Se cayó la conexión con el modelo.' } });
+    onEvent({ event: 'error', data: { kind: 'api', message: 'Se cayó la conexión con el modelo.' } });
     return;
   }
 
@@ -78,7 +78,7 @@ export async function streamChat(
   if (!sawTerminal) {
     onEvent({
       event: 'error',
-      data: { message: 'Se cortó la conexión antes de terminar. Intenta de nuevo.' },
+      data: { kind: 'api', message: 'Se cortó la conexión antes de terminar. Intenta de nuevo.' },
     });
   }
 }

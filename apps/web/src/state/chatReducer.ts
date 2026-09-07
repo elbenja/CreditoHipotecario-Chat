@@ -8,8 +8,14 @@ export interface Candidate {
 
 export type Message =
   | { id: string; role: 'user'; content: string }
-  | { id: string; role: 'assistant'; envelope: AnalysisEnvelope }
-  | { id: string; role: 'assistant-fallback'; prose: string; candidates: Candidate[] };
+  | {
+      id: string;
+      role: 'assistant';
+      envelope: AnalysisEnvelope;
+      truncated?: boolean;
+      outOfScope?: boolean;
+    }
+  | { id: string; role: 'assistant-fallback'; prose: string; candidates: Candidate[]; truncated?: boolean };
 
 export type Status = 'idle' | 'sending' | 'thinking' | 'analyzing' | 'streaming' | 'error';
 
@@ -36,16 +42,31 @@ export interface ChatState {
   lastDeleted: Scenario | null;
   status: Status;
   analyzeSteps: { label: string; done: boolean }[];
-  error: string | null;
+  error: ChatError | null;
+  /** The browser reports no connection. */
+  offline: boolean;
+  /** A message typed while offline, held until the connection returns. */
+  queued: string | null;
+}
+
+export interface ChatError {
+  kind: 'api' | 'offline';
+  message: string;
+  /** The question that failed, so "Reintentar" can resend exactly it. */
+  retry: string | null;
 }
 
 export type Action =
   | { type: 'send'; content: string }
   | { type: 'status'; phase: Status }
   | { type: 'analyzeStep'; label: string }
-  | { type: 'envelope'; envelope: AnalysisEnvelope }
-  | { type: 'fallback'; prose: string; candidates: Candidate[] }
-  | { type: 'error'; message: string }
+  | { type: 'envelope'; envelope: AnalysisEnvelope; truncated?: boolean; outOfScope?: boolean }
+  | { type: 'fallback'; prose: string; candidates: Candidate[]; truncated?: boolean }
+  | { type: 'error'; kind: 'api' | 'offline'; message: string; retry: string | null }
+  | { type: 'clearError' }
+  | { type: 'setOffline'; offline: boolean }
+  | { type: 'queue'; content: string }
+  | { type: 'dequeue' }
   | { type: 'editField'; key: string; value: string }
   | { type: 'revertChange'; key: string }
   | { type: 'acceptProposal'; key: string }
@@ -69,6 +90,8 @@ export const initialState: ChatState = {
   status: 'idle',
   analyzeSteps: [],
   error: null,
+  offline: false,
+  queued: null,
 };
 
 const deriveBaseline = (fields: Record<string, PinnedField>): Record<string, string> =>
@@ -140,7 +163,16 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
 
       return {
         ...state,
-        messages: [...state.messages, { id: nextId(), role: 'assistant', envelope: action.envelope }],
+        messages: [
+          ...state.messages,
+          {
+            id: nextId(),
+            role: 'assistant',
+            envelope: action.envelope,
+            truncated: action.truncated ?? false,
+            outOfScope: action.outOfScope ?? false,
+          },
+        ],
         fields,
         // Derived after arbitration, so a blocked field is not spuriously dirty.
         baseline: deriveBaseline(fields),
@@ -190,13 +222,37 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         ...state,
         messages: [
           ...state.messages,
-          { id: nextId(), role: 'assistant-fallback', prose: action.prose, candidates: action.candidates },
+          {
+            id: nextId(),
+            role: 'assistant-fallback',
+            prose: action.prose,
+            candidates: action.candidates,
+            truncated: action.truncated ?? false,
+          },
         ],
         status: 'idle',
       };
 
     case 'error':
-      return { ...state, status: 'error', error: action.message };
+      // Never touch fields, savedScenarios or messages: an error must not
+      // erase what the user already had.
+      return {
+        ...state,
+        status: 'error',
+        error: { kind: action.kind, message: action.message, retry: action.retry },
+      };
+
+    case 'clearError':
+      return { ...state, status: 'idle', error: null };
+
+    case 'setOffline':
+      return { ...state, offline: action.offline };
+
+    case 'queue':
+      return { ...state, queued: action.content };
+
+    case 'dequeue':
+      return { ...state, queued: null };
 
     case 'editField': {
       const existing = state.fields[action.key];

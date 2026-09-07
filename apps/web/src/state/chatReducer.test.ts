@@ -77,9 +77,9 @@ describe('chatReducer', () => {
 
   it('records an error without dropping messages', () => {
     let s = chatReducer(initialState, { type: 'send', content: 'hola' });
-    s = chatReducer(s, { type: 'error', message: 'se cayó' });
+    s = chatReducer(s, { type: 'error', kind: 'api', message: 'se cayó', retry: 'hola' });
     expect(s.status).toBe('error');
-    expect(s.error).toBe('se cayó');
+    expect(s.error?.message).toBe('se cayó');
     expect(s.messages).toHaveLength(1);
   });
 });
@@ -343,5 +343,74 @@ describe('recalculate', () => {
     s = chatReducer(s, { type: 'editField', key: 'tasa', value: '7.24' });
     s = chatReducer(s, { type: 'recalculate' });
     expect(s.userEdited).toContain('tasa');
+  });
+});
+
+describe('error kinds', () => {
+  it('records an api error with the question to retry', () => {
+    let s = chatReducer(initialState, { type: 'send', content: '¿Es buen negocio?' });
+    s = chatReducer(s, { type: 'error', kind: 'api', message: 'Se cayó.', retry: '¿Es buen negocio?' });
+    expect(s.status).toBe('error');
+    expect(s.error?.kind).toBe('api');
+    expect(s.error?.retry).toBe('¿Es buen negocio?');
+  });
+
+  it('keeps the failed question in the transcript', () => {
+    let s = chatReducer(initialState, { type: 'send', content: '¿Es buen negocio?' });
+    s = chatReducer(s, { type: 'error', kind: 'api', message: 'x', retry: '¿Es buen negocio?' });
+    expect(s.messages).toHaveLength(1);
+    expect(s.messages[0]!.role).toBe('user');
+  });
+
+  it('never discards pinned fields on an error', () => {
+    let s = chatReducer(initialState, { type: 'envelope', envelope, truncated: false });
+    const fieldCount = Object.keys(s.fields).length;
+    s = chatReducer(s, { type: 'error', kind: 'api', message: 'x', retry: null });
+    expect(Object.keys(s.fields)).toHaveLength(fieldCount);
+  });
+
+  it('clears the error and returns to idle', () => {
+    let s = chatReducer(initialState, { type: 'error', kind: 'api', message: 'x', retry: 'q' });
+    s = chatReducer(s, { type: 'clearError' });
+    expect(s.error).toBeNull();
+    expect(s.status).toBe('idle');
+  });
+});
+
+describe('offline queue', () => {
+  it('marks the app offline', () => {
+    const s = chatReducer(initialState, { type: 'setOffline', offline: true });
+    expect(s.offline).toBe(true);
+  });
+
+  it('queues a message instead of sending it', () => {
+    let s = chatReducer(initialState, { type: 'setOffline', offline: true });
+    s = chatReducer(s, { type: 'queue', content: '¿Y con 30%?' });
+    expect(s.queued).toBe('¿Y con 30%?');
+  });
+
+  it('clears the queue on dequeue', () => {
+    let s = chatReducer(initialState, { type: 'queue', content: '¿Y con 30%?' });
+    s = chatReducer(s, { type: 'dequeue' });
+    expect(s.queued).toBeNull();
+  });
+
+  it('does not append a queued message to the transcript', () => {
+    const s = chatReducer(initialState, { type: 'queue', content: '¿Y con 30%?' });
+    expect(s.messages).toEqual([]);
+  });
+});
+
+describe('truncation', () => {
+  it('marks an assistant message truncated', () => {
+    const s = chatReducer(initialState, { type: 'envelope', envelope, truncated: true });
+    const last = s.messages.at(-1)!;
+    expect(last.role).toBe('assistant');
+    expect((last as { truncated?: boolean }).truncated).toBe(true);
+  });
+
+  it('leaves a complete answer unmarked', () => {
+    const s = chatReducer(initialState, { type: 'envelope', envelope, truncated: false });
+    expect((s.messages.at(-1) as { truncated?: boolean }).truncated).toBe(false);
   });
 });

@@ -4,9 +4,11 @@ export const STORAGE_KEY = 'chat-ia-draft-v1';
 
 /**
  * Transient fields are never persisted: restoring a page mid-"analyzing" would
- * show a spinner for a request that is not in flight.
+ * show a spinner for a request that is not in flight. `offline` is likewise
+ * excluded — it must be re-derived from the browser on load, not trusted from
+ * a stale draft, or a reload while back online would wrongly show the banner.
  */
-type Persisted = Omit<ChatState, 'status' | 'analyzeSteps' | 'error'>;
+type Persisted = Omit<ChatState, 'status' | 'analyzeSteps' | 'error' | 'offline'>;
 
 function isPlausible(value: unknown): value is Persisted {
   if (typeof value !== 'object' || value === null) return false;
@@ -26,7 +28,7 @@ export function loadState(): ChatState {
     if (!raw) return initialState;
     const parsed: unknown = JSON.parse(raw);
     if (!isPlausible(parsed)) return initialState;
-    return { ...initialState, ...parsed, status: 'idle', analyzeSteps: [], error: null };
+    return { ...initialState, ...parsed, status: 'idle', analyzeSteps: [], error: null, offline: false };
   } catch {
     // Corrupt data, or storage blocked entirely. Start clean rather than crash.
     return initialState;
@@ -35,7 +37,7 @@ export function loadState(): ChatState {
 
 export function saveState(state: ChatState): void {
   try {
-    const { status: _s, analyzeSteps: _a, error: _e, ...persisted } = state;
+    const { status: _s, analyzeSteps: _a, error: _e, offline: _o, ...persisted } = state;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
   } catch {
     // Quota exceeded or storage blocked. A lost draft is bad; a crash is worse.

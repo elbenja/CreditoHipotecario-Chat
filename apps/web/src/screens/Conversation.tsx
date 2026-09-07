@@ -129,7 +129,7 @@ export function Conversation({
             {state.status === 'analyzing' && <AnalyzeSteps steps={state.analyzeSteps} />}
             {state.status === 'streaming' && <MetricSkeleton />}
             {state.status === 'error' && (
-              <p className="text-[13px] text-slate-400">{state.error}</p>
+              <p className="text-[13px] text-slate-400">{state.error?.message}</p>
             )}
 
             <div ref={endRef} />
