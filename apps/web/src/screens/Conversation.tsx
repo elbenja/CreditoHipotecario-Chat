@@ -3,8 +3,10 @@ import { AnalyzeSteps } from '../components/AnalyzeSteps';
 import { AssistantAnswer } from '../components/AssistantAnswer';
 import { Composer } from '../components/Composer';
 import { ErrorNotice } from '../components/ErrorNotice';
+import { Icon } from '../components/Icon';
 import { MetricSkeleton } from '../components/MetricSkeleton';
 import { OfflineBanner } from '../components/OfflineBanner';
+import { OutOfScopeAnswer } from '../components/OutOfScopeAnswer';
 import { PinnedPanel } from '../components/PinnedPanel';
 import { Thinking } from '../components/Thinking';
 import { TruncatedNotice } from '../components/TruncatedNotice';
@@ -107,13 +109,17 @@ export function Conversation({
               if (m.role === 'assistant') {
                 return (
                   <div key={m.id} className="ch-line">
-                    <AssistantAnswer
-                      envelope={m.envelope}
-                      onFollowUp={send}
-                      onSaveScenario={onSaveScenario}
-                      savedIds={savedIds}
-                      disabled={busy}
-                    />
+                    {m.outOfScope ? (
+                      <OutOfScopeAnswer envelope={m.envelope} onFollowUp={send} />
+                    ) : (
+                      <AssistantAnswer
+                        envelope={m.envelope}
+                        onFollowUp={send}
+                        onSaveScenario={onSaveScenario}
+                        savedIds={savedIds}
+                        disabled={busy}
+                      />
+                    )}
                     {m.truncated && <TruncatedNotice onContinue={onContinue} onShorten={onShorten} />}
                   </div>
                 );
@@ -132,8 +138,9 @@ export function Conversation({
                             key={`${c.key}-${c.value}`}
                             type="button"
                             onClick={() => onPinCandidate(c.key, c.label, c.value)}
-                            className="rounded-full border border-ch-border-hover px-[11px] py-[6px] text-[11.5px] font-medium text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
+                            className="flex items-center gap-[6px] rounded-full border border-ch-border-hover px-[11px] py-[6px] text-[11.5px] font-medium text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
                           >
+                            <Icon name="plus-sign" size={12} />
                             {c.label}: {c.value}
                           </button>
                         ))}

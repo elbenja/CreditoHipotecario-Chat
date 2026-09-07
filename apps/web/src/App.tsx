@@ -36,9 +36,20 @@ export default function App() {
         const data = e.data as Record<string, any>;
         if (e.event === 'status') dispatch({ type: 'status', phase: data.phase });
         else if (e.event === 'analyzeStep') dispatch({ type: 'analyzeStep', label: data.label });
-        else if (e.event === 'envelope') dispatch({ type: 'envelope', envelope: data.envelope });
+        else if (e.event === 'envelope')
+          dispatch({
+            type: 'envelope',
+            envelope: data.envelope,
+            truncated: data.truncated,
+            outOfScope: data.outOfScope,
+          });
         else if (e.event === 'fallback')
-          dispatch({ type: 'fallback', prose: data.prose, candidates: data.candidates });
+          dispatch({
+            type: 'fallback',
+            prose: data.prose,
+            candidates: data.candidates,
+            truncated: data.truncated,
+          });
         else if (e.event === 'error')
           dispatch({
             type: 'error',
