@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { AnalyzeSteps } from '../components/AnalyzeSteps';
 import { AssistantAnswer } from '../components/AssistantAnswer';
 import { Composer } from '../components/Composer';
+import { ErrorNotice } from '../components/ErrorNotice';
 import { MetricSkeleton } from '../components/MetricSkeleton';
 import { PinnedPanel } from '../components/PinnedPanel';
 import { Thinking } from '../components/Thinking';
+import { TruncatedNotice } from '../components/TruncatedNotice';
 import { UndoBar } from '../components/UndoBar';
 import { UserBubble } from '../components/UserBubble';
 import { selectDirtyKeys, type ChatState } from '../state/chatReducer';
@@ -23,6 +25,11 @@ export function Conversation({
   onRecalculate,
   onRevertChange,
   onDismissChanges,
+  onRetry,
+  onEditQuestion,
+  onContinue,
+  onShorten,
+  composerSeed,
 }: {
   state: ChatState;
   onSend: (text: string) => void;
@@ -37,11 +44,20 @@ export function Conversation({
   onRecalculate: () => void;
   onRevertChange: (key: string) => void;
   onDismissChanges: () => void;
+  onRetry: () => void;
+  onEditQuestion: () => void;
+  onContinue: () => void;
+  onShorten: () => void;
+  composerSeed: { text: string; n: number } | null;
 }) {
   const [value, setValue] = useState('');
   const [showUndo, setShowUndo] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const busy = state.status !== 'idle' && state.status !== 'error';
+
+  useEffect(() => {
+    if (composerSeed) setValue(composerSeed.text);
+  }, [composerSeed]);
 
   const deleteScenario = (id: string) => {
     onDeleteScenario(id);
@@ -96,6 +112,7 @@ export function Conversation({
                       savedIds={savedIds}
                       disabled={busy}
                     />
+                    {m.truncated && <TruncatedNotice onContinue={onContinue} onShorten={onShorten} />}
                   </div>
                 );
               }
@@ -121,6 +138,7 @@ export function Conversation({
                       </div>
                     </div>
                   )}
+                  {m.truncated && <TruncatedNotice onContinue={onContinue} onShorten={onShorten} />}
                 </div>
               );
             })}
@@ -128,8 +146,8 @@ export function Conversation({
             {state.status === 'thinking' && <Thinking />}
             {state.status === 'analyzing' && <AnalyzeSteps steps={state.analyzeSteps} />}
             {state.status === 'streaming' && <MetricSkeleton />}
-            {state.status === 'error' && (
-              <p className="text-[13px] text-slate-400">{state.error?.message}</p>
+            {state.status === 'error' && state.error && (
+              <ErrorNotice error={state.error} onRetry={onRetry} onEdit={onEditQuestion} />
             )}
 
             <div ref={endRef} />
