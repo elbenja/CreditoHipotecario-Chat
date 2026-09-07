@@ -16,6 +16,7 @@ It's a normal Node service, no platform-specific adapter needed.
 Environment variables:
 
 - `MOONSHOT_API_KEY` — required.
+- `PORT` — injected by the host; the server also honours `API_PORT` locally.
 - `MOONSHOT_MODEL=kimi-k2.7-code-highspeed`
 - `MOONSHOT_BASE_URL=https://api.moonshot.ai/v1`
 - `CORS_ORIGIN` — set to the Vercel URL once it's known (comma-separated for
@@ -23,7 +24,11 @@ Environment variables:
   deployment's deliberate choice to be public.
 
 A `render.yaml` blueprint for one-click Render deploys lives at
-`apps/api/render.yaml`.
+`apps/api/render.yaml`. For Railway, `railway.json` at the repo root sets the
+same build and start commands; also set `NIXPACKS_NODE_VERSION=22` on the
+service, because Nixpacks does not reliably resolve the `>=22.6` range in
+`engines` and silently falling back to an older Node breaks
+`--experimental-strip-types`.
 
 ## Web — Vercel
 
