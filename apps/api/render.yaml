@@ -1,0 +1,24 @@
+# One-click Render deploy for the API.
+#
+# Note: healthCheckPath below hits /api/chat with a GET, which this server
+# returns 405 for (only POST/OPTIONS are registered) — Render treats any
+# response, including 405, as reachable. If that proves a problem, clear the
+# health check path in the Render dashboard.
+services:
+  - type: web
+    name: creditohipotecario-chat-api
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile
+    startCommand: pnpm --filter @chat/api start
+    healthCheckPath: /api/chat
+    envVars:
+      - key: MOONSHOT_API_KEY
+        sync: false
+      - key: MOONSHOT_MODEL
+        value: kimi-k2.7-code-highspeed
+      - key: MOONSHOT_BASE_URL
+        value: https://api.moonshot.ai/v1
+      - key: CORS_ORIGIN
+        sync: false

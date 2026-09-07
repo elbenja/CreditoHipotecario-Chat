@@ -3,8 +3,5 @@
   "buildCommand": "pnpm --filter @chat/web build",
   "outputDirectory": "apps/web/dist",
   "installCommand": "pnpm install",
-  "functions": {
-    "api/chat.ts": { "maxDuration": 60 }
-  },
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

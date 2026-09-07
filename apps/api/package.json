@@ -5,11 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "node --experimental-strip-types --watch src/index.ts",
+    "start": "node --experimental-strip-types src/index.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
+  "engines": {
+    "node": ">=22.6"
+  },
   "dependencies": {
     "@chat/shared": "workspace:*",
+    "@fastify/cors": "^10.0.1",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.0",
     "openai": "^4.77.0",

@@ -1,5 +1,11 @@
 import type { PinnedField } from '@chat/shared';
 
+/**
+ * In production the API lives on another host. Locally this stays empty so the
+ * Vite dev proxy keeps handling /api, and dev behaviour is unchanged.
+ */
+const API_BASE = (import.meta.env?.VITE_API_URL ?? '').replace(/\/$/, '');
+
 export interface SSEEvent {
   event: string;
   data: unknown;
@@ -33,7 +39,7 @@ export async function streamChat(
 ): Promise<void> {
   let res: Awaited<ReturnType<typeof fetch>>;
   try {
-    res = await fetchImpl('/api/chat', {
+    res = await fetchImpl(`${API_BASE}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
