@@ -26,6 +26,10 @@ export function parseSSE(chunk: string): SSEEvent[] {
   return out;
 }
 
+// Empty in dev, where Vite proxies /api to the local server. In production
+// this points at the deployed API, which lives on another origin.
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
+
 export async function streamChat(
   body: ChatRequest,
   onEvent: (e: SSEEvent) => void,
@@ -33,7 +37,7 @@ export async function streamChat(
 ): Promise<void> {
   let res: Awaited<ReturnType<typeof fetch>>;
   try {
-    res = await fetchImpl('/api/chat', {
+    res = await fetchImpl(`${API_BASE}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

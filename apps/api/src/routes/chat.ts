@@ -23,8 +23,20 @@ const ANALYZE_STEPS = [
   'Calculando cuota y flujo mensual',
 ];
 
+// The browser app is served from another origin in production, so the
+// streaming response needs explicit CORS headers. Fastify's onSend hooks do
+// not run for hijacked replies, so they are written on the raw response.
+const WEB_ORIGIN = process.env.WEB_ORIGIN ?? '*';
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': WEB_ORIGIN,
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 export function buildServer(deps: ServerDeps): FastifyInstance {
   const app = Fastify({ logger: false });
+
+  app.options('/api/chat', async (_request, reply) => reply.headers(CORS_HEADERS).code(204).send());
 
   app.post('/api/chat', async (request, reply) => {
     const parsed = BodySchema.safeParse(request.body);
@@ -38,6 +50,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
+      ...CORS_HEADERS,
     });
 
     const send = (event: string, data: unknown) => {
