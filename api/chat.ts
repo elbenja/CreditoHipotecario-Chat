@@ -1,9 +1,12 @@
-import { callKimi } from '../apps/api/src/kimi.ts';
-import { parseChatBody, runTurn } from '../apps/api/src/turn.ts';
-
 // A model reply takes 15-35s, so the default duration is not enough.
 export const config = { maxDuration: 60 };
 
+/**
+ * Imports are dynamic and inside the try on purpose. A static import that
+ * throws while the module graph loads kills the function before any handler
+ * exists, and Vercel can only report FUNCTION_INVOCATION_FAILED — which names
+ * nothing. Loading here turns that same failure into a readable message.
+ */
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
@@ -16,40 +19,53 @@ export default async function handler(req: Request): Promise<Response> {
     return Response.json({ error: 'invalid request body' }, { status: 400 });
   }
 
-  const body = parseChatBody(raw);
-  if (!body) return Response.json({ error: 'invalid request body' }, { status: 400 });
-
+  let stage = 'import';
   try {
-    return streamTurn(body);
+    const { callKimi } = await import('../apps/api/src/kimi.ts');
+    const { parseChatBody, runTurn } = await import('../apps/api/src/turn.ts');
+
+    stage = 'parse';
+    const body = parseChatBody(raw);
+    if (!body) return Response.json({ error: 'invalid request body' }, { status: 400 });
+
+    stage = 'stream';
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        try {
+          for await (const ev of runTurn(body, callKimi)) {
+            controller.enqueue(
+              encoder.encode(`event: ${ev.event}\ndata: ${JSON.stringify(ev.data)}\n\n`),
+            );
+          }
+        } catch (err) {
+          controller.enqueue(
+            encoder.encode(
+              `event: error\ndata: ${JSON.stringify({
+                kind: 'api',
+                message: 'Se cayó la conexión con el modelo. Tus datos siguen acá.',
+              })}\n\n`,
+            ),
+          );
+          console.error('[api/chat] stream failed:', err);
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        Connection: 'keep-alive',
+      },
+    });
   } catch (err) {
-    // Surface the real reason rather than an opaque FUNCTION_INVOCATION_FAILED.
-    console.error('[api/chat] failed:', err);
+    console.error(`[api/chat] failed at stage "${stage}":`, err);
     return Response.json(
-      { error: 'chat handler failed', detail: err instanceof Error ? err.message : String(err) },
+      { stage, error: err instanceof Error ? `${err.name}: ${err.message}` : String(err) },
       { status: 500 },
     );
   }
-}
-
-function streamTurn(body: ReturnType<typeof parseChatBody> & {}): Response {
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      try {
-        for await (const ev of runTurn(body, callKimi)) {
-          controller.enqueue(encoder.encode(`event: ${ev.event}\ndata: ${JSON.stringify(ev.data)}\n\n`));
-        }
-      } finally {
-        controller.close();
-      }
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-    },
-  });
 }
