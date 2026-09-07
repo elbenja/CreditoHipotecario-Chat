@@ -30,7 +30,13 @@ export default function App() {
         else if (e.event === 'envelope') dispatch({ type: 'envelope', envelope: data.envelope });
         else if (e.event === 'fallback')
           dispatch({ type: 'fallback', prose: data.prose, candidates: data.candidates });
-        else if (e.event === 'error') dispatch({ type: 'error', message: data.message });
+        else if (e.event === 'error')
+          dispatch({
+            type: 'error',
+            kind: data.kind === 'offline' ? 'offline' : 'api',
+            message: data.message,
+            retry: turns.filter((t) => t.role === 'user').at(-1)?.content ?? null,
+          });
       });
     },
     [],
