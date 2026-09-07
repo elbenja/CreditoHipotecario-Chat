@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import type { Scenario } from '@chat/shared';
 import { Icon } from './Icon';
 
@@ -8,6 +9,22 @@ export function SavedScenarios({
   scenarios: Scenario[];
   onDelete: (id: string) => void;
 }) {
+  const seen = useRef<string[]>([]);
+  const fresh = scenarios.filter((s) => !seen.current.includes(s.id)).map((s) => s.id);
+  useEffect(() => {
+    seen.current = scenarios.map((s) => s.id);
+  }, [scenarios]);
+
+  const [collapsing, setCollapsing] = useState<string | null>(null);
+
+  const handleDelete = (id: string) => {
+    setCollapsing(id);
+    setTimeout(() => {
+      setCollapsing(null);
+      onDelete(id);
+    }, 180);
+  };
+
   return (
     <section className="mb-3 mt-4 px-3">
       <div className="mb-3 flex items-center gap-3">
@@ -35,7 +52,9 @@ export function SavedScenarios({
               data-saved-scenario={s.id}
               /* Filled #1e293b, not the in-chat card's #0f172a outline. That
                  contrast is what signals "committed". */
-              className="flex items-center gap-2 rounded-[10px] border border-white/[.06] bg-ch-card px-[13px] py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]"
+              className={`flex items-center gap-2 rounded-[10px] border border-white/[.06] bg-ch-card px-[13px] py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.04)] ${
+                collapsing === s.id ? 'ch-collapse' : ''
+              } ${fresh.includes(s.id) ? 'ch-flash' : ''}`}
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[10px] font-semibold uppercase tracking-[.08em] text-slate-500">
@@ -47,7 +66,7 @@ export function SavedScenarios({
               </div>
               <button
                 type="button"
-                onClick={() => onDelete(s.id)}
+                onClick={() => handleDelete(s.id)}
                 aria-label={`Borrar escenario ${s.cause}`}
                 className="grid h-6 w-6 flex-none place-items-center rounded-md text-slate-500 transition-colors duration-120 ease-ch hover:bg-ch-panel hover:text-ch-neg"
               >

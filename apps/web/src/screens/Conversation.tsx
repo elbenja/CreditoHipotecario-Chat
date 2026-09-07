@@ -64,6 +64,15 @@ export function Conversation({
     onSend(text);
   };
 
+  let suggestions: string[] = [];
+  for (let i = state.messages.length - 1; i >= 0; i -= 1) {
+    const m = state.messages[i]!;
+    if (m.role === 'assistant') {
+      suggestions = m.envelope.followUps;
+      break;
+    }
+  }
+
   return (
     <div className="relative flex min-h-0 flex-1">
       <div className="flex min-w-0 flex-1 flex-col">
@@ -135,6 +144,8 @@ export function Conversation({
               onSubmit={() => send(value)}
               placeholder="Pregunta lo que quieras…"
               disabled={busy}
+              suggestions={suggestions}
+              onSuggestion={send}
             />
           </div>
         </div>
