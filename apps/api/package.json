@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --experimental-strip-types --watch src/index.ts",
+    "start": "node --experimental-strip-types src/index.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -14,5 +15,8 @@
     "fastify": "^5.2.0",
     "openai": "^4.77.0",
     "zod": "^3.24.1"
+  },
+  "engines": {
+    "node": ">=22.6"
   }
 }
