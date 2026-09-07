@@ -19,6 +19,19 @@ export default async function handler(req: Request): Promise<Response> {
   const body = parseChatBody(raw);
   if (!body) return Response.json({ error: 'invalid request body' }, { status: 400 });
 
+  try {
+    return streamTurn(body);
+  } catch (err) {
+    // Surface the real reason rather than an opaque FUNCTION_INVOCATION_FAILED.
+    console.error('[api/chat] failed:', err);
+    return Response.json(
+      { error: 'chat handler failed', detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
+  }
+}
+
+function streamTurn(body: ReturnType<typeof parseChatBody> & {}): Response {
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
