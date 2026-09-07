@@ -4,6 +4,7 @@ import { AssistantAnswer } from '../components/AssistantAnswer';
 import { Composer } from '../components/Composer';
 import { ErrorNotice } from '../components/ErrorNotice';
 import { MetricSkeleton } from '../components/MetricSkeleton';
+import { OfflineBanner } from '../components/OfflineBanner';
 import { PinnedPanel } from '../components/PinnedPanel';
 import { Thinking } from '../components/Thinking';
 import { TruncatedNotice } from '../components/TruncatedNotice';
@@ -92,6 +93,7 @@ export function Conversation({
   return (
     <div className="relative flex min-h-0 flex-1">
       <div className="flex min-w-0 flex-1 flex-col">
+        {state.offline && <OfflineBanner />}
         <div className="min-h-0 flex-1 overflow-y-auto px-14 pt-8">
           <div className="mx-auto flex w-full max-w-transcript flex-col gap-[26px]">
             {state.messages.map((m) => {
@@ -150,6 +152,18 @@ export function Conversation({
               <ErrorNotice error={state.error} onRetry={onRetry} onEdit={onEditQuestion} />
             )}
 
+            {state.queued && (
+              <div className="ch-enter flex flex-col gap-1">
+                {/* Pending, not lost — the same bubble, just not sent yet. */}
+                <div className="self-end opacity-45">
+                  <UserBubble content={state.queued} />
+                </div>
+                <span className="self-end text-[11px] font-medium text-slate-400">
+                  Se enviará al reconectar
+                </span>
+              </div>
+            )}
+
             <div ref={endRef} />
           </div>
         </div>
@@ -160,8 +174,12 @@ export function Conversation({
               value={value}
               onChange={setValue}
               onSubmit={() => send(value)}
-              placeholder="Pregunta lo que quieras…"
-              disabled={busy}
+              placeholder={state.offline ? 'Sin conexión…' : 'Pregunta lo que quieras…'}
+              // Offline still lets the user type and send once — that's the
+              // only way a message reaches the queue. Once something is
+              // queued (the single pending slot) the composer locks until
+              // reconnect flushes it.
+              disabled={busy || (state.offline && state.queued !== null)}
               suggestions={suggestions}
               onSuggestion={send}
             />

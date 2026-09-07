@@ -72,7 +72,12 @@ export function Composer({
           ))}
         </div>
       )}
-      <div className="flex items-center gap-[14px] rounded-xl border border-ch-border bg-ch-panel py-[15px] pl-[18px] pr-[15px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-[0_0_0_3px_rgba(244,188,68,.35)] hover:border-ch-border-hover">
+      <div
+        className={`flex items-center gap-[14px] rounded-xl border border-ch-border bg-ch-panel py-[15px] pl-[18px] pr-[15px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-[0_0_0_3px_rgba(244,188,68,.35)] hover:border-ch-border-hover ${
+          disabled ? 'opacity-50' : ''
+        }`}
+      >
+        {/* Disabled, not hidden: the message is pending, not lost. */}
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}

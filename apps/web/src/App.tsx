@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useState } from 'react';
 import { streamChat } from './api/streamChat';
 import { TopNav } from './components/TopNav';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { Conversation } from './screens/Conversation';
 import { EmptyState } from './screens/EmptyState';
 import { chatReducer, type Message } from './state/chatReducer';
@@ -23,6 +24,11 @@ export default function App() {
   useEffect(() => {
     saveState(state);
   }, [state]);
+
+  const online = useOnlineStatus();
+  useEffect(() => {
+    dispatch({ type: 'setOffline', offline: !online });
+  }, [online]);
 
   const request = useCallback(
     async (turns: { role: 'user'; content: string }[], fields: PinnedField[]) => {
@@ -47,12 +53,26 @@ export default function App() {
 
   const send = useCallback(
     async (text: string) => {
+      // Offline: the message is pending, not lost — hold it for reconnect.
+      if (state.offline) {
+        dispatch({ type: 'queue', content: text });
+        return;
+      }
       dispatch({ type: 'send', content: text });
       const turns = [...toTurns(state.messages), { role: 'user' as const, content: text }];
       await request(turns, Object.values(state.fields));
     },
-    [state.messages, state.fields, request],
+    [state.offline, state.messages, state.fields, request],
   );
+
+  // Connectivity returned with a message waiting: send it on the user's behalf.
+  useEffect(() => {
+    if (!state.offline && state.queued) {
+      const text = state.queued;
+      dispatch({ type: 'dequeue' });
+      void send(text);
+    }
+  }, [state.offline, state.queued, send]);
 
   const recalculate = useCallback(async () => {
     dispatch({ type: 'recalculate' });
