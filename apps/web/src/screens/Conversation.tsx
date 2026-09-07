@@ -5,8 +5,9 @@ import { Composer } from '../components/Composer';
 import { MetricSkeleton } from '../components/MetricSkeleton';
 import { PinnedPanel } from '../components/PinnedPanel';
 import { Thinking } from '../components/Thinking';
+import { UndoBar } from '../components/UndoBar';
 import { UserBubble } from '../components/UserBubble';
-import type { ChatState } from '../state/chatReducer';
+import { selectDirtyKeys, type ChatState } from '../state/chatReducer';
 
 export function Conversation({
   state,
@@ -15,6 +16,13 @@ export function Conversation({
   onAcceptProposal,
   onRejectProposal,
   onPinCandidate,
+  savedIds,
+  onSaveScenario,
+  onDeleteScenario,
+  onUndoDelete,
+  onRecalculate,
+  onRevertChange,
+  onDismissChanges,
 }: {
   state: ChatState;
   onSend: (text: string) => void;
@@ -22,10 +30,28 @@ export function Conversation({
   onAcceptProposal: (key: string) => void;
   onRejectProposal: (key: string) => void;
   onPinCandidate: (key: string, label: string, value: string) => void;
+  savedIds: string[];
+  onSaveScenario: (id: string) => void;
+  onDeleteScenario: (id: string) => void;
+  onUndoDelete: () => void;
+  onRecalculate: () => void;
+  onRevertChange: (key: string) => void;
+  onDismissChanges: () => void;
 }) {
   const [value, setValue] = useState('');
+  const [showUndo, setShowUndo] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const busy = state.status !== 'idle' && state.status !== 'error';
+
+  const deleteScenario = (id: string) => {
+    onDeleteScenario(id);
+    setShowUndo(true);
+  };
+
+  const undo = () => {
+    setShowUndo(false);
+    onUndoDelete();
+  };
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,7 +65,7 @@ export function Conversation({
   };
 
   return (
-    <div className="flex min-h-0 flex-1">
+    <div className="relative flex min-h-0 flex-1">
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto px-14 pt-8">
           <div className="mx-auto flex w-full max-w-transcript flex-col gap-[26px]">
@@ -54,7 +80,13 @@ export function Conversation({
               if (m.role === 'assistant') {
                 return (
                   <div key={m.id} className="ch-line">
-                    <AssistantAnswer envelope={m.envelope} onFollowUp={send} disabled={busy} />
+                    <AssistantAnswer
+                      envelope={m.envelope}
+                      onFollowUp={send}
+                      onSaveScenario={onSaveScenario}
+                      savedIds={savedIds}
+                      disabled={busy}
+                    />
                   </div>
                 );
               }
@@ -111,10 +143,20 @@ export function Conversation({
       <PinnedPanel
         fields={Object.values(state.fields)}
         proposals={state.proposals}
+        changes={state.changes}
+        savedScenarios={state.savedScenarios}
+        dirtyKeys={selectDirtyKeys(state)}
+        busy={busy}
         onEdit={onEdit}
         onAcceptProposal={onAcceptProposal}
         onRejectProposal={onRejectProposal}
+        onDeleteScenario={deleteScenario}
+        onRecalculate={onRecalculate}
+        onRevertChange={onRevertChange}
+        onDismissChanges={onDismissChanges}
       />
+
+      <UndoBar visible={showUndo} onUndo={undo} onExpire={() => setShowUndo(false)} />
     </div>
   );
 }
