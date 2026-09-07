@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Scenario } from '@chat/shared';
 import { Icon } from './Icon';
 
@@ -18,6 +18,13 @@ export function ScenarioCard({
   onSave?: (id: string) => void;
 }) {
   const [travelling, setTravelling] = useState(false);
+
+  // The card travels away on save. If it stops being saved — deleted from the
+  // panel, or an undo that lands it back as unsaved — it must become visible
+  // again, otherwise it stays invisible for the rest of the session.
+  useEffect(() => {
+    if (!saved) setTravelling(false);
+  }, [saved]);
 
   const handleSave = () => {
     if (saved || travelling) return;
