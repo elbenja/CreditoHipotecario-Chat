@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import { streamChat } from './api/streamChat';
 import { TopNav } from './components/TopNav';
 import { Conversation } from './screens/Conversation';
@@ -15,6 +15,9 @@ function toTurns(messages: Message[]) {
 
 export default function App() {
   const [state, dispatch] = useReducer(chatReducer, undefined, loadState);
+  // Seeds the composer with a failed question so the user can edit it. `n`
+  // forces the effect to re-fire even when re-editing the same question twice.
+  const [composerSeed, setComposerSeed] = useState<{ text: string; n: number } | null>(null);
 
   // Mirror every mutation so a reload does not lose the draft.
   useEffect(() => {
@@ -55,6 +58,19 @@ export default function App() {
     dispatch({ type: 'recalculate' });
     await request(toTurns(state.messages), Object.values(state.fields));
   }, [state.messages, state.fields, request]);
+
+  const retry = useCallback(async () => {
+    dispatch({ type: 'clearError' });
+    await request(toTurns(state.messages), Object.values(state.fields));
+  }, [state.messages, state.fields, request]);
+
+  const editQuestion = useCallback(() => {
+    const failedQuestion = state.error?.retry;
+    dispatch({ type: 'clearError' });
+    if (failedQuestion) {
+      setComposerSeed((prev) => ({ text: failedQuestion, n: (prev?.n ?? 0) + 1 }));
+    }
+  }, [state.error]);
 
   const edit = useCallback((key: string, value: string) => {
     dispatch({ type: 'editField', key, value });
@@ -124,6 +140,11 @@ export default function App() {
           onRecalculate={recalculate}
           onRevertChange={revertChange}
           onDismissChanges={dismissChanges}
+          onRetry={retry}
+          onEditQuestion={editQuestion}
+          onContinue={() => send('Continúa desde donde te quedaste.')}
+          onShorten={() => send('Resúmelo más corto, por favor.')}
+          composerSeed={composerSeed}
         />
       )}
     </div>
