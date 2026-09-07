@@ -102,8 +102,16 @@ const omit = <T,>(obj: Record<string, T>, key: string): Record<string, T> => {
   return rest;
 };
 
-let counter = 0;
-const nextId = () => `m${++counter}`;
+/**
+ * Ids must be unique across reloads: the app restores messages from
+ * localStorage, so a counter that restarts at 0 collides with restored ids and
+ * React reuses the wrong node. Also keeps the reducer pure, which StrictMode's
+ * double-invocation would otherwise expose.
+ */
+const nextId = (): string =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `m${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
 export function chatReducer(state: ChatState, action: Action): ChatState {
   switch (action.type) {
