@@ -1,9 +1,8 @@
 # One-click Render deploy for the API.
 #
-# Note: healthCheckPath below hits /api/chat with a GET, which this server
-# returns 405 for (only POST/OPTIONS are registered) — Render treats any
-# response, including 405, as reachable. If that proves a problem, clear the
-# health check path in the Render dashboard.
+# No healthCheckPath: the only route is POST /api/chat, and a GET to it 404s,
+# which Render scores as unhealthy and would fail the deploy. With none set,
+# Render falls back to port binding, which this server does satisfy.
 services:
   - type: web
     name: creditohipotecario-chat-api
@@ -12,7 +11,6 @@ services:
     rootDir: .
     buildCommand: pnpm install --frozen-lockfile
     startCommand: pnpm --filter @chat/api start
-    healthCheckPath: /api/chat
     envVars:
       - key: MOONSHOT_API_KEY
         sync: false
