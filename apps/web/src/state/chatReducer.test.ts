@@ -82,6 +82,16 @@ describe('chatReducer', () => {
     expect(s.error?.message).toBe('se cayó');
     expect(s.messages).toHaveLength(1);
   });
+
+  it('gives every message a unique id, even across a simulated reload', () => {
+    let s = chatReducer(initialState, { type: 'send', content: 'uno' });
+    s = chatReducer(s, { type: 'send', content: 'dos' });
+    // A reload restores the messages but re-initialises module state.
+    const restored = { ...initialState, messages: s.messages };
+    const after = chatReducer(restored, { type: 'send', content: 'tres' });
+    const ids = after.messages.map((m) => m.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
 });
 
 describe('value-change arbitration', () => {
