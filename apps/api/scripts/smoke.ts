@@ -9,7 +9,7 @@ const turn =
 
 console.log(`\nTú: ${turn}\n`);
 
-const raw = await callKimi(buildMessages([{ role: 'user', content: turn }], []));
+const { content: raw } = await callKimi(buildMessages([{ role: 'user', content: turn }], []));
 const result = runPipeline(raw, [turn]);
 
 if (result.ok) {

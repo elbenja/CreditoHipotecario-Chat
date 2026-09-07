@@ -21,8 +21,14 @@ function getClient(): OpenAI {
   return client;
 }
 
+export interface ModelReply {
+  content: string;
+  /** The model stopped because it hit the token ceiling, not because it finished. */
+  truncated: boolean;
+}
+
 /** Returns the raw assistant text. Parsing and validation belong to the pipeline. */
-export async function callKimi(messages: ChatMessage[]): Promise<string> {
+export async function callKimi(messages: ChatMessage[]): Promise<ModelReply> {
   const res = await getClient().chat.completions.create({
     model: MODEL,
     messages,
@@ -31,5 +37,9 @@ export async function callKimi(messages: ChatMessage[]): Promise<string> {
     // model default apply rather than sending a value it refuses.
     response_format: { type: 'json_object' },
   });
-  return res.choices[0]?.message?.content ?? '';
+  const choice = res.choices[0];
+  return {
+    content: choice?.message?.content ?? '',
+    truncated: choice?.finish_reason === 'length',
+  };
 }

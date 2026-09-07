@@ -1,6 +1,7 @@
 import { PinnedFieldSchema } from '@chat/shared';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import type { ModelReply } from '../kimi.ts';
 import { runPipeline } from '../pipeline/index.ts';
 import { REFUSAL_ENVELOPE, isOutOfScope } from '../pipeline/scope.ts';
 import { buildMessages, type ChatMessage } from '../prompt.ts';
@@ -13,7 +14,7 @@ const BodySchema = z.object({
 });
 
 export interface ServerDeps {
-  callModel: (messages: ChatMessage[]) => Promise<string>;
+  callModel: (messages: ChatMessage[]) => Promise<ModelReply>;
 }
 
 /** Steps shown while waiting. Real labels — this is where trust is built. */
@@ -51,7 +52,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     const latest = messages.filter((m) => m.role === 'user').at(-1);
     if (latest && isOutOfScope(latest.content)) {
       send('status', { phase: 'streaming' });
-      send('envelope', { envelope: REFUSAL_ENVELOPE });
+      send('envelope', { envelope: REFUSAL_ENVELOPE, truncated: false, outOfScope: true });
       reply.raw.end();
       return;
     }
@@ -60,20 +61,20 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     send('status', { phase: 'analyzing' });
 
     try {
-      const raw = await deps.callModel(buildMessages(messages, fields));
+      const { content, truncated } = await deps.callModel(buildMessages(messages, fields));
       const userTurns = messages.filter((m) => m.role === 'user').map((m) => m.content);
-      const result = runPipeline(raw, userTurns);
+      const result = runPipeline(content, userTurns);
 
       send('status', { phase: 'streaming' });
       if (result.ok) {
-        send('envelope', { envelope: result.envelope });
+        send('envelope', { envelope: result.envelope, truncated });
       } else {
-        send('fallback', { prose: result.prose, candidates: result.candidates });
+        send('fallback', { prose: result.prose, candidates: result.candidates, truncated });
       }
     } catch (err) {
       // Log the real error; the user gets Spanish, not an SDK string.
       console.error('[chat] model call failed:', err);
-      send('error', { message: 'Se cayó la conexión con el modelo. Tus datos siguen acá.' });
+      send('error', { kind: 'api', message: 'Se cayó la conexión con el modelo. Tus datos siguen acá.' });
     } finally {
       reply.raw.end();
     }
