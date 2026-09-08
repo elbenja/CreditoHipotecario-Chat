@@ -2,6 +2,14 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Status — implemented; UX review in progress.** Phase 4 was merged to
+> `main` at `9c8a016`. Verification passed with 232 tests, clean typecheck,
+> a production web build, and `design-qa.md` marked `passed`. The detailed
+> checklist below now records the completed implementation. New UX findings
+> are follow-up work and should be captured in a separate approved plan before
+> changing the Phase 4 baseline. The recorded desktop visual check used
+> 1280 × 720 rather than the originally planned 1440 × 900 viewport.
+
 **Goal:** Ship the supplied M1–M3 mobile layouts with a persistent, accessible bottom sheet while leaving the desktop chat and its data behavior unchanged.
 
 **Architecture:** Keep `App` and `ChatState` as the single source of truth. Add one mobile-only bottom-sheet shell that renders the same panel component and handlers as desktop, then apply breakpoint-specific structure to navigation, empty state, transcript, metrics, suggestions, and field typography. Use component tests for behavior and browser captures for 390 × 844 fidelity.
@@ -36,7 +44,7 @@
 - Modify: `apps/web/vitest.config.ts`
 - Create: `apps/web/src/test/setup.ts`
 
-- [ ] **Step 1: Install only the test dependencies needed for DOM interaction**
+- [x] **Step 1: Install only the test dependencies needed for DOM interaction**
 
 Run:
 
@@ -46,7 +54,7 @@ pnpm --filter @chat/web add -D @testing-library/react @testing-library/user-even
 
 Expected: `apps/web/package.json` and `pnpm-lock.yaml` add the four dev dependencies without changing runtime dependencies.
 
-- [ ] **Step 2: Configure Vitest for React component tests**
+- [x] **Step 2: Configure Vitest for React component tests**
 
 Replace `apps/web/vitest.config.ts` with:
 
@@ -74,13 +82,13 @@ import { afterEach } from 'vitest';
 afterEach(() => cleanup());
 ```
 
-- [ ] **Step 3: Verify the existing web suite still passes in jsdom**
+- [x] **Step 3: Verify the existing web suite still passes in jsdom**
 
 Run: `pnpm --filter @chat/web test`
 
 Expected: all existing web tests pass.
 
-- [ ] **Step 4: Commit the harness**
+- [x] **Step 4: Commit the harness**
 
 ```bash
 git add apps/web/package.json apps/web/vitest.config.ts apps/web/src/test/setup.ts pnpm-lock.yaml
@@ -95,7 +103,7 @@ git commit -m "test(web): add component test harness"
 - Modify: `apps/web/src/components/TopNav.tsx`
 - Modify: `apps/web/src/components/EmptyPanel.tsx`
 
-- [ ] **Step 1: Write the failing M1 component test**
+- [x] **Step 1: Write the failing M1 component test**
 
 Create `apps/web/src/screens/EmptyState.test.tsx`:
 
@@ -121,13 +129,13 @@ describe('EmptyState', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and confirm the current desktop-only screen fails it**
+- [x] **Step 2: Run the test and confirm the current desktop-only screen fails it**
 
 Run: `pnpm --filter @chat/web test -- EmptyState.test.tsx`
 
 Expected: FAIL because the mobile copy and summary do not exist and four suggestion buttons render.
 
-- [ ] **Step 3: Add the M1 layout with responsive desktop fallbacks**
+- [x] **Step 3: Add the M1 layout with responsive desktop fallbacks**
 
 Refactor `EmptyState.tsx` so the heading is shared and each breakpoint owns an explicit, correctly ordered controls block:
 
@@ -215,13 +223,13 @@ const [mobileTitle, mobileSubtitle] = context?.split(' · ') ?? [];
 </header>
 ```
 
-- [ ] **Step 4: Run the M1 and existing web tests**
+- [x] **Step 4: Run the M1 and existing web tests**
 
 Run: `pnpm --filter @chat/web test`
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit M1**
+- [x] **Step 5: Commit M1**
 
 ```bash
 git add apps/web/src/screens/EmptyState.tsx apps/web/src/screens/EmptyState.test.tsx apps/web/src/components/TopNav.tsx apps/web/src/components/EmptyPanel.tsx
@@ -237,7 +245,7 @@ git commit -m "feat(web): add phase 4 mobile empty state"
 - Modify: `apps/web/src/components/PinnedField.tsx`
 - Modify: `apps/web/src/index.css`
 
-- [ ] **Step 1: Write failing behavior tests for summary data, open, Escape, and focus return**
+- [x] **Step 1: Write failing behavior tests for summary data, open, Escape, and focus return**
 
 Create `apps/web/src/components/MobileBottomSheet.test.tsx`:
 
@@ -300,13 +308,13 @@ describe('MobileBottomSheet', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and confirm it fails because the component does not exist**
+- [x] **Step 2: Run the test and confirm it fails because the component does not exist**
 
 Run: `pnpm --filter @chat/web test -- MobileBottomSheet.test.tsx`
 
 Expected: FAIL with module-not-found for `./MobileBottomSheet`.
 
-- [ ] **Step 3: Add a mobile mode to the shared panel shell**
+- [x] **Step 3: Add a mobile mode to the shared panel shell**
 
 Add `mode?: 'desktop' | 'mobile'` to `PinnedPanel`. Use these structural classes:
 
@@ -348,7 +356,7 @@ const mobile = mode === 'mobile';
 
 Import `Icon` into `PinnedPanel`. In `PinnedField.tsx`, add `text-[11px] md:text-[10px]` to labels, `text-[18px] md:text-[17px]` to inputs, `text-[15px] md:text-[14px]` to prefix/suffix, and `text-[11.5px] md:text-[11px]` to notes.
 
-- [ ] **Step 4: Implement `MobileBottomSheet`**
+- [x] **Step 4: Implement `MobileBottomSheet`**
 
 Create `MobileBottomSheet.tsx` with this interface:
 
@@ -409,7 +417,7 @@ When open, render a fixed `md:hidden` overlay with a dismissible scrim and a bot
 <PinnedPanel {...panelProps} fields={fields} savedScenarios={savedScenarios} mode="mobile" />
 ```
 
-- [ ] **Step 5: Add safe-area and motion utilities**
+- [x] **Step 5: Add safe-area and motion utilities**
 
 Append to `index.css`:
 
@@ -425,13 +433,13 @@ Append to `index.css`:
 }
 ```
 
-- [ ] **Step 6: Run the sheet test and complete web suite**
+- [x] **Step 6: Run the sheet test and complete web suite**
 
 Run: `pnpm --filter @chat/web test`
 
 Expected: all tests pass, including open/close, summary count, body scroll lock, and focus return.
 
-- [ ] **Step 7: Commit the sheet**
+- [x] **Step 7: Commit the sheet**
 
 ```bash
 git add apps/web/src/components/MobileBottomSheet.tsx apps/web/src/components/MobileBottomSheet.test.tsx apps/web/src/components/PinnedPanel.tsx apps/web/src/components/PinnedField.tsx apps/web/src/index.css
@@ -445,17 +453,17 @@ git commit -m "feat(web): add persistent mobile data sheet"
 - Modify: `apps/web/src/components/AssistantAnswer.tsx`
 - Modify: `apps/web/src/components/MetricCard.tsx`
 
-- [ ] **Step 1: Enable the callback-forwarding test already written in Task 3**
+- [x] **Step 1: Enable the callback-forwarding test already written in Task 3**
 
 Keep the second `MobileBottomSheet.test.tsx` case unchanged while wiring the real conversation props. It is the regression guard for sharing behavior rather than creating mobile-only state.
 
-- [ ] **Step 2: Run the focused test and verify the new callback assertion fails until integration props are complete**
+- [x] **Step 2: Run the focused test and verify the new callback assertion fails until integration props are complete**
 
 Run: `pnpm --filter @chat/web test -- MobileBottomSheet.test.tsx`
 
 Expected: FAIL if any shared panel handler or dirty state is not forwarded.
 
-- [ ] **Step 3: Integrate the mobile sheet into `Conversation`**
+- [x] **Step 3: Integrate the mobile sheet into `Conversation`**
 
 Import `MobileBottomSheet`. Keep the desktop `PinnedPanel` call and add `mode="desktop"`. Render `MobileBottomSheet` after the mobile composer, passing the same props and handlers:
 
@@ -479,7 +487,7 @@ Import `MobileBottomSheet`. Keep the desktop `PinnedPanel` call and add `mode="d
 
 Change transcript padding to `px-5 pt-2 md:px-14 md:pt-8`, message gap to `gap-[18px] md:gap-[26px]`, and composer padding to `px-5 pb-0 pt-3 md:px-14 md:pb-6 md:pt-5`. Ensure the sheet remains a flex-none sibling so collapsed M2 never covers the composer.
 
-- [ ] **Step 4: Make metrics and follow-ups horizontally scrollable on mobile**
+- [x] **Step 4: Make metrics and follow-ups horizontally scrollable on mobile**
 
 In `AssistantAnswer.tsx`:
 
@@ -501,7 +509,7 @@ Use mobile typography from M2 for the attribution (`11.5px`), verdict (`17px`), 
 
 In `MetricCard.tsx`, use `w-[150px] flex-none px-[15px] py-[14px] md:w-auto md:min-w-0 md:px-5 md:py-[18px]`, `text-[23px] md:text-[28px]` for the value, and mobile labels/context matching the artboard.
 
-- [ ] **Step 5: Run the focused tests and typecheck**
+- [x] **Step 5: Run the focused tests and typecheck**
 
 Run:
 
@@ -512,7 +520,7 @@ pnpm --filter @chat/web typecheck
 
 Expected: all tests pass and TypeScript reports no errors.
 
-- [ ] **Step 6: Commit M2 integration**
+- [x] **Step 6: Commit M2 integration**
 
 ```bash
 git add apps/web/src/screens/Conversation.tsx apps/web/src/components/AssistantAnswer.tsx apps/web/src/components/MetricCard.tsx apps/web/src/components/MobileBottomSheet.test.tsx
@@ -525,7 +533,7 @@ git commit -m "feat(web): integrate phase 4 mobile conversation"
 - Create: `design-qa.md`
 - Modify only files with verified P0–P2 fidelity defects found during QA.
 
-- [ ] **Step 1: Run the complete automated verification suite**
+- [x] **Step 1: Run the complete automated verification suite**
 
 Run:
 
@@ -537,13 +545,13 @@ pnpm --filter @chat/web build
 
 Expected: all tests pass, all packages typecheck, and Vite produces `apps/web/dist`.
 
-- [ ] **Step 2: Start the local app without changing its runtime configuration**
+- [x] **Step 2: Start the local app without changing its runtime configuration**
 
 Run: `pnpm --filter @chat/web dev -- --host 127.0.0.1`
 
 Expected: Vite serves the app at `http://127.0.0.1:5173/` and remains running.
 
-- [ ] **Step 3: Compare M1 at 390 × 844**
+- [x] **Step 3: Compare M1 at 390 × 844**
 
 Open the supplied `Chat IA - Errores y Mobile.dc.html` and the local app in the same browser. At 390 × 844 verify:
 
@@ -553,7 +561,7 @@ Open the supplied `Chat IA - Errores y Mobile.dc.html` and the local app in the 
 - composer above the persistent empty summary;
 - no desktop side panel or horizontal page overflow.
 
-- [ ] **Step 4: Compare M2 and M3 at 390 × 844**
+- [x] **Step 4: Compare M2 and M3 at 390 × 844**
 
 Use an existing persisted conversation or send the reference property prompt. Verify:
 
@@ -564,11 +572,11 @@ Use an existing persisted conversation or send the reference property prompt. Ve
 - field editing, proposals, scenario deletion/undo, dirty band, and recalculate still call existing behavior;
 - scrim, downward drag, and Escape close it.
 
-- [ ] **Step 5: Check desktop regression at 1440 × 900**
+- [x] **Step 5: Check desktop regression (completed at 1280 × 720)**
 
 Verify the 372px right panel, 60px nav, transcript width, metric grid, composer, and empty state are visually unchanged.
 
-- [ ] **Step 6: Record and resolve design QA**
+- [x] **Step 6: Record and resolve design QA**
 
 Create `design-qa.md` with:
 
@@ -598,7 +606,7 @@ final result: passed
 
 If comparison finds P0–P2 defects, list each with viewport and evidence, fix only those defects, recapture, and repeat the affected section. Do not mark the final result passed before all P0–P2 items are closed.
 
-- [ ] **Step 7: Re-run verification after QA fixes**
+- [x] **Step 7: Re-run verification after QA fixes**
 
 Run:
 
@@ -611,7 +619,7 @@ git diff --check
 
 Expected: all checks pass and `design-qa.md` says `final result: passed`.
 
-- [ ] **Step 8: Commit final QA**
+- [x] **Step 8: Commit final QA**
 
 ```bash
 git add apps/web design-qa.md pnpm-lock.yaml

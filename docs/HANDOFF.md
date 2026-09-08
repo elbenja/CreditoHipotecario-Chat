@@ -1,18 +1,21 @@
-# Handoff — deployment done, Phase 4 next
+# Handoff — Phase 4 implemented, UX review in progress
 
-Written 2026-09-07, at the end of the deploy session. Start here in a new chat.
+Written 2026-09-07 after deployment and updated 2026-09-08 after the Phase 4
+merge. Start here in a new chat.
 
 ## Where things stand
 
-Phases 1–3 are built. The POC is **deployed and verified live**.
+Phases 1–4 are built. The pre-Phase 4 POC was **deployed and verified live**.
+Phase 4 passed local automated and visual QA and is merged to `main`; its live
+mobile deployment still needs a recorded verification pass.
 
 | | URL |
 | --- | --- |
 | Web (Vercel) | https://credito-hipotecario-chat.vercel.app |
 | API (Railway, project `Credito-Chat-API`) | https://credito-chat-api-production.up.railway.app |
 
-`main` is at `3278de7`. Working tree clean, 221 tests passing, typecheck clean,
-web build clean.
+`main` is at `9c8a016`. The Phase 4 verification baseline is 232 tests passing,
+typecheck clean, web build clean, and `design-qa.md` marked `passed`.
 
 ## What changed during the deploy
 
@@ -58,34 +61,27 @@ with **no** allow-origin header.
 - Railway shared variables are not injected into a service until the service
   explicitly references them.
 
-## Phase 4 — mobile bottom sheet
+## Phase 4 — implemented, under UX review
 
-Spec: `docs/superpowers/specs/2026-09-04-chat-ia-datos-fijados-design.md` §10
-lists Phase 4 as "M1–M3 persistent bottom sheet".
+Phase 4 delivers the supplied M1–M3 mobile states: the compact empty state,
+the conversation with a persistent collapsed data summary, and the expanded
+accessible bottom sheet. Desktop behavior remains intact.
 
-**The component is one thing — a persistent bottom sheet, the mobile
-counterpart of the desktop pinned panel. But M1–M3 are three artboards, not
-one idea.** The naming follows E1–E5 exactly, and each of those turned out to
-be a fully specified state: exact hex values, literal copy strings, button
-heights (see the Phase 3 plan, Task 3).
+- Design: `docs/superpowers/specs/2026-09-08-chat-ia-phase-4-mobile-design.md`
+- Execution plan: `docs/superpowers/plans/2026-09-08-chat-ia-phase-4-mobile.md`
+- Visual QA: `design-qa.md`
+- Final implementation commit: `9c8a016`
 
-**Where the definitions live:** the Phase 3 plan cites its design source as
-the artboards in **`Chat IA - Errores y Mobile.dc.html`**. The mobile
-artboards are in that same file — it is in the filename. So M1–M3 are
-specified; the file just is not in this repo.
-
-Searched on 2026-09-07: not anywhere under the home directory, and not among
-the published Claude artifacts. Most likely still in Claude Design, or on
-another machine. **Open that file before planning Phase 4** — the acceptance
-criteria are in it, and inventing them instead would break the pattern every
-other phase followed. Phases 1–3 each have a plan in
-`docs/superpowers/plans/` — follow that format.
-
-Nothing in the deploy work touched the web UI, so Phase 4 starts from a clean
-tree.
+The implementation phase is complete, but product review is still active.
+Capture approved UX improvements in a focused follow-up plan before changing
+the shipped Phase 4 behavior, then repeat the affected mobile and desktop QA.
 
 ## Open items
 
+- **Phase 4 UX review — active.** Record concrete findings, prioritize them,
+  and execute only the approved improvements in a follow-up plan.
+- **Phase 4 live verification — not yet recorded.** Confirm M1–M3 on the
+  deployed Vercel build after the current `main` deployment completes.
 - **Moonshot spend cap — not confirmed set.** The endpoint is public and
   unauthenticated; every reply spends the key. Decision taken: **if the tokens
   run out, put a password on the project** rather than leaving it open.
