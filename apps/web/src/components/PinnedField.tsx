@@ -23,7 +23,7 @@ export function PinnedFieldRow({
   return (
     <div className="rounded-[10px] border border-transparent px-3 py-[11px] transition-colors duration-180 ease-ch hover:border-ch-border">
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">
+        <span className="text-[11px] font-semibold uppercase tracking-[.1em] text-slate-500 md:text-[10px]">
           {field.label}
         </span>
         <span
@@ -36,19 +36,19 @@ export function PinnedFieldRow({
 
       <div className="mt-[7px] flex items-baseline gap-[5px]">
         {field.prefix && (
-          <span className="font-jakarta text-[14px] font-bold text-slate-500">{field.prefix}</span>
+          <span className="font-jakarta text-[15px] font-bold text-slate-500 md:text-[14px]">{field.prefix}</span>
         )}
         <input
           value={field.value}
           onChange={(e) => onChange(field.key, e.target.value)}
-          className="tnum min-w-0 flex-1 border-none bg-transparent p-0 font-jakarta text-[17px] font-bold tracking-[-.02em] text-white outline-none"
+          className="tnum min-w-0 flex-1 border-none bg-transparent p-0 font-jakarta text-[18px] font-bold tracking-[-.02em] text-white outline-none md:text-[17px]"
           aria-label={field.label}
         />
-        {field.suffix && <span className="text-[14px] text-slate-400">{field.suffix}</span>}
+        {field.suffix && <span className="text-[15px] text-slate-400 md:text-[14px]">{field.suffix}</span>}
       </div>
 
       {field.note && (
-        <p className="mt-[5px] text-[11px] font-medium leading-[1.45] text-slate-400">{field.note}</p>
+        <p className="mt-[5px] text-[11.5px] font-medium leading-[1.45] text-slate-400 md:text-[11px]">{field.note}</p>
       )}
 
       {/*

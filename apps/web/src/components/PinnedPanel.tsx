@@ -4,6 +4,7 @@ import { ChangesStrip } from './ChangesStrip';
 import { DirtyBand } from './DirtyBand';
 import { PinnedFieldRow } from './PinnedField';
 import { SavedScenarios } from './SavedScenarios';
+import { Icon } from './Icon';
 
 export function PinnedPanel({
   fields,
@@ -19,6 +20,7 @@ export function PinnedPanel({
   onRecalculate,
   onRevertChange,
   onDismissChanges,
+  mode = 'desktop',
 }: {
   fields: PinnedField[];
   proposals?: Record<string, PinnedField>;
@@ -33,19 +35,31 @@ export function PinnedPanel({
   onRecalculate?: () => void;
   onRevertChange?: (key: string) => void;
   onDismissChanges?: () => void;
+  mode?: 'desktop' | 'mobile';
 }) {
   const fieldsByKey = Object.fromEntries(fields.map((f) => [f.key, f]));
 
+  const mobile = mode === 'mobile';
   return (
-    <aside className="flex w-panel flex-none flex-col border-l border-ch-border">
-      <div className="flex-none border-b border-ch-border px-[22px] pb-4 pt-[22px]">
+    <aside
+      className={
+        mobile
+          ? 'flex h-full min-h-0 w-full flex-col bg-ch-panel'
+          : 'hidden w-panel flex-none flex-col border-l border-ch-border md:flex'
+      }
+    >
+      <div
+        className={`flex-none border-b border-ch-border ${mobile ? 'px-5 pb-[14px] pt-0' : 'px-[22px] pb-4 pt-[22px]'}`}
+      >
         <div className="flex items-baseline justify-between">
-          <span className="text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">
+          <span
+            className={`${mobile ? 'text-[11px] text-slate-400' : 'text-[10px] text-slate-500'} font-semibold uppercase tracking-[.1em]`}
+          >
             Datos de la operación
           </span>
           <span className="text-[11px] font-medium text-slate-400">{fields.length} fijados</span>
         </div>
-        <div className="mt-3 flex items-center gap-[14px]">
+        <div className="mt-[11px] flex items-center gap-[14px]">
           <span className="flex items-center gap-[6px] text-[11px] font-medium text-slate-400">
             <span className="h-[7px] w-[7px] rounded-full bg-slate-400" />
             Lo dijiste tú
@@ -57,7 +71,7 @@ export function PinnedPanel({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-[10px] py-2">
+      <div className={`ch-scrollbar-none min-h-0 flex-1 overflow-y-auto ${mobile ? 'px-[14px] py-1' : 'px-[10px] py-2'}`}>
         <ChangesStrip
           changes={changes}
           onRevert={(k) => onRevertChange?.(k)}
@@ -76,7 +90,9 @@ export function PinnedPanel({
         <SavedScenarios scenarios={savedScenarios} onDelete={(id) => onDeleteScenario?.(id)} />
       </div>
 
-      <div className="flex-none border-t border-ch-border px-[22px] pb-6 pt-4">
+      <div
+        className={`flex-none border-t border-ch-border ${mobile ? 'mobile-safe-bottom px-5 pb-[14px] pt-[14px]' : 'px-[22px] pb-6 pt-4'}`}
+      >
         <DirtyBand
           fields={fieldsByKey}
           dirtyKeys={dirtyKeys}
@@ -85,13 +101,16 @@ export function PinnedPanel({
         />
         <button
           type="button"
-          className="flex h-[46px] w-full items-center justify-center gap-2 rounded-full bg-slate-50 text-[13.5px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px"
+          className={`flex w-full items-center justify-center gap-2 rounded-full bg-slate-50 font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px ${mobile ? 'h-[50px] text-[14.5px]' : 'h-[46px] text-[13.5px]'}`}
         >
+          <Icon name="plus-sign" size={mobile ? 17 : 15} />
           Guardar como propiedad
         </button>
-        <p className="mt-2 text-center text-[11px] font-medium text-slate-400">
-          Entra a tu portafolio y podrás amortizar sobre ella.
-        </p>
+        {!mobile && (
+          <p className="mt-2 text-center text-[11px] font-medium text-slate-400">
+            Entra a tu portafolio y podrás amortizar sobre ella.
+          </p>
+        )}
       </div>
     </aside>
   );
