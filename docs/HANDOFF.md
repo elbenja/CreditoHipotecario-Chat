@@ -63,10 +63,22 @@ with **no** allow-origin header.
 Spec: `docs/superpowers/specs/2026-09-04-chat-ia-datos-fijados-design.md` §10
 lists Phase 4 as "M1–M3 persistent bottom sheet".
 
-**Gap to resolve first: the spec names M1, M2 and M3 but never defines them.**
-Those details are in the original design handoff, which is not in this repo.
-Recover that document before planning Phase 4, or the acceptance criteria have
-to be reinvented. Phases 1–3 each have a plan in
+**The component is one thing — a persistent bottom sheet, the mobile
+counterpart of the desktop pinned panel. But M1–M3 are three artboards, not
+one idea.** The naming follows E1–E5 exactly, and each of those turned out to
+be a fully specified state: exact hex values, literal copy strings, button
+heights (see the Phase 3 plan, Task 3).
+
+**Where the definitions live:** the Phase 3 plan cites its design source as
+the artboards in **`Chat IA - Errores y Mobile.dc.html`**. The mobile
+artboards are in that same file — it is in the filename. So M1–M3 are
+specified; the file just is not in this repo.
+
+Searched on 2026-09-07: not anywhere under the home directory, and not among
+the published Claude artifacts. Most likely still in Claude Design, or on
+another machine. **Open that file before planning Phase 4** — the acceptance
+criteria are in it, and inventing them instead would break the pattern every
+other phase followed. Phases 1–3 each have a plan in
 `docs/superpowers/plans/` — follow that format.
 
 Nothing in the deploy work touched the web UI, so Phase 4 starts from a clean
