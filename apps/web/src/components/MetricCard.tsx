@@ -4,11 +4,11 @@ export function MetricCard({ metric }: { metric: Metric }) {
   const negative = metric.delta?.startsWith('↓') || metric.delta?.startsWith('-');
 
   return (
-    <div className="min-w-0 rounded-xl border border-white/[.06] bg-ch-card px-5 py-[18px] shadow-[inset_0_1px_0_rgba(255,255,255,.04)]">
+    <div className="w-[150px] flex-none min-w-0 rounded-xl border border-white/[.06] bg-ch-card px-[15px] py-[14px] shadow-[inset_0_1px_0_rgba(255,255,255,.04)] md:w-auto md:px-5 md:py-[18px]">
       <div className="text-[10px] font-semibold uppercase tracking-[.08em] text-slate-400">
         {metric.label}
       </div>
-      <div className="tnum mt-2 break-words font-jakarta text-[28px] font-bold leading-none tracking-[-.02em] text-white">
+      <div className="tnum mt-2 break-words font-jakarta text-[23px] font-bold leading-none tracking-[-.02em] text-white md:text-[28px]">
         {metric.value}
       </div>
       {metric.delta && (

@@ -5,6 +5,7 @@ import { Composer } from '../components/Composer';
 import { ErrorNotice } from '../components/ErrorNotice';
 import { Icon } from '../components/Icon';
 import { MetricSkeleton } from '../components/MetricSkeleton';
+import { MobileBottomSheet } from '../components/MobileBottomSheet';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { OutOfScopeAnswer } from '../components/OutOfScopeAnswer';
 import { PinnedPanel } from '../components/PinnedPanel';
@@ -96,8 +97,8 @@ export function Conversation({
     <div className="relative flex min-h-0 flex-1">
       <div className="flex min-w-0 flex-1 flex-col">
         {state.offline && <OfflineBanner />}
-        <div className="min-h-0 flex-1 overflow-y-auto px-14 pt-8">
-          <div className="mx-auto flex w-full max-w-transcript flex-col gap-[26px]">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-2 md:px-14 md:pt-8">
+          <div className="mx-auto flex w-full max-w-transcript flex-col gap-[18px] md:gap-[26px]">
             {state.messages.map((m) => {
               if (m.role === 'user') {
                 return (
@@ -126,7 +127,7 @@ export function Conversation({
               }
               return (
                 <div key={m.id} className="ch-line flex flex-col gap-3">
-                  <p className="break-words text-[14.5px] leading-[1.6] text-slate-300">{m.prose}</p>
+                  <p className="break-words text-[13.5px] leading-[1.6] text-slate-300 md:text-[14.5px]">{m.prose}</p>
                   {m.candidates.length > 0 && (
                     <div className="rounded-[10px] border border-ch-border p-[14px]">
                       <p className="text-[12px] font-medium text-slate-400">
@@ -175,7 +176,7 @@ export function Conversation({
           </div>
         </div>
 
-        <div className="flex-none px-14 pb-6 pt-5">
+        <div className="flex-none px-5 pb-[108px] pt-3 md:px-14 md:pb-6 md:pt-5">
           <div className="mx-auto w-full max-w-transcript">
             <Composer
               value={value}
@@ -193,6 +194,22 @@ export function Conversation({
           </div>
         </div>
       </div>
+
+      <MobileBottomSheet
+        fields={Object.values(state.fields)}
+        proposals={state.proposals}
+        changes={state.changes}
+        savedScenarios={state.savedScenarios}
+        dirtyKeys={selectDirtyKeys(state)}
+        busy={busy}
+        onEdit={onEdit}
+        onAcceptProposal={onAcceptProposal}
+        onRejectProposal={onRejectProposal}
+        onDeleteScenario={deleteScenario}
+        onRecalculate={onRecalculate}
+        onRevertChange={onRevertChange}
+        onDismissChanges={onDismissChanges}
+      />
 
       <PinnedPanel
         fields={Object.values(state.fields)}

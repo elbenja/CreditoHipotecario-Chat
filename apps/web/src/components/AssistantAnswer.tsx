@@ -17,18 +17,18 @@ export function AssistantAnswer({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-[13px] md:gap-4">
       <div className="flex items-center gap-2">
         <img src="/assets/logo-mark.svg" alt="" className="h-4 w-4" />
-        <span className="text-[12px] font-semibold text-slate-500">Análisis</span>
+        <span className="text-[11.5px] font-semibold text-slate-500 md:text-[12px]">Análisis</span>
       </div>
 
-      <h2 className="font-jakarta text-[19px] font-bold leading-[1.35] tracking-[-.02em] text-white">
+      <h2 className="font-jakarta text-[17px] font-bold leading-[1.35] tracking-[-.02em] text-white md:text-[19px]">
         {envelope.verdict}
       </h2>
 
       {envelope.metrics.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="ch-scrollbar-none flex min-w-0 gap-[9px] overflow-x-auto md:grid md:grid-cols-3 md:gap-3 md:overflow-visible">
           {envelope.metrics.map((m) => (
             <MetricCard key={m.label} metric={m} />
           ))}
@@ -49,7 +49,7 @@ export function AssistantAnswer({
       {envelope.prose.length > 0 && (
         <div className="flex flex-col gap-[11px]">
           {envelope.prose.map((p, i) => (
-            <p key={i} className="text-[14.5px] leading-[1.6] text-slate-300">
+            <p key={i} className="text-[13.5px] leading-[1.6] text-slate-300 md:text-[14.5px]">
               {p}
             </p>
           ))}
@@ -79,9 +79,9 @@ export function AssistantAnswer({
       )}
 
       {envelope.followUps.length > 0 && (
-        <div className="flex flex-wrap gap-[9px]">
+        <div className="ch-scrollbar-none flex flex-nowrap gap-[9px] overflow-x-auto md:flex-wrap md:overflow-visible">
           {envelope.followUps.map((f) => (
-            <Pill key={f} onClick={() => onFollowUp(f)} className="text-[12.5px]" disabled={disabled}>
+            <Pill key={f} onClick={() => onFollowUp(f)} className="flex-none text-[12.5px]" disabled={disabled}>
               {f}
             </Pill>
           ))}
