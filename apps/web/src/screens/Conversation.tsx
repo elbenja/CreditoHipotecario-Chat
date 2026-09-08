@@ -176,7 +176,7 @@ export function Conversation({
           </div>
         </div>
 
-        <div className="flex-none px-5 pb-[108px] pt-3 md:px-14 md:pb-6 md:pt-5">
+        <div className="flex-none px-5 pb-0 pt-3 md:px-14 md:pb-6 md:pt-5">
           <div className="mx-auto w-full max-w-transcript">
             <Composer
               value={value}
@@ -193,23 +193,23 @@ export function Conversation({
             />
           </div>
         </div>
-      </div>
 
-      <MobileBottomSheet
-        fields={Object.values(state.fields)}
-        proposals={state.proposals}
-        changes={state.changes}
-        savedScenarios={state.savedScenarios}
-        dirtyKeys={selectDirtyKeys(state)}
-        busy={busy}
-        onEdit={onEdit}
-        onAcceptProposal={onAcceptProposal}
-        onRejectProposal={onRejectProposal}
-        onDeleteScenario={deleteScenario}
-        onRecalculate={onRecalculate}
-        onRevertChange={onRevertChange}
-        onDismissChanges={onDismissChanges}
-      />
+        <MobileBottomSheet
+          fields={Object.values(state.fields)}
+          proposals={state.proposals}
+          changes={state.changes}
+          savedScenarios={state.savedScenarios}
+          dirtyKeys={selectDirtyKeys(state)}
+          busy={busy}
+          onEdit={onEdit}
+          onAcceptProposal={onAcceptProposal}
+          onRejectProposal={onRejectProposal}
+          onDeleteScenario={deleteScenario}
+          onRecalculate={onRecalculate}
+          onRevertChange={onRevertChange}
+          onDismissChanges={onDismissChanges}
+        />
+      </div>
 
       <PinnedPanel
         fields={Object.values(state.fields)}

@@ -74,8 +74,12 @@ describe('Conversation mobile integration', () => {
 
     const trigger = screen.getByRole('button', { name: 'Abrir datos de la operación' });
     expect(trigger).toHaveTextContent('1 datos fijados');
+    expect(trigger.closest('section')).toHaveClass('relative', 'flex-none', 'w-full');
 
     const metricValue = screen.getByText('S/ 2,400');
     expect(metricValue.parentElement).toHaveClass('w-[150px]');
+
+    const composerWrapper = screen.getByPlaceholderText('Pregunta lo que quieras…').parentElement?.parentElement?.parentElement;
+    expect(composerWrapper).toHaveClass('px-5', 'pt-3', 'pb-0');
   });
 });
