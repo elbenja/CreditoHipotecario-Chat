@@ -28,7 +28,7 @@ export function AssistantAnswer({
       </h2>
 
       {envelope.metrics.length > 0 && (
-        <div className="ch-scrollbar-none flex min-w-0 gap-[9px] overflow-x-auto md:grid md:grid-cols-3 md:gap-3 md:overflow-visible">
+        <div className="ch-scrollbar-none -mr-5 flex min-w-0 gap-[9px] overflow-x-auto pr-10 md:mr-0 md:grid md:grid-cols-3 md:gap-3 md:overflow-visible md:pr-0">
           {envelope.metrics.map((m) => (
             <MetricCard key={m.label} metric={m} />
           ))}
@@ -79,7 +79,7 @@ export function AssistantAnswer({
       )}
 
       {envelope.followUps.length > 0 && (
-        <div className="ch-scrollbar-none flex flex-nowrap gap-[9px] overflow-x-auto md:flex-wrap md:overflow-visible">
+        <div className="ch-scrollbar-none -mr-5 flex flex-nowrap gap-[9px] overflow-x-auto pr-10 md:mr-0 md:flex-wrap md:overflow-visible md:pr-0">
           {envelope.followUps.map((f) => (
             <Pill key={f} onClick={() => onFollowUp(f)} className="flex-none text-[12.5px]" disabled={disabled}>
               {f}

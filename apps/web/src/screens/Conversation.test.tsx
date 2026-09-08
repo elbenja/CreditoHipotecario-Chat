@@ -23,7 +23,7 @@ const envelope: AnalysisEnvelope = {
   scenarios: [],
   sources: [],
   prose: ['Una cuota dentro de tu rango.'],
-  followUps: [],
+  followUps: ['¿Y con 30% de inicial?'],
 };
 
 const state: ChatState = {
@@ -78,6 +78,10 @@ describe('Conversation mobile integration', () => {
 
     const metricValue = screen.getByText('S/ 2,400');
     expect(metricValue.parentElement).toHaveClass('w-[150px]');
+    expect(metricValue.parentElement?.parentElement).toHaveClass('-mr-5', 'pr-10', 'md:mr-0', 'md:pr-0');
+
+    const followUp = screen.getByRole('button', { name: '¿Y con 30% de inicial?' });
+    expect(followUp.parentElement).toHaveClass('-mr-5', 'pr-10', 'md:mr-0', 'md:pr-0');
 
     const composerWrapper = screen.getByPlaceholderText('Pregunta lo que quieras…').parentElement?.parentElement?.parentElement;
     expect(composerWrapper).toHaveClass('px-5', 'pt-3', 'pb-0');
