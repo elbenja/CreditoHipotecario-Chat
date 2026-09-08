@@ -59,7 +59,7 @@ export function PinnedPanel({
           </span>
           <span className="text-[11px] font-medium text-slate-400">{fields.length} fijados</span>
         </div>
-        <div className="mt-[11px] flex items-center gap-[14px]">
+        <div className={`${mobile ? 'mt-[11px]' : 'mt-3'} flex items-center gap-[14px]`}>
           <span className="flex items-center gap-[6px] text-[11px] font-medium text-slate-400">
             <span className="h-[7px] w-[7px] rounded-full bg-slate-400" />
             Lo dijiste tú
@@ -103,7 +103,7 @@ export function PinnedPanel({
           type="button"
           className={`flex w-full items-center justify-center gap-2 rounded-full bg-slate-50 font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px ${mobile ? 'h-[50px] text-[14.5px]' : 'h-[46px] text-[13.5px]'}`}
         >
-          <Icon name="plus-sign" size={mobile ? 17 : 15} />
+          {mobile && <Icon name="plus-sign" size={17} />}
           Guardar como propiedad
         </button>
         {!mobile && (

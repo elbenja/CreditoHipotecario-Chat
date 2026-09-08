@@ -37,12 +37,11 @@ export function MobileBottomSheet({
 }: MobileBottomSheetProps) {
   const [open, setOpen] = useState(false);
   const summaryRef = useRef<HTMLButtonElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const startY = useRef<number | null>(null);
   const wasOpen = useRef(false);
   const assumedCount = fields.filter((field) => field.provenance !== 'user').length;
   const savedCount = savedScenarios.length;
-  const assumedLabel = assumedCount === 1 ? 'asumido' : 'asumidos';
   const scenarioLabel = savedCount === 1 ? 'escenario guardado' : 'escenarios guardados';
 
   const close = () => setOpen(false);
@@ -56,7 +55,7 @@ export function MobileBottomSheet({
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    dialogRef.current?.focus();
+    closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') close();
     };
@@ -112,17 +111,16 @@ export function MobileBottomSheet({
             onPointerUp={handleCollapsedPointerUp}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleCollapsedTouchEnd}
-            className="flex min-h-[44px] w-full flex-col items-start gap-1 text-left"
+            className="flex min-h-[44px] w-full flex-col items-start gap-1 pr-24 text-left"
           >
             <span className="mx-auto mb-1 h-1 w-9 rounded-full bg-slate-500" aria-hidden="true" />
-            <span className="flex w-full items-center gap-2 text-[11px] font-semibold uppercase tracking-[.1em] text-slate-400">
-              Datos de la operación
-              <span className="font-medium normal-case tracking-normal text-slate-500">
-                {fields.length} fijados · {assumedCount} {assumedLabel}
-              </span>
+            <span className="text-[13px] font-semibold text-white">
+              {fields.length} datos fijados
             </span>
-            <span className="text-[11.5px] font-medium text-slate-300">
-              {savedCount} {scenarioLabel}
+            {' '}
+            <span className="text-[11.5px] font-medium text-slate-400">
+              {assumedCount} {assumedCount === 1 ? 'lo asumí yo' : 'los asumí yo'} · {savedCount}{' '}
+              {scenarioLabel}
             </span>
           </button>
           <button
@@ -137,28 +135,28 @@ export function MobileBottomSheet({
         <div className="fixed inset-0 z-40 md:hidden">
           <button
             type="button"
-            aria-label="Cerrar datos de la operación"
+            aria-label="Cerrar panel"
             className="absolute inset-0 h-full w-full bg-[rgba(2,6,23,.6)]"
             onClick={close}
           />
           <div
-            ref={dialogRef}
             role="dialog"
             aria-label="Datos de la operación"
             aria-modal="true"
             tabIndex={-1}
-            onPointerDown={handlePointerDown}
-            onPointerUp={handleExpandedPointerUp}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleExpandedTouchEnd}
             className="ch-sheet-enter absolute bottom-0 flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[16px] border-t border-[#334155] bg-[#0f172a] outline-none"
           >
             <div className="flex h-[50px] flex-none items-center justify-between px-5">
               <span className="mx-auto h-1 w-9 rounded-full bg-slate-500" aria-hidden="true" />
               <button
+                ref={closeRef}
                 type="button"
                 aria-label="Cerrar datos de la operación"
                 onClick={close}
+                onPointerDown={handlePointerDown}
+                onPointerUp={handleExpandedPointerUp}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleExpandedTouchEnd}
                 className="absolute right-3 top-2 grid h-11 w-11 place-items-center rounded-full text-slate-400 transition-colors duration-120 ease-ch hover:bg-ch-card hover:text-white"
               >
                 <Icon name="cancel-01" size={18} />

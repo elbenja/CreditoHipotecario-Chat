@@ -61,15 +61,10 @@ function renderSheet(overrides: Partial<React.ComponentProps<typeof MobileBottom
 describe('MobileBottomSheet', () => {
   it('shows dynamic fixed, assumed, and saved summary counts', () => {
     renderSheet();
+    const summary = screen.getByRole('button', { name: /Abrir datos de la operación/i });
 
-    expect(screen.getByRole('button', { name: /Abrir datos de la operación/i })).toHaveTextContent(
-      '3 fijados',
-    );
-    expect(screen.getByRole('button', { name: /Abrir datos de la operación/i })).toHaveTextContent(
-      '2 asumidos',
-    );
-    expect(screen.getByRole('button', { name: /Abrir datos de la operación/i })).toHaveTextContent(
-      '1 escenario guardado',
+    expect(summary.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      '3 datos fijados 2 los asumí yo · 1 escenario guardado',
     );
   });
 
@@ -81,6 +76,7 @@ describe('MobileBottomSheet', () => {
     await user.click(summary);
 
     expect(screen.getByRole('dialog', { name: 'Datos de la operación' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cerrar datos de la operación' })).toHaveFocus();
     expect(document.body).toHaveStyle({ overflow: 'hidden' });
 
     await user.keyboard('{Escape}');
@@ -97,7 +93,12 @@ describe('MobileBottomSheet', () => {
     fireEvent.touchStart(summary, { touches: [{ clientY: 720 }] });
     fireEvent.touchEnd(summary, { changedTouches: [{ clientY: 500 }] });
 
-    expect(screen.getByRole('dialog', { name: 'Datos de la operación' })).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog', { name: 'Datos de la operación' });
+    expect(dialog).toBeInTheDocument();
+    const grabber = screen.getByRole('button', { name: 'Cerrar datos de la operación' });
+    fireEvent.touchStart(grabber, { touches: [{ clientY: 500 }] });
+    fireEvent.touchEnd(grabber, { changedTouches: [{ clientY: 720 }] });
+    expect(screen.queryByRole('dialog', { name: 'Datos de la operación' })).not.toBeInTheDocument();
   });
 
   it('forwards shared field edit and recalculate callbacks from the expanded panel', async () => {
