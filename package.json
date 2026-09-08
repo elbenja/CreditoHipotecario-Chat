@@ -6,6 +6,7 @@
     "node": ">=22.6"
   },
   "scripts": {
+    "start": "pnpm --filter @chat/api start",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "dev": "pnpm --parallel -r dev"
@@ -14,5 +15,6 @@
     "@types/node": "^18.19.130",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
-  }
+  },
+  "packageManager": "pnpm@10.27.0"
 }
