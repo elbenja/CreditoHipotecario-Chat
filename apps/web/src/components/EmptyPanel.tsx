@@ -2,7 +2,7 @@ const SLOTS = ['Ubicación', 'Precio de compra', 'Área', 'Tasa TEA', 'Cuota ini
 
 export function EmptyPanel() {
   return (
-    <aside className="flex w-panel flex-none flex-col border-l border-ch-border px-[22px] py-6">
+    <aside className="hidden w-panel flex-none flex-col border-l border-ch-border px-[22px] py-6 md:flex">
       <div className="text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">
         Datos de la operación
       </div>
