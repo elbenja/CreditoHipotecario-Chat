@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { PinnedField, Scenario } from '@chat/shared';
 import { describe, expect, it, vi } from 'vitest';
@@ -121,6 +121,39 @@ describe('MobileBottomSheet', () => {
     await user.tab({ shift: true });
     expect(save).toHaveFocus();
     expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
+  it('closes and restores body scroll when the viewport crosses to desktop', async () => {
+    const user = userEvent.setup();
+    let mediaChange: ((event: MediaQueryListEvent) => void) | null = null;
+    const mediaList = {
+      matches: false,
+      media: '(min-width: 768px)',
+      addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
+        mediaChange = listener;
+      },
+      removeEventListener: vi.fn(),
+    } as unknown as MediaQueryList;
+    vi.stubGlobal('matchMedia', vi.fn(() => mediaList));
+
+    try {
+      renderSheet();
+      await user.click(screen.getByRole('button', { name: /Abrir datos de la operación/i }));
+      expect(screen.getByRole('dialog', { name: 'Datos de la operación' })).toBeInTheDocument();
+      expect(mediaChange).toBeTypeOf('function');
+      expect(document.body).toHaveStyle({ overflow: 'hidden' });
+
+      Object.defineProperty(mediaList, 'matches', { configurable: true, value: true });
+      const triggerChange = mediaChange as unknown as (event: MediaQueryListEvent) => void;
+      triggerChange({ matches: true } as MediaQueryListEvent);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog', { name: 'Datos de la operación' })).not.toBeInTheDocument();
+        expect(document.body).not.toHaveStyle({ overflow: 'hidden' });
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('forwards shared field edit and recalculate callbacks from the expanded panel', async () => {

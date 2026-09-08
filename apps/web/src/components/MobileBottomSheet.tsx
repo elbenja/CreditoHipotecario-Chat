@@ -53,6 +53,22 @@ export function MobileBottomSheet({
   }, [open]);
 
   useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const desktopQuery = window.matchMedia('(min-width: 768px)');
+    const closeOnDesktop = (event: MediaQueryListEvent | MediaQueryList) => {
+      if (event.matches) setOpen(false);
+    };
+
+    if (typeof desktopQuery.addEventListener === 'function') {
+      desktopQuery.addEventListener('change', closeOnDesktop);
+      return () => desktopQuery.removeEventListener('change', closeOnDesktop);
+    }
+
+    desktopQuery.addListener(closeOnDesktop);
+    return () => desktopQuery.removeListener(closeOnDesktop);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
