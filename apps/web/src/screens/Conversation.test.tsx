@@ -134,4 +134,18 @@ describe('Conversation mobile integration', () => {
     await user.click(screen.getByPlaceholderText('Pregunta lo que quieras…'));
     expect(screen.getAllByRole('button', { name: '¿Y con 30% de inicial?' })).toHaveLength(1);
   });
+
+  it('disables out-of-scope follow-ups while the conversation is busy', () => {
+    const outOfScopeState: ChatState = {
+      ...state,
+      status: 'thinking',
+      messages: [
+        state.messages[0]!,
+        { id: 'assistant-out-of-scope', role: 'assistant', envelope, outOfScope: true },
+      ],
+    };
+    renderConversation(outOfScopeState);
+
+    expect(screen.getByRole('button', { name: '¿Y con 30% de inicial?' })).toBeDisabled();
+  });
 });

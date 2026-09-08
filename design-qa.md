@@ -1,8 +1,8 @@
 # Phase 4 Design QA
 
-Source visual truth: `/tmp/credhi-phase4.B20ngT/Chat IA - Errores y Mobile.dc.html` (M1–M3 artboards)  
-Implementation: `http://127.0.0.1:4173/` in the Codex In-app Browser  
-Implementation captures: Codex in-app Browser tab 1, captured at 390 × 844 CSS px, devicePixelRatio 1  
+Source visual truth: `/tmp/credhi-phase4.B20ngT/Chat IA - Errores y Mobile.dc.html` (M1–M3 artboards)
+Implementation: `http://127.0.0.1:4173/` in the Codex In-app Browser
+Implementation captures: Codex in-app Browser tab 1, captured at 390 × 844 CSS px, devicePixelRatio 1
 Reference artboards: 390 × 844 CSS px inside the supplied iOS frames; device chrome was excluded from app-content comparison  
 State: M1 empty, M2 conversation with 7 pinned fields, M3 expanded sheet; desktop conversation regression at 1280 × 720 CSS px, devicePixelRatio 1
 

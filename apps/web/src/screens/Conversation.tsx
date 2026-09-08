@@ -114,7 +114,7 @@ export function Conversation({
                 return (
                   <div key={m.id} className="ch-line">
                     {m.outOfScope ? (
-                      <OutOfScopeAnswer envelope={m.envelope} onFollowUp={send} />
+                      <OutOfScopeAnswer envelope={m.envelope} onFollowUp={send} disabled={busy} />
                     ) : (
                       <AssistantAnswer
                         envelope={m.envelope}

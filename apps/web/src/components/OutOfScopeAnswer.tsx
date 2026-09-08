@@ -3,9 +3,11 @@ import type { AnalysisEnvelope } from '@chat/shared';
 export function OutOfScopeAnswer({
   envelope,
   onFollowUp,
+  disabled = false,
 }: {
   envelope: AnalysisEnvelope;
   onFollowUp: (text: string) => void;
+  disabled?: boolean;
 }) {
   return (
     /* No icon, no box, no apology: one line and two ways out. Refusing well
@@ -21,8 +23,9 @@ export function OutOfScopeAnswer({
               <button
                 key={f}
                 type="button"
+                disabled={disabled}
                 onClick={() => onFollowUp(f)}
-                className="rounded-full border border-ch-border-hover px-[13px] py-[7px] text-[12px] font-medium text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
+                className="rounded-full border border-ch-border-hover px-[13px] py-[7px] text-[12px] font-medium text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {f}
               </button>
