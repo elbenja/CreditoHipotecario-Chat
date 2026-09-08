@@ -8,6 +8,7 @@ import { MetricSkeleton } from '../components/MetricSkeleton';
 import { MobileBottomSheet } from '../components/MobileBottomSheet';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { OutOfScopeAnswer } from '../components/OutOfScopeAnswer';
+import { Pill } from '../components/Pill';
 import { PinnedPanel } from '../components/PinnedPanel';
 import { Thinking } from '../components/Thinking';
 import { TruncatedNotice } from '../components/TruncatedNotice';
@@ -178,6 +179,15 @@ export function Conversation({
 
         <div className="flex-none px-5 pb-0 pt-3 md:px-14 md:pb-6 md:pt-5">
           <div className="mx-auto w-full max-w-transcript">
+            {suggestions.length > 0 && (
+              <div className="ch-scrollbar-none -mr-5 mb-3 flex min-w-0 flex-nowrap gap-[9px] overflow-x-auto pr-10 md:mr-0 md:hidden md:pr-0">
+                {suggestions.slice(0, 2).map((suggestion) => (
+                  <Pill key={suggestion} onClick={() => send(suggestion)} className="flex-none text-[12.5px]">
+                    {suggestion}
+                  </Pill>
+                ))}
+              </div>
+            )}
             <Composer
               value={value}
               onChange={setValue}

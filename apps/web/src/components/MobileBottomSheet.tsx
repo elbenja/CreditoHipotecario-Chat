@@ -141,7 +141,7 @@ export function MobileBottomSheet({
     <>
       <section
         aria-hidden={open}
-        className={`mobile-safe-bottom relative z-30 min-h-[96px] w-full flex-none rounded-t-[16px] border-t border-[#1e293b] bg-[#0f172a] px-4 pt-3 transition-opacity duration-120 ease-ch md:hidden ${open ? 'pointer-events-none opacity-0' : ''}`}
+        className={`mobile-safe-bottom relative z-30 mt-3 min-h-[96px] w-full flex-none rounded-t-[16px] border-t border-[#1e293b] bg-[#0f172a] px-4 pt-3 transition-opacity duration-120 ease-ch md:hidden ${open ? 'pointer-events-none opacity-0' : ''}`}
       >
           <button
             ref={summaryRef}

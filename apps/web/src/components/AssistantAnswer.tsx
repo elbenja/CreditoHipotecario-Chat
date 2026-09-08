@@ -79,7 +79,7 @@ export function AssistantAnswer({
       )}
 
       {envelope.followUps.length > 0 && (
-        <div className="ch-scrollbar-none -mr-5 flex flex-nowrap gap-[9px] overflow-x-auto pr-10 md:mr-0 md:flex-wrap md:overflow-visible md:pr-0">
+        <div className="ch-scrollbar-none -mr-5 hidden flex-nowrap gap-[9px] overflow-x-auto pr-10 md:mr-0 md:flex md:flex-wrap md:overflow-visible md:pr-0">
           {envelope.followUps.map((f) => (
             <Pill key={f} onClick={() => onFollowUp(f)} className="flex-none text-[12.5px]" disabled={disabled}>
               {f}

@@ -80,8 +80,15 @@ describe('Conversation mobile integration', () => {
     expect(metricValue.parentElement).toHaveClass('w-[150px]');
     expect(metricValue.parentElement?.parentElement).toHaveClass('-mr-5', 'pr-10', 'md:mr-0', 'md:pr-0');
 
-    const followUp = screen.getByRole('button', { name: '¿Y con 30% de inicial?' });
-    expect(followUp.parentElement).toHaveClass('-mr-5', 'pr-10', 'md:mr-0', 'md:pr-0');
+    const followUps = screen.getAllByRole('button', { name: '¿Y con 30% de inicial?' });
+    const mobileFollowUp = followUps.find((button) => button.parentElement?.classList.contains('md:hidden'));
+    expect(mobileFollowUp).toBeDefined();
+    expect(mobileFollowUp?.parentElement).toHaveClass('-mr-5', 'pr-10', 'md:mr-0', 'md:pr-0', 'mb-3');
+
+    const desktopFollowUp = followUps.find((button) => button.parentElement?.classList.contains('hidden'));
+    expect(desktopFollowUp).toBeDefined();
+
+    expect(trigger.closest('section')).toHaveClass('mt-3');
 
     const composerWrapper = screen.getByPlaceholderText('Pregunta lo que quieras…').parentElement?.parentElement?.parentElement;
     expect(composerWrapper).toHaveClass('px-5', 'pt-3', 'pb-0');
