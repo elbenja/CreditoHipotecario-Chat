@@ -77,6 +77,7 @@ describe('MobileBottomSheet', () => {
 
     expect(screen.getByRole('dialog', { name: 'Datos de la operación' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cerrar datos de la operación' })).toHaveFocus();
+    expect(summary).toHaveAttribute('tabindex', '-1');
     expect(document.body).toHaveStyle({ overflow: 'hidden' });
 
     await user.keyboard('{Escape}');
@@ -96,9 +97,30 @@ describe('MobileBottomSheet', () => {
     const dialog = screen.getByRole('dialog', { name: 'Datos de la operación' });
     expect(dialog).toBeInTheDocument();
     const grabber = screen.getByRole('button', { name: 'Cerrar datos de la operación' });
+    expect(grabber).toHaveClass('mx-auto');
     fireEvent.touchStart(grabber, { touches: [{ clientY: 500 }] });
     fireEvent.touchEnd(grabber, { changedTouches: [{ clientY: 720 }] });
     expect(screen.queryByRole('dialog', { name: 'Datos de la operación' })).not.toBeInTheDocument();
+  });
+
+  it('traps Tab and Shift+Tab within the expanded sheet', async () => {
+    const user = userEvent.setup();
+    renderSheet();
+    const summary = screen.getByRole('button', { name: /Abrir datos de la operación/i });
+    await user.click(summary);
+
+    const dialog = screen.getByRole('dialog', { name: 'Datos de la operación' });
+    const grabber = screen.getByRole('button', { name: 'Cerrar datos de la operación' });
+    const save = screen.getByRole('button', { name: 'Guardar como propiedad' });
+
+    save.focus();
+    await user.tab();
+    expect(grabber).toHaveFocus();
+
+    grabber.focus();
+    await user.tab({ shift: true });
+    expect(save).toHaveFocus();
+    expect(dialog.contains(document.activeElement)).toBe(true);
   });
 
   it('forwards shared field edit and recalculate callbacks from the expanded panel', async () => {

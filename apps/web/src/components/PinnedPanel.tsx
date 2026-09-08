@@ -71,7 +71,7 @@ export function PinnedPanel({
         </div>
       </div>
 
-      <div className={`ch-scrollbar-none min-h-0 flex-1 overflow-y-auto ${mobile ? 'px-[14px] py-1' : 'px-[10px] py-2'}`}>
+      <div className={`${mobile ? 'ch-scrollbar-none ' : ''}min-h-0 flex-1 overflow-y-auto ${mobile ? 'px-[14px] py-1' : 'px-[10px] py-2'}`}>
         <ChangesStrip
           changes={changes}
           onRevert={(k) => onRevertChange?.(k)}

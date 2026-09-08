@@ -38,6 +38,7 @@ export function MobileBottomSheet({
   const [open, setOpen] = useState(false);
   const summaryRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number | null>(null);
   const wasOpen = useRef(false);
   const assumedCount = fields.filter((field) => field.provenance !== 'user').length;
@@ -57,7 +58,31 @@ export function MobileBottomSheet({
     document.body.style.overflow = 'hidden';
     closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
+      if (event.key === 'Escape') {
+        close();
+        return;
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialogRef.current.focus();
+        return;
+      }
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener('keydown', onKeyDown);
     return () => {
@@ -99,6 +124,7 @@ export function MobileBottomSheet({
   return (
     <>
       <section
+        aria-hidden={open}
         className={`mobile-safe-bottom fixed inset-x-0 bottom-0 z-30 min-h-[96px] rounded-t-[16px] border-t border-[#1e293b] bg-[#0f172a] px-4 pt-3 transition-opacity duration-120 ease-ch md:hidden ${open ? 'pointer-events-none opacity-0' : ''}`}
       >
           <button
@@ -106,6 +132,7 @@ export function MobileBottomSheet({
             type="button"
             aria-label="Abrir datos de la operación"
             aria-expanded={open}
+            tabIndex={open ? -1 : undefined}
             onClick={() => setOpen(true)}
             onPointerDown={handlePointerDown}
             onPointerUp={handleCollapsedPointerUp}
@@ -125,6 +152,7 @@ export function MobileBottomSheet({
           </button>
           <button
             type="button"
+            tabIndex={open ? -1 : undefined}
             className="absolute right-4 top-[44px] h-9 rounded-full bg-slate-50 px-4 text-[12px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90"
           >
             Guardar
@@ -140,6 +168,7 @@ export function MobileBottomSheet({
             onClick={close}
           />
           <div
+            ref={dialogRef}
             role="dialog"
             aria-label="Datos de la operación"
             aria-modal="true"
@@ -147,7 +176,6 @@ export function MobileBottomSheet({
             className="ch-sheet-enter absolute bottom-0 flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[16px] border-t border-[#334155] bg-[#0f172a] outline-none"
           >
             <div className="flex h-[50px] flex-none items-center justify-between px-5">
-              <span className="mx-auto h-1 w-9 rounded-full bg-slate-500" aria-hidden="true" />
               <button
                 ref={closeRef}
                 type="button"
@@ -157,6 +185,14 @@ export function MobileBottomSheet({
                 onPointerUp={handleExpandedPointerUp}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleExpandedTouchEnd}
+                className="mx-auto grid h-11 w-11 place-items-center rounded-full text-slate-400 transition-colors duration-120 ease-ch hover:bg-ch-card hover:text-white"
+              >
+                <span className="h-1 w-9 rounded-full bg-slate-500" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label="Cerrar panel"
+                onClick={close}
                 className="absolute right-3 top-2 grid h-11 w-11 place-items-center rounded-full text-slate-400 transition-colors duration-120 ease-ch hover:bg-ch-card hover:text-white"
               >
                 <Icon name="cancel-01" size={18} />
