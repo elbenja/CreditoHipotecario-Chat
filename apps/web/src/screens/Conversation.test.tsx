@@ -36,10 +36,10 @@ const state: ChatState = {
   fields: { [field.key]: field },
 };
 
-function renderConversation() {
+function renderConversation(conversationState: ChatState = state) {
   return render(
     <Conversation
-      state={state}
+      state={conversationState}
       onSend={vi.fn()}
       onEdit={vi.fn()}
       onAcceptProposal={vi.fn()}
@@ -105,5 +105,33 @@ describe('Conversation mobile integration', () => {
 
     const composerWrapper = screen.getByPlaceholderText('Pregunta lo que quieras…').parentElement?.parentElement?.parentElement;
     expect(composerWrapper).toHaveClass('px-5', 'pt-3', 'pb-0');
+  });
+
+  it('disables mobile follow-up actions while the conversation is busy', () => {
+    renderConversation({ ...state, status: 'thinking' });
+
+    const mobileFollowUp = screen
+      .getAllByRole('button', { name: '¿Y con 30% de inicial?' })
+      .find((button) => button.parentElement?.classList.contains('md:hidden'));
+    expect(mobileFollowUp).toBeDisabled();
+  });
+
+  it('keeps out-of-scope follow-ups in the transcript without mobile footer duplicates', async () => {
+    const user = userEvent.setup();
+    const outOfScopeState: ChatState = {
+      ...state,
+      messages: [
+        state.messages[0]!,
+        { id: 'assistant-out-of-scope', role: 'assistant', envelope, outOfScope: true },
+      ],
+    };
+    renderConversation(outOfScopeState);
+
+    const transcriptFollowUps = screen.getAllByRole('button', { name: '¿Y con 30% de inicial?' });
+    expect(transcriptFollowUps).toHaveLength(1);
+    expect(transcriptFollowUps[0]?.parentElement).toHaveClass('mt-3');
+
+    await user.click(screen.getByPlaceholderText('Pregunta lo que quieras…'));
+    expect(screen.getAllByRole('button', { name: '¿Y con 30% de inicial?' })).toHaveLength(1);
   });
 });

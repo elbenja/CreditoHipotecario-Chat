@@ -86,10 +86,12 @@ export function Conversation({
   };
 
   let suggestions: string[] = [];
+  let latestAssistantIsOutOfScope = false;
   for (let i = state.messages.length - 1; i >= 0; i -= 1) {
     const m = state.messages[i]!;
     if (m.role === 'assistant') {
-      suggestions = m.envelope.followUps;
+      latestAssistantIsOutOfScope = m.outOfScope === true;
+      suggestions = latestAssistantIsOutOfScope ? [] : m.envelope.followUps;
       break;
     }
   }
@@ -179,10 +181,15 @@ export function Conversation({
 
         <div className="flex-none px-5 pb-0 pt-3 md:px-14 md:pb-6 md:pt-5">
           <div className="mx-auto w-full max-w-transcript">
-            {suggestions.length > 0 && (
+            {!latestAssistantIsOutOfScope && suggestions.length > 0 && (
               <div className="ch-scrollbar-none -mr-5 mb-3 flex min-w-0 flex-nowrap gap-[9px] overflow-x-auto pr-10 md:mr-0 md:hidden md:pr-0">
                 {suggestions.slice(0, 2).map((suggestion) => (
-                  <Pill key={suggestion} onClick={() => send(suggestion)} className="flex-none text-[12.5px]">
+                  <Pill
+                    key={suggestion}
+                    onClick={() => send(suggestion)}
+                    className="flex-none text-[12.5px]"
+                    disabled={busy || (state.offline && state.queued !== null)}
+                  >
                     {suggestion}
                   </Pill>
                 ))}
