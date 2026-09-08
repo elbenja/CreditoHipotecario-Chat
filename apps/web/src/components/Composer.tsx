@@ -10,6 +10,7 @@ export function Composer({
   disabled = false,
   suggestions = [],
   onSuggestion,
+  suggestionClassName = '',
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -19,6 +20,7 @@ export function Composer({
   disabled?: boolean;
   suggestions?: string[];
   onSuggestion?: (s: string) => void;
+  suggestionClassName?: string;
 }) {
   const [focused, setFocused] = useState(false);
 
@@ -57,7 +59,7 @@ export function Composer({
   return (
     <>
       {focused && suggestions.length > 0 && (
-        <div className="ch-rise mb-2 flex flex-wrap gap-2">
+        <div className={`ch-rise mb-2 flex flex-wrap gap-2 ${suggestionClassName}`}>
           {/* Exactly two. The composer is not a menu. */}
           {suggestions.slice(0, 2).map((s) => (
             <button

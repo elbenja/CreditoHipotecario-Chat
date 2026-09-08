@@ -200,6 +200,7 @@ export function Conversation({
               disabled={busy || (state.offline && state.queued !== null)}
               suggestions={suggestions}
               onSuggestion={send}
+              suggestionClassName="hidden md:flex"
             />
           </div>
         </div>

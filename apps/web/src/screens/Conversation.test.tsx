@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { AnalysisEnvelope, PinnedField } from '@chat/shared';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Conversation } from './Conversation';
@@ -69,7 +70,8 @@ describe('Conversation mobile integration', () => {
     HTMLElement.prototype.scrollIntoView = scrollIntoView;
   });
 
-  it('renders the mobile operation-sheet trigger and mobile metric width', () => {
+  it('renders the mobile operation-sheet trigger and mobile metric width', async () => {
+    const user = userEvent.setup();
     renderConversation();
 
     const trigger = screen.getByRole('button', { name: 'Abrir datos de la operación' });
@@ -87,6 +89,17 @@ describe('Conversation mobile integration', () => {
 
     const desktopFollowUp = followUps.find((button) => button.parentElement?.classList.contains('hidden'));
     expect(desktopFollowUp).toBeDefined();
+
+    await user.click(screen.getByPlaceholderText('Pregunta lo que quieras…'));
+    const focusedFollowUp = screen
+      .getAllByRole('button', { name: '¿Y con 30% de inicial?' })
+      .find((button) => button.parentElement?.classList.contains('ch-rise'));
+    expect(focusedFollowUp?.parentElement).toHaveClass('hidden', 'md:flex');
+
+    const mobileVisibleFollowUps = screen
+      .getAllByRole('button', { name: '¿Y con 30% de inicial?' })
+      .filter((button) => !button.parentElement?.classList.contains('hidden'));
+    expect(mobileVisibleFollowUps).toHaveLength(1);
 
     expect(trigger.closest('section')).toHaveClass('mt-3');
 
