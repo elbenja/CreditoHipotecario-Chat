@@ -1,0 +1,42 @@
+HPCR101H05 TDA:296                                     I  N T E R B A N K                             FECHA: 13/02/2025   PAGINA: 00001
+                                                        CRONOGRAMA DEFINITIVO
+                                                      CREDITO HIPOTECARIO REGULAR
+JUNIO 2021                                                                                         COMPRA DE DEUDA
+************************************************************************************************************************************
+CLIENTE                                : [REDACTADO]
++------------------------------------------------------------------------+ MONEDA                    : SOLES
+| TASA DE INTERES COMPENSATORIA                                          | FECHA DE DESEMBOLSO       : 11/02/2025
+| EFECTIVA ANUAL FIJA (1)              : 6.800 %                         | PRIMER VENCIMIENTO        : 02/04/2025
+| TASA DE COSTO EFECTIVO ANUAL (2)     : 8.55   %                        |
+| TASA DE INTERÉS MORATORIO NOMINAL                                      | VENCIMIENTO CREDITO       : 02/03/2035
+| ANUAL (11)                           : 12.51 % MN                      |
+|                                                                        | SELECCION DEL SEGURO
+|                                                                        | DE DESGRAVAMEN IND.(7)    : INTERNO
++------------------------------------------------------------------------+ COMPANIA DE SEGUROS
+PLAZO                                  : 120 MESES                         DE DESGRAVAMEN IND.       : (8)
+                                                                           SEGURO DE DESGRAVAMEN
+MONTO DE CREDITO                       : S/    283,764.56                  MENSUAL (8)               : 0.0280% INDIVIDUAL
+PERIODO DE GRACIA (019 DIAS) (3)       : S/       1,215.30                 MONTO DE PRIMA DE
+---------------------------------------: ----------------                  SEG.DESGRAV.IND.MENSUAL   : (8)(9)
+TOTAL FINANCIADO                       : S/    284,979.86                  NRO DE POLIZA DE
+                                                                           SEGURO DESGRAVAMEN IND.(8): [REDACTADO]
+CATEGORIA Y DENOMINACION DE COMISIONES                                      SELECCION DEL SEGURO
+SERVICIOS ASOCIADOS AL CREDITO                                              DEL BIEN (7)                : INTERNO
+                                                                            COMPANIA DE SEGURO
+                                                                            DEL BIEN                    : (8)
+1. COMISIÓN POR EVALUACIÓN DE PÓLIZA                                        TIPO DE GARANTIA            : HIPOTECA
+DEL SEGURO DEL BIEN ENDOSADA A FAVOR                                        VALOR DEL GRAVAMEN          : US$   163,179.30
+DE INTERBANK                             : S/   150                         MONTO DE PRIMA DE
+                                                                            SEGURO BIEN MENSUAL         : (8)(9)
+                                                                            TASA DE SEGURO BIEN (8)     : 0.34 % ANUAL
+2.MODIFICACION DE CONDICIONES                                               NRO DE POLIZA DE
+COMISION POR MODIFICACION DE MONEDA O                                       SEGURO BIEN (8): [REDACTADO]
+PLAZO (5)                                : S/   290                         VALOR ASEGURADO BIEN        : S/    628,240.31
+                                                                            POLIZA DE PROTECCION AL
+                                                                            ACREEDOR PPA                : (10)
+                                                                            COMPANIA DE SEGUROS PPA     : (8)
+                                                                            TASA DE SEGURO PPA          : (8)
+ANTE EL INCUMPLIMIENTO DEL PAGO SEGÚN LAS CONDICIONES PACTADAS, SE PROCEDERÁ A REALIZAR EL REPORTE CORRESPONDIENTE A LAS
+CENTRALES DE RIESGO CON LA CALIFICACIÓN QUE CORRESPONDA, DE CONFORMIDAD CON EL REGLAMENTO PARA LA EVALUACIÓN Y CLASIFICACIÓN
+DEL DEUDOR Y LA EXIGENCIA DE PROVISIONES VIGENTE.
+
