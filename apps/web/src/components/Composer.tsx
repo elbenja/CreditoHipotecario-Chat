@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
+
+/** Three lines of 22px leading. Past that the box scrolls rather than grows. */
+const MAX_HEIGHT = 66;
 
 export function Composer({
   value,
@@ -23,20 +26,44 @@ export function Composer({
   suggestionClassName?: string;
 }) {
   const [focused, setFocused] = useState(false);
+  const boxRef = useRef<HTMLTextAreaElement>(null);
+
+  // Measured, not counted: 'auto' first so the box can shrink back when the
+  // user deletes, then grow to whatever the content actually needs.
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+    box.style.height = 'auto';
+    // A display:none box measures 0 — this component renders twice on the
+    // empty screen, one per breakpoint. Writing that 0 would collapse the
+    // hidden one, and it stays collapsed when its breakpoint takes over.
+    if (box.scrollHeight === 0) return;
+    box.style.height = `${Math.min(box.scrollHeight, MAX_HEIGHT)}px`;
+  }, [value]);
 
   const submit = () => {
     if (!disabled && value.trim()) onSubmit();
   };
 
+  // Enter sends; Shift+Enter is the only way to type the newline the box can
+  // now show.
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    e.preventDefault();
+    submit();
+  };
+
   if (variant === 'empty') {
     return (
       <div className="rounded-xl border border-ch-border bg-ch-panel px-[18px] pb-[14px] pt-[18px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-[0_0_0_3px_rgba(244,188,68,.35)] hover:border-ch-border-hover">
-        <input
+        <textarea
+          ref={boxRef}
+          rows={1}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && submit()}
+          onKeyDown={onKeyDown}
           placeholder={placeholder}
-          className="w-full bg-transparent text-[14.5px] text-white outline-none placeholder:text-slate-500"
+          className="w-full resize-none overflow-y-auto bg-transparent text-[14.5px] leading-[22px] text-white outline-none placeholder:text-slate-500"
         />
         <div className="mt-[14px] flex items-center">
           <span className="flex items-center gap-[6px] text-[11.5px] text-slate-400">
@@ -75,20 +102,22 @@ export function Composer({
         </div>
       )}
       <div
-        className={`flex items-center gap-[14px] rounded-xl border border-ch-border bg-ch-panel py-[15px] pl-[18px] pr-[15px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-[0_0_0_3px_rgba(244,188,68,.35)] hover:border-ch-border-hover ${
+        className={`flex items-end gap-[14px] rounded-xl border border-ch-border bg-ch-panel py-[15px] pl-[18px] pr-[15px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-[0_0_0_3px_rgba(244,188,68,.35)] hover:border-ch-border-hover ${
           disabled ? 'opacity-50' : ''
         }`}
       >
         {/* Disabled, not hidden: the message is pending, not lost. */}
-        <input
+        <textarea
+          ref={boxRef}
+          rows={1}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && submit()}
+          onKeyDown={onKeyDown}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 150)}
           placeholder={placeholder}
           disabled={disabled}
-          className="flex-1 bg-transparent text-[14.5px] text-white outline-none placeholder:text-slate-500"
+          className="min-w-0 flex-1 resize-none overflow-y-auto bg-transparent text-[14.5px] leading-[22px] text-white outline-none placeholder:text-slate-500"
         />
         {/* Primary CTA: slate-50 background, per the product rule. */}
         <button

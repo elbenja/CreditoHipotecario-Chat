@@ -209,6 +209,14 @@ export function Conversation({
               onSuggestion={send}
               suggestionClassName="hidden md:flex"
             />
+            {/*
+              Every figure on this screen is model-produced. Said once, under
+              the box that produces them — and deliberately NOT in #F4BC44,
+              since that accent is capped at four placements here.
+            */}
+            <p className="mt-[10px] text-center text-[11px] text-slate-500">
+              números indicativos · POC
+            </p>
           </div>
         </div>
 

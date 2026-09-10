@@ -148,4 +148,9 @@ describe('Conversation mobile integration', () => {
 
     expect(screen.getByRole('button', { name: '¿Y con 30% de inicial?' })).toBeDisabled();
   });
+
+  it('states once that the figures are model-produced', () => {
+    renderConversation();
+    expect(screen.getByText('números indicativos · POC')).toBeTruthy();
+  });
 });

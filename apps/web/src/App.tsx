@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useReducer, useState } from 'react';
 import { streamChat } from './api/streamChat';
 import { TopNav } from './components/TopNav';
+import { UndoBar } from './components/UndoBar';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { Conversation } from './screens/Conversation';
 import { EmptyState } from './screens/EmptyState';
-import { chatReducer, type Message } from './state/chatReducer';
+import { chatReducer, type ChatState, type Message } from './state/chatReducer';
 import { loadState, saveState } from './state/persistence';
 import type { PinnedField, Scenario } from '@chat/shared';
 
@@ -19,6 +20,9 @@ export default function App() {
   // Seeds the composer with a failed question so the user can edit it. `n`
   // forces the effect to re-fire even when re-editing the same question twice.
   const [composerSeed, setComposerSeed] = useState<{ text: string; n: number } | null>(null);
+  // The whole conversation, held only long enough for the undo bar to offer it
+  // back. Outside the reducer on purpose: it must not reach localStorage.
+  const [beforeReset, setBeforeReset] = useState<ChatState | null>(null);
 
   // Mirror every mutation so a reload does not lose the draft.
   useEffect(() => {
@@ -139,9 +143,23 @@ export default function App() {
     dispatch({ type: 'dismissChanges' });
   }, []);
 
+  const reset = useCallback(() => {
+    setBeforeReset(state);
+    dispatch({ type: 'reset' });
+  }, [state]);
+
+  const undoReset = useCallback(() => {
+    if (!beforeReset) return;
+    dispatch({ type: 'restore', state: beforeReset });
+    setBeforeReset(null);
+  }, [beforeReset]);
+
   return (
-    <div className="flex h-full flex-col">
-      <TopNav context={state.messages.length > 0 ? 'Depa Pueblo Libre · sin guardar' : undefined} />
+    <div className="relative flex h-full flex-col">
+      <TopNav
+        context={state.messages.length > 0 ? 'Depa Pueblo Libre · sin guardar' : undefined}
+        onReset={reset}
+      />
       {state.messages.length === 0 ? (
         <EmptyState onSubmit={send} />
       ) : (
@@ -178,6 +196,20 @@ export default function App() {
           composerSeed={composerSeed}
         />
       )}
+
+      {/*
+        Lives here, not in Conversation: a reset unmounts that screen. The
+        wrapper keeps it centred over the transcript rather than the whole
+        app, so it never lands under the pinned panel.
+      */}
+      <div className="absolute inset-x-0 bottom-0 md:right-panel">
+        <UndoBar
+          visible={beforeReset !== null}
+          label="Conversación reiniciada"
+          onUndo={undoReset}
+          onExpire={() => setBeforeReset(null)}
+        />
+      </div>
     </div>
   );
 }

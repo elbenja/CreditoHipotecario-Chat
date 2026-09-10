@@ -424,3 +424,46 @@ describe('truncation', () => {
     expect((s.messages.at(-1) as { truncated?: boolean }).truncated).toBe(false);
   });
 });
+
+describe('reset', () => {
+  const scenario: Scenario = {
+    id: 'amoblado',
+    cause: 'Si lo amueblas',
+    value: '+S/ 250',
+    unit: '/mes de alquiler',
+    tone: 'good',
+    note: 'Rango 200-300.',
+  };
+
+  const populated = () => {
+    let s = chatReducer(initialState, { type: 'send', content: 'hola' });
+    s = chatReducer(s, { type: 'envelope', envelope });
+    s = chatReducer(s, { type: 'saveScenario', scenario });
+    return s;
+  };
+
+  it('forgets everything, saved scenarios included', () => {
+    const s = chatReducer(populated(), { type: 'reset' });
+    expect(s.messages).toEqual([]);
+    expect(s.fields).toEqual({});
+    expect(s.savedScenarios).toEqual([]);
+    expect(s.status).toBe('idle');
+  });
+
+  // Connectivity is the browser's fact, not the draft's: wiping it would hide
+  // the offline banner while the connection is still down.
+  it('keeps the offline flag', () => {
+    let s = chatReducer(populated(), { type: 'setOffline', offline: true });
+    s = chatReducer(s, { type: 'reset' });
+    expect(s.offline).toBe(true);
+  });
+
+  it('restores the previous state', () => {
+    const before = populated();
+    const after = chatReducer(chatReducer(before, { type: 'reset' }), {
+      type: 'restore',
+      state: before,
+    });
+    expect(after).toEqual(before);
+  });
+});

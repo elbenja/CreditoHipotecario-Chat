@@ -23,7 +23,9 @@ export default {
       transitionTimingFunction: { ch: 'cubic-bezier(.2,.7,.2,1)' },
       transitionDuration: { 120: '120ms', 180: '180ms', 240: '240ms' },
       maxWidth: { transcript: '640px' },
-      width: { panel: '372px' },
+      // Spacing, not width: `w-panel` still resolves, and `right-panel` can
+      // hold an overlay clear of the panel without repeating the number.
+      spacing: { panel: '372px' },
       height: { nav: '60px' },
     },
   },

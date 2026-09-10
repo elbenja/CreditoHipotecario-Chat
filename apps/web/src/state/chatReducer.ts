@@ -76,7 +76,9 @@ export type Action =
   | { type: 'saveScenario'; scenario: Scenario }
   | { type: 'deleteScenario'; id: string }
   | { type: 'undoDelete' }
-  | { type: 'recalculate' };
+  | { type: 'recalculate' }
+  | { type: 'reset' }
+  | { type: 'restore'; state: ChatState };
 
 export const initialState: ChatState = {
   messages: [],
@@ -338,6 +340,15 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         analyzeSteps: [],
         error: null,
       };
+
+    case 'reset':
+      // Everything the user ever gave us, gone — saved scenarios included.
+      // `offline` survives because it is the browser's fact, not the draft's:
+      // clearing it would hide the banner while the connection is still down.
+      return { ...initialState, offline: state.offline };
+
+    case 'restore':
+      return action.state;
 
     default:
       return state;
