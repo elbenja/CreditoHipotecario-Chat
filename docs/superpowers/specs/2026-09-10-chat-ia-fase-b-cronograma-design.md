@@ -107,12 +107,29 @@ Confirmation is a modal listing what was read, with the `dudosos` fields
 highlighted. Every value is editable there. Confirming pins them; cancelling
 discards the read without pinning anything.
 
+The modal states plainly why it exists: a digit read from a photo can be wrong
+and still look confident, so the figures are worth a glance before they are
+pinned. This is the warning's whole job — not to add ceremony, but to stop the
+user from waving through ten numbers because the panel looks authoritative.
+
+## Privacy notice
+
+Every bank schedule carries the holder's name, national ID and loan number in
+its header, so "don't upload confidential ones" would mean "don't upload any".
+The attach control instead says what actually happens: only page 1 is read, the
+file is never uploaded or stored, and the page's contents go to the model that
+answers the chat. It adds that personal data can be covered before uploading —
+the condition block sits below the name line in all five banks, so a schedule
+with its header masked still reads correctly.
+
+Anyone who would rather not send the document at all can type the figures into
+the panel by hand, which is what the panel already does.
+
 ## Errors
 
 Rejected in the browser without spending a model call: not a PDF, an encrypted
-PDF, or a file over **25 MB**. The limit has to clear real documents by a wide
-margin — the BIF sample is 14 MB of phone photos — and nothing is uploaded
-anyway, so the cost of a high limit is only the reader's own memory.
+PDF, or a file over **20 MB**. The BIF sample is 14 MB of phone photos, so the
+limit clears real documents with room to spare.
 
 `pdf.js` cannot open the file: "No pude leer ese PDF."
 
@@ -149,8 +166,12 @@ image route.
 
 ## Open risk
 
-Values read from a photo are pinned as the most trustworthy data on screen. The
-confirmation modal and the `dudosos` highlighting mitigate this, but a
-confidently misread digit that the user skims past will still land as fact. If
-this leaves POC status, the mitigation to revisit is showing the source snippet
-next to each extracted value.
+Values read from a photo are pinned as the most trustworthy data on screen.
+Three things mitigate it: the confirmation step, the `dudosos` highlighting, and
+the modal saying out loud that a misread digit can look confident. None of them
+eliminate it — a wrong figure the user skims past still lands as fact, and it
+lands in the field the whole analysis is built on.
+
+If this leaves POC status, the mitigation to revisit is showing the source
+snippet next to each extracted value, so confirming means comparing rather than
+trusting.
