@@ -61,4 +61,20 @@ describe('deriveInicial', () => {
   it('returns null when either side is not a number', () => {
     expect(deriveInicial('caro', '280,000')).toBeNull();
   });
+
+  it('parses currency prefix S/', () => {
+    expect(deriveInicial('S/ 300,000', '250,000')).toBe('50,000');
+  });
+
+  it('parses Peruvian period-thousands with comma-decimal', () => {
+    expect(deriveInicial('300.000,50', '250,000')).toBe('50,001');
+  });
+
+  it('parses multi-group Peruvian period-thousands', () => {
+    expect(deriveInicial('1.234.567,89', '1,000,000')).toBe('234,568');
+  });
+
+  it('parses S/. prefix with period-decimal format', () => {
+    expect(deriveInicial('S/. 618,382.27', '500,000')).toBe('118,382');
+  });
 });
