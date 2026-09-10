@@ -50,6 +50,29 @@ describe('runDocumentPipeline', () => {
     expect(keys).toEqual(['tea']);
   });
 
+  it('rejects bare affixes (e.g. "S/." or "%") rather than pinning them as values', () => {
+    const raw = JSON.stringify({
+      montoFinanciado: 'S/.',
+      tea: '%',
+      cuota: '2,500.00',
+      dudosos: [],
+    });
+    const f = fieldsOf(raw);
+    expect(Object.keys(f)).toEqual(['cuota']);
+    expect(f.cuota!.value).toBe('2,500.00');
+  });
+
+  it('still strips legitimate affixes correctly', () => {
+    const raw = JSON.stringify({
+      montoFinanciado: 'S/ 280,000.00',
+      tea: '8.99 %',
+      dudosos: [],
+    });
+    const f = fieldsOf(raw);
+    expect(f.montoFinanciado!.value).toBe('280,000.00');
+    expect(f.tea!.value).toBe('8.99');
+  });
+
   it('strips markdown fences the model sometimes adds', () => {
     expect(runDocumentPipeline('```json\n' + FULL + '\n```').ok).toBe(true);
   });
@@ -64,10 +87,36 @@ describe('runDocumentPipeline', () => {
     expect(r).toEqual({ ok: false, reason: 'unparsable' });
   });
 
-  it('never lets the model claim user provenance', () => {
-    const raw = JSON.stringify({ ...JSON.parse(FULL), provenance: 'user' });
-    for (const f of Object.values(fieldsOf(raw))) {
-      expect(f.provenance).not.toBe('user');
+  it('enforces provenance invariant: all fields are exactly documento or assumed', () => {
+    // Provenance is structural: the pipeline assigns only 'documento' (for read fields)
+    // or 'assumed' (for valorInmueble and dudosos). If a regression adds a third value
+    // or a code path leaks the model's input, this test catches it.
+    const testCases = [
+      { raw: FULL, label: 'normal input' },
+      {
+        raw: JSON.stringify({ ...JSON.parse(FULL), provenance: 'user' }),
+        label: 'hostile: model sends provenance: user',
+      },
+      {
+        raw: JSON.stringify({ ...JSON.parse(FULL), provenance: 'market', unknownField: true }),
+        label: 'hostile: extra unknown keys',
+      },
+      {
+        raw: JSON.stringify({
+          montoFinanciado: '100,000',
+          tea: '5%',
+          dudosos: ['tea'],
+        }),
+        label: 'minimal input with dudoso',
+      },
+    ];
+
+    for (const { raw, label } of testCases) {
+      const r = runDocumentPipeline(raw);
+      if (!r.ok) continue; // ok to have no schedule; we only check fields that exist
+      for (const field of r.fields) {
+        expect(field.provenance, `${label}: field ${field.key}`).toMatch(/^(documento|assumed)$/);
+      }
     }
   });
 });
