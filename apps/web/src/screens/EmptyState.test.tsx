@@ -21,26 +21,20 @@ vi.mock('../api/streamChat', async (importOriginal) => {
 });
 
 describe('EmptyState', () => {
-  it('renders the mobile prompt, suggestions, and empty summary', async () => {
+  it('offers five facts to start with instead of premature analysis', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-
-    render(<EmptyState onSubmit={onSubmit} state={initialState} />);
-
-    expect(
-      screen.getByText(
-        'Cuéntamelo en tus palabras. Voy fijando los datos abajo y los puedes corregir cuando quieras.',
-      ),
-    ).toBeInTheDocument();
-
-    const suggestions = screen.getByRole('region', {
-      name: 'Preguntas sugeridas para móvil',
-    });
-    const questionButtons = within(suggestions).getAllByRole('button');
-
-    expect(questionButtons).toHaveLength(3);
-    await user.click(questionButtons[1]!);
-    expect(onSubmit).toHaveBeenCalledWith('¿Es un buen negocio?');
+    const onAskField = vi.fn();
+    render(<EmptyState onSubmit={onSubmit} onAskField={onAskField} state={initialState} />);
+    const group = screen.getByRole('group', { name: 'Datos de la propiedad' });
+    expect(within(group).getAllByRole('button').map((button) => button.textContent))
+      .toEqual(['Ubicación', 'Precio', 'Área', 'Cuota inicial', 'Tasa']);
+    await user.click(within(group).getByRole('button', { name: 'Ubicación' }));
+    expect(onAskField).toHaveBeenCalledWith('ubicacion');
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.queryByText('O empieza por una pregunta')).not.toBeInTheDocument();
+    expect(screen.queryByText('¿Es un buen negocio?')).not.toBeInTheDocument();
+    expect(screen.getByText(/Tengo S\/ 60,000 de inicial/)).toBeInTheDocument();
     expect(screen.getByText('Ningún dato fijado todavía')).toBeInTheDocument();
   });
 
@@ -137,7 +131,7 @@ describe('EmptyState attach flow', () => {
 
     const file = pdf('soltado.pdf');
     const dt = { items: [{ kind: 'file', type: 'application/pdf' }], files: [file], types: ['Files'] };
-    const heading = screen.getAllByText('¿Qué depa estás evaluando?')[0]!;
+    const heading = screen.getByText('Cuéntame del depa y su hipoteca');
     fireEvent.dragEnter(heading, { dataTransfer: dt });
     expect(screen.getByText('Suelta tu cronograma aquí')).toBeInTheDocument();
     fireEvent.drop(heading, { dataTransfer: dt });

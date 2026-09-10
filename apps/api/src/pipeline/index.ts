@@ -1,5 +1,6 @@
 import {
   AnalysisEnvelopeSchema,
+  CaptureEnvelopeSchema,
   groupFieldValue,
   isValidSoles,
   normalizeSoles,
@@ -66,6 +67,28 @@ export function runPipeline(raw: string, userTurns: string[]): PipelineResult {
     parsed = JSON.parse(stripFences(raw));
   } catch {
     return { ok: false, prose: raw, candidates: extractCandidates(raw) };
+  }
+
+  if (typeof parsed === 'object' && parsed !== null && 'kind' in parsed && (parsed.kind === 'capture' || parsed.kind === 'clarification')) {
+    const capture = CaptureEnvelopeSchema.safeParse(parsed);
+    if (!capture.success) {
+      return { ok: false, prose: 'No pude registrar esos datos. ¿Puedes escribirlos de nuevo?', candidates: [] };
+    }
+    // Capturing a fact must never fill the remaining form with guesses.
+    const fields = enforceProvenance(capture.data.fields, userTurns)
+      .filter((field) => field.provenance === 'user')
+      .map((field) => ({ ...field, value: groupFieldValue(stripAffixes(field)) }));
+    // A successful capture has a product-owned acknowledgement. The model
+    // must not smuggle unsolicited advice into the confirmation sentence.
+    const verdict = capture.data.kind === 'capture' && !capture.data.askField && capture.data.fields.length > 0
+      ? fields.length > 0
+        ? 'Listo, recibí los datos de la propiedad.'
+        : 'No pude confirmar esos datos. ¿Puedes precisarlos?'
+      : capture.data.reply;
+    return { ok: true, envelope: {
+      kind: 'capture', verdict, askField: capture.data.askField, fields,
+      metrics: [], scenarios: [], sources: [], prose: [], followUps: [],
+    } };
   }
 
   const result = AnalysisEnvelopeSchema.safeParse(parsed);

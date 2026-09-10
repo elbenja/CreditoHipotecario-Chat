@@ -27,11 +27,7 @@ export interface SSEEvent { event: string; data: unknown }
 export type CallModel = (messages: ChatMessage[]) => Promise<ModelReply>;
 
 /** Steps shown while waiting. Real labels — this is where trust is built. */
-const ANALYZE_STEPS = [
-  'Leyendo lo que me contaste',
-  'Contrastando precio por m² del distrito',
-  'Calculando cuota y flujo mensual',
-];
+const ANALYZE_STEPS = ['Leyendo tu mensaje y los datos de la propiedad'];
 
 export function parseChatBody(raw: unknown): ChatBody | null {
   const parsed = BodySchema.safeParse(raw);

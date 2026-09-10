@@ -12,9 +12,11 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/1\/12/);
   });
 
-  it('caps prose and follow-ups at three', () => {
+  it('limits output to what was requested without requiring three metrics', () => {
     expect(SYSTEM_PROMPT).toMatch(/m[áa]ximo 3 p[áa]rrafos/i);
-    expect(SYSTEM_PROMPT).toMatch(/exactamente 3/i);
+    expect(SYSTEM_PROMPT).toContain('\"metrics\": de 0 a 3');
+    expect(SYSTEM_PROMPT).toContain('\"followUps\": de 0 a 3');
+    expect(SYSTEM_PROMPT).toContain('CONTRATO CORTO DE CAPTURA');
   });
 
   it('defines the scope boundary for refusals', () => {

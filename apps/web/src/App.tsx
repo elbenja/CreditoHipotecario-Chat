@@ -5,15 +5,10 @@ import { UndoBar } from './components/UndoBar';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { Conversation } from './screens/Conversation';
 import { EmptyState } from './screens/EmptyState';
-import { chatReducer, type ChatState, type Message } from './state/chatReducer';
+import { chatReducer, type ChatState } from './state/chatReducer';
 import { loadState, saveState } from './state/persistence';
-import type { PinnedField, Scenario } from '@chat/shared';
-
-function toTurns(messages: Message[]) {
-  return messages.flatMap((m) =>
-    m.role === 'user' ? [{ role: 'user' as const, content: m.content }] : [],
-  );
-}
+import { toTurns } from './state/guidance';
+import type { FieldKey, PinnedField, Scenario } from '@chat/shared';
 
 export default function App() {
   const [state, dispatch] = useReducer(chatReducer, undefined, loadState);
@@ -35,7 +30,7 @@ export default function App() {
   }, [online]);
 
   const request = useCallback(
-    async (turns: { role: 'user'; content: string }[], fields: PinnedField[]) => {
+    async (turns: { role: 'user' | 'assistant'; content: string }[], fields: PinnedField[]) => {
       await streamChat({ messages: turns, fields }, (e) => {
         const data = e.data as Record<string, any>;
         if (e.event === 'status') dispatch({ type: 'status', phase: data.phase });
@@ -74,10 +69,10 @@ export default function App() {
         return;
       }
       dispatch({ type: 'send', content: text });
-      const turns = [...toTurns(state.messages), { role: 'user' as const, content: text }];
+      const turns = toTurns([...state.messages, { id: 'pending', role: 'user', content: text, respondingTo: state.pendingField ?? undefined }]);
       await request(turns, Object.values(state.fields));
     },
-    [state.offline, state.messages, state.fields, request],
+    [state.offline, state.messages, state.fields, state.pendingField, request],
   );
 
   // Connectivity returned with a message waiting: send it on the user's behalf.
@@ -91,13 +86,18 @@ export default function App() {
 
   const recalculate = useCallback(async () => {
     dispatch({ type: 'recalculate' });
-    await request(toTurns(state.messages), Object.values(state.fields));
+    await request([...toTurns(state.messages), { role: 'user', content: 'Recalcula el último análisis solicitado con los datos actuales del panel.' }], Object.values(state.fields));
   }, [state.messages, state.fields, request]);
 
   const retry = useCallback(async () => {
     dispatch({ type: 'clearError' });
-    await request(toTurns(state.messages), Object.values(state.fields));
-  }, [state.messages, state.fields, request]);
+    const turns = toTurns(state.messages);
+    const failedRequest = state.error?.retry;
+    if (failedRequest && turns.at(-1)?.content !== failedRequest) {
+      turns.push({ role: 'user', content: failedRequest });
+    }
+    await request(turns, Object.values(state.fields));
+  }, [state.messages, state.fields, state.error, request]);
 
   const editQuestion = useCallback(() => {
     const failedQuestion = state.error?.retry;
@@ -162,7 +162,7 @@ export default function App() {
   // first message counts: without this, a PDF-only session had no way back.
   const context =
     state.messages.length > 0
-      ? 'Depa Pueblo Libre · sin guardar'
+      ? `${state.fields.ubicacion?.value ?? 'Tu propiedad'} · sin guardar`
       : Object.keys(state.mortgage).length > 0
         ? 'Cronograma leído · sin guardar'
         : undefined;
@@ -171,10 +171,16 @@ export default function App() {
     <div className="relative flex h-full flex-col">
       <TopNav context={context} onReset={reset} />
       {state.messages.length === 0 ? (
-        <EmptyState onSubmit={send} state={state} dispatch={dispatch} />
+        <EmptyState
+          onSubmit={send}
+          onAskField={(key: FieldKey) => dispatch({ type: 'askField', key })}
+          state={state}
+          dispatch={dispatch}
+        />
       ) : (
         <Conversation
           state={state}
+          onAskField={(key: FieldKey) => dispatch({ type: 'askField', key })}
           onSend={send}
           onEdit={edit}
           onEditMortgage={editMortgage}

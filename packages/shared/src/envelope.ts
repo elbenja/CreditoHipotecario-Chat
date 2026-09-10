@@ -46,7 +46,17 @@ export const MetricSchema = z.object({
   context: z.string(),
 });
 
+export const CaptureEnvelopeSchema = z.object({
+  kind: z.enum(['capture', 'clarification']),
+  askField: z.enum(FIELD_KEYS).nullish().transform((key) => key ?? undefined),
+  reply: z.string().trim().min(1),
+  fields: z.array(PinnedFieldSchema),
+});
+
 export const AnalysisEnvelopeSchema = z.object({
+  // Optional so existing persisted conversations retain their original rendering.
+  kind: z.enum(['capture', 'analysis']).optional(),
+  askField: z.enum(FIELD_KEYS).optional(),
   verdict: z.string().min(1),
   fields: z.array(PinnedFieldSchema),
   metrics: z.array(MetricSchema),

@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import type { FieldKey } from '@chat/shared';
+import { FieldSuggestions } from '../components/FieldSuggestions';
+import { getAnalysisSuggestions } from '../state/guidance';
 import { AnalyzeSteps } from '../components/AnalyzeSteps';
 import { AssistantAnswer } from '../components/AssistantAnswer';
 import { Composer } from '../components/Composer';
@@ -22,6 +25,7 @@ import { selectDirtyKeys, type Action, type ChatState } from '../state/chatReduc
 
 export function Conversation({
   state,
+  onAskField,
   onSend,
   onEdit,
   onEditMortgage,
@@ -43,6 +47,7 @@ export function Conversation({
   dispatch,
 }: {
   state: ChatState;
+  onAskField?: (key: FieldKey) => void;
   onSend: (text: string) => void;
   onEdit: (key: string, value: string) => void;
   onEditMortgage?: (key: string, value: string) => void;
@@ -72,6 +77,17 @@ export function Conversation({
   const [showUndo, setShowUndo] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const busy = state.status !== 'idle' && state.status !== 'error';
+  const lastMessage = state.messages.at(-1);
+  const capturing = lastMessage?.role === 'assistant-question' ||
+    (lastMessage?.role === 'assistant' && lastMessage.envelope.kind === 'capture');
+  const contextualSuggestions = state.pendingField ? [] : getAnalysisSuggestions(state.fields);
+  const hasAnalysis = state.messages.some((message) => message.role === 'assistant' &&
+    (message.envelope.kind === 'analysis' || message.envelope.metrics.length > 0 || message.envelope.scenarios.length > 0));
+  const dirtyKeys = hasAnalysis ? selectDirtyKeys(state) : [];
+
+  useEffect(() => {
+    if (state.pendingField) document.querySelector<HTMLTextAreaElement>('textarea')?.focus();
+  }, [state.pendingField]);
 
   useEffect(() => {
     if (composerSeed) setValue(composerSeed.text);
@@ -112,6 +128,8 @@ export function Conversation({
     }
   }
 
+  if (capturing) suggestions = [];
+
   return (
     <div className="relative flex min-h-0 flex-1">
       {/* The whole chat column takes a dropped schedule (card 10); the panel
@@ -127,6 +145,9 @@ export function Conversation({
                     <UserBubble content={m.content} />
                   </div>
                 );
+              }
+              if (m.role === 'assistant-question') {
+                return <p key={m.id} className="ch-line text-[13.5px] leading-[1.6] text-slate-300 md:text-[14.5px]">{m.content}</p>;
               }
               if (m.role === 'assistant') {
                 return (
@@ -202,6 +223,21 @@ export function Conversation({
               </div>
             )}
 
+            {capturing && !busy && !state.error && onAskField && (
+              <div className="flex flex-col gap-6 pb-2">
+                <FieldSuggestions fields={state.fields} onAsk={onAskField} selected={state.pendingField} disabled={state.queued !== null} />
+                {contextualSuggestions.length > 0 && (
+                  <div>
+                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-[.1em] text-slate-400">Ahora puedes preguntar</p>
+                    <div className="flex flex-wrap gap-2">
+                      {contextualSuggestions.map((suggestion) => (
+                        <Pill key={suggestion} onClick={() => send(suggestion)} disabled={state.queued !== null} className="min-h-[44px] text-left">{suggestion}</Pill>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div ref={endRef} />
           </div>
         </div>
@@ -226,7 +262,7 @@ export function Conversation({
               value={value}
               onChange={setValue}
               onSubmit={() => send(value)}
-              placeholder={state.offline ? 'Sin conexión…' : 'Pregunta lo que quieras…'}
+              placeholder={state.offline ? 'Sin conexión…' : capturing ? 'Escribe lo que sabes o haz una pregunta…' : 'Pregunta lo que quieras…'}
               // Offline still lets the user type and send once — that's the
               // only way a message reaches the queue. Once something is
               // queued (the single pending slot) the composer locks until
@@ -256,7 +292,7 @@ export function Conversation({
           proposals={state.proposals}
           changes={state.changes}
           savedScenarios={state.savedScenarios}
-          dirtyKeys={selectDirtyKeys(state)}
+          dirtyKeys={dirtyKeys}
           busy={busy}
           onEdit={onEdit}
           onEditMortgage={onEditMortgage}
@@ -277,7 +313,7 @@ export function Conversation({
         proposals={state.proposals}
         changes={state.changes}
         savedScenarios={state.savedScenarios}
-        dirtyKeys={selectDirtyKeys(state)}
+        dirtyKeys={dirtyKeys}
         busy={busy}
         onEdit={onEdit}
         onEditMortgage={onEditMortgage}

@@ -16,6 +16,9 @@ export function AssistantAnswer({
   savedIds?: string[];
   disabled?: boolean;
 }) {
+  if (envelope.kind === 'capture') {
+    return <p className="text-[13.5px] leading-[1.6] text-slate-300 md:text-[14.5px]">{envelope.verdict}</p>;
+  }
   return (
     <div className="flex min-w-0 flex-col gap-[13px] md:gap-4">
       <div className="flex items-center gap-2">

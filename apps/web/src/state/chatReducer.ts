@@ -1,4 +1,12 @@
-import { deriveInicial, type AnalysisEnvelope, type MortgageField, type PinnedField, type Scenario } from '@chat/shared';
+import { getFieldQuestion } from './guidance';
+import {
+  deriveInicial,
+  type AnalysisEnvelope,
+  type FieldKey,
+  type MortgageField,
+  type PinnedField,
+  type Scenario,
+} from '@chat/shared';
 
 export interface Candidate {
   key: string;
@@ -7,7 +15,8 @@ export interface Candidate {
 }
 
 export type Message =
-  | { id: string; role: 'user'; content: string }
+  | { id: string; role: 'user'; content: string; respondingTo?: FieldKey }
+  | { id: string; role: 'assistant-question'; content: string; field: FieldKey }
   | {
       id: string;
       role: 'assistant';
@@ -27,6 +36,7 @@ export interface FieldChange {
 }
 
 export interface ChatState {
+  pendingField: FieldKey | null;
   messages: Message[];
   fields: Record<string, PinnedField>;
   baseline: Record<string, string>;
@@ -75,6 +85,7 @@ export interface ChatError {
 }
 
 export type Action =
+  | { type: 'askField'; key: FieldKey }
   | { type: 'send'; content: string }
   | { type: 'status'; phase: Status }
   | { type: 'analyzeStep'; label: string }
@@ -104,6 +115,7 @@ export type Action =
   | { type: 'cancelExtraction' };
 
 export const initialState: ChatState = {
+  pendingField: null,
   messages: [],
   fields: {},
   baseline: {},
@@ -145,10 +157,22 @@ const nextId = (): string =>
 
 export function chatReducer(state: ChatState, action: Action): ChatState {
   switch (action.type) {
+    case 'askField':
+      if (state.status !== 'idle' || state.queued || state.pendingField === action.key) return state;
+      return {
+        ...state,
+        pendingField: action.key,
+        messages: [...state.messages, {
+          id: nextId(), role: 'assistant-question', field: action.key,
+          content: getFieldQuestion(action.key, state.fields[action.key]),
+        }],
+      };
+
     case 'send':
       return {
         ...state,
-        messages: [...state.messages, { id: nextId(), role: 'user', content: action.content }],
+        messages: [...state.messages, { id: nextId(), role: 'user', content: action.content, respondingTo: state.pendingField ?? undefined }],
+        pendingField: null,
         status: 'thinking',
         analyzeSteps: [],
         error: null,
@@ -212,8 +236,11 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
           },
         ],
         fields,
-        // Derived after arbitration, so a blocked field is not spuriously dirty.
-        baseline: deriveBaseline(fields),
+        pendingField: action.envelope.kind === 'capture' ? action.envelope.askField ?? null : null,
+        // Capturing data does not recalculate previous results. Keep their baseline.
+        baseline: action.envelope.kind === 'capture'
+          ? { ...deriveBaseline(fields), ...state.baseline }
+          : deriveBaseline(fields),
         changes,
         proposals,
         status: 'idle',
