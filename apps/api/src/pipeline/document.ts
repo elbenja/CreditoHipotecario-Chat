@@ -41,7 +41,7 @@ function bareValue(raw: string, p: Presentation): string {
   let v = raw.trim();
   if (p.prefix) v = v.replace(new RegExp(`^${p.prefix}\\.?\\s*`, 'i'), '').trim();
   if (p.suffix) v = v.replace(new RegExp(`\\s*${p.suffix}$`, 'i'), '').trim();
-  return v || raw.trim();
+  return v;
 }
 
 export function runDocumentPipeline(raw: string): DocumentResult {
