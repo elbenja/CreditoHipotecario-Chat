@@ -56,6 +56,10 @@ function longDigitRuns(text: string): string[] {
   return text.match(/\d{8,}/g) ?? [];
 }
 
+function redactionMarkerCount(text: string): number {
+  return (text.match(/\[REDACTADO\]/g) ?? []).length;
+}
+
 describe('cronograma fixtures: bcp-page1.txt', () => {
   it('still carries the figures under test', () => {
     expect(bcp).toContain('6.99%');
@@ -77,6 +81,22 @@ describe('cronograma fixtures: bcp-page1.txt', () => {
   it('has no unlabelled 8+ digit identifier (loan/policy/national-id)', () => {
     expect(longDigitRuns(bcp)).toEqual([]);
   });
+
+  // Exact-count invariant: the one leak shape none of the checks above can
+  // see is an unlabelled, digit-free identifier (e.g. a name and street
+  // address sitting on their own lines with no "label :" and no digits at
+  // all — this is exactly how the original name/address block leaked before
+  // it was collapsed by the redaction script's awk rule). Such a line trips
+  // no label pattern and no digit-run check, yet still removes a
+  // "[REDACTADO]" marker if its rule stops firing, or leaves the marker
+  // count unchanged if it's simply reworded around. Pinning the exact count
+  // (verified by hand against the current fixture: the collapsed name/
+  // address block, "CREDITO NRO", and both "(POLIZA n)" values) catches that
+  // drop directly. This number must be updated deliberately, in lockstep
+  // with any change to scripts/make-fixtures.sh's BCP redaction rules.
+  it('has exactly the expected number of redaction markers', () => {
+    expect(redactionMarkerCount(bcp)).toBe(4);
+  });
 });
 
 describe('cronograma fixtures: interbank-page1.txt', () => {
@@ -92,5 +112,14 @@ describe('cronograma fixtures: interbank-page1.txt', () => {
 
   it('has no unlabelled 8+ digit identifier (loan/policy/national-id)', () => {
     expect(longDigitRuns(interbank)).toEqual([]);
+  });
+
+  // Exact-count invariant: see the matching comment in the bcp-page1.txt
+  // suite above. Verified by hand against the current fixture (the
+  // collapsed client-name line and the two "NRO DE POLIZA ... (8):"
+  // values). Update deliberately if scripts/make-fixtures.sh's Interbank
+  // redaction rules change.
+  it('has exactly the expected number of redaction markers', () => {
+    expect(redactionMarkerCount(interbank)).toBe(3);
   });
 });
