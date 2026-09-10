@@ -10,7 +10,7 @@ export const FIELD_KEYS = [
   'alquiler',
 ] as const;
 
-export const ProvenanceSchema = z.enum(['user', 'assumed', 'market']);
+export const ProvenanceSchema = z.enum(['user', 'assumed', 'market', 'documento']);
 
 export const PinnedFieldSchema = z.object({
   key: z.enum(FIELD_KEYS),
