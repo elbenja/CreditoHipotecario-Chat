@@ -1,13 +1,25 @@
 import { PinnedFieldSchema } from '@chat/shared';
 import { z } from 'zod';
+import { runDocumentPipeline } from './pipeline/document.ts';
 import { runPipeline } from './pipeline/index.ts';
 import { REFUSAL_ENVELOPE, isOutOfScope } from './pipeline/scope.ts';
-import { buildMessages, type ChatMessage } from './prompt.ts';
+import { buildDocumentMessages, buildMessages, type ChatMessage } from './prompt.ts';
 import type { ModelReply } from './kimi.ts';
+
+const DocumentSchema = z.union([
+  z.object({ kind: z.literal('text'), text: z.string().min(1) }),
+  z.object({
+    kind: z.literal('image'),
+    // Data URLs only. A remote URL would make the API fetch whatever a caller
+    // names, which is not something this endpoint should ever do.
+    dataUrl: z.string().regex(/^data:image\/(jpeg|png);base64,/),
+  }),
+]);
 
 const BodySchema = z.object({
   messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string() })).min(1),
   fields: z.array(PinnedFieldSchema).default([]),
+  document: DocumentSchema.optional(),
 });
 
 export type ChatBody = z.infer<typeof BodySchema>;
@@ -35,6 +47,40 @@ export async function* runTurn(body: ChatBody, callModel: CallModel): AsyncGener
   const { messages, fields } = body;
 
   yield { event: 'status', data: { phase: 'thinking' } };
+
+  // Document turns branch before the out-of-scope guardrail: on an upload the
+  // accompanying message text is incidental or odd (or literally off-topic),
+  // and the document itself is the payload — the guardrail must not eat it.
+  if (body.document) {
+    yield { event: 'analyzeStep', data: { label: 'Leyendo el cronograma' } };
+    yield { event: 'status', data: { phase: 'analyzing' } };
+    try {
+      const { content } = await callModel(buildDocumentMessages(body.document));
+      const result = runDocumentPipeline(content);
+      yield { event: 'status', data: { phase: 'streaming' } };
+      if (result.ok) {
+        yield { event: 'extraction', data: { fields: result.fields } };
+      } else {
+        yield {
+          event: 'error',
+          data: {
+            kind: 'document',
+            message:
+              result.reason === 'noSchedule'
+                ? 'Esto no parece un cronograma de pagos. Revisa que sea la primera página.'
+                : 'No pude leer las condiciones de ese cronograma.',
+          },
+        };
+      }
+    } catch (err) {
+      console.error('[chat] document extraction failed:', err);
+      yield {
+        event: 'error',
+        data: { kind: 'api', message: 'Se cayó la conexión con el modelo. Tus datos siguen acá.' },
+      };
+    }
+    return;
+  }
 
   // Guardrail: refuse off-topic turns before spending a model call.
   // Only the latest user turn is checked — earlier context is already scoped.

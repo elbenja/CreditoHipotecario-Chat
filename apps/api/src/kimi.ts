@@ -31,10 +31,17 @@ export interface ModelReply {
 export async function callKimi(messages: ChatMessage[]): Promise<ModelReply> {
   const res = await getClient().chat.completions.create({
     model: MODEL,
+    // ChatMessage is a discriminated union keyed on role, exactly like the
+    // SDK's own ChatCompletionMessageParam union (only a user turn may carry
+    // image_url parts), so it satisfies the SDK type structurally — no cast.
     messages,
     // No temperature: the Moonshot models used here reject anything but 1
     // ("invalid temperature: only 1 is allowed for this model"), so let the
     // model default apply rather than sending a value it refuses.
+    // Generous on purpose: these models spend reasoning tokens before emitting
+    // any content. Measured on a page-1 crop: ~2,200 completion tokens, almost
+    // all of them reasoning. A low ceiling yields '' and no error at all.
+    max_tokens: 4000,
     response_format: { type: 'json_object' },
   });
   const choice = res.choices[0];
