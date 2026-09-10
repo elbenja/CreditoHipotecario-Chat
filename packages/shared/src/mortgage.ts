@@ -63,8 +63,12 @@ function toNumber(raw: string | undefined): number | null {
 }
 
 /**
- * The down payment is what the buyer covers that the bank did not. Returns null
- * rather than a guess whenever the subtraction would not mean anything.
+ * The down payment is what the buyer covers that the bank did not. Subtracts the
+ * financed amount (banco-stated) from the price (user-stated). When they are equal,
+ * returning zero would assert "you put nothing down" from figures that may not be
+ * comparable: the price may be stale, approximate, or measure something different
+ * than what the bank financed. Returning null leaves the field empty so the user
+ * fills it, keeping the panel's rule of never presenting an inference as fact.
  */
 export function deriveInicial(
   precio: string | undefined,
