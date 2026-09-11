@@ -1,4 +1,4 @@
-# Handoff — Fase B merged, cronograma UX pass open as PR #5
+# Handoff — Fase B and its UX pass merged
 
 Written 2026-09-07 after deployment, updated 2026-09-08 after the Phase 4
 merge, 2026-09-11 after Fase B, and again 2026-09-11 after the UX pass on
@@ -17,11 +17,11 @@ by the project owner and passed: the app reads a real cronograma end to end.
 The `response_format: json_object` suspicion in `apps/api/src/kimi.ts` did
 not materialise.
 
-**The UX pass on that flow is built and open as PR #5**, branch
-`ux-composer-cronograma`, from the Claude Design page
-`Micro-interacciones chat.dc.html` (cards 03, 09, 10, 11). 381 tests
+**The UX pass on that flow is merged** (PR #5, rebase-merged 2026-09-11,
+branch `ux-composer-cronograma`), from the Claude Design page
+`Micro-interacciones chat.dc.html` (cards 03, 09, 10, 11, 12, 13). 390 tests
 (baseline 351), typecheck and build clean, verified in the in-app browser on
-desktop and the 375px mobile preset. What it changes:
+desktop and the 375px mobile preset. What it changed:
 
 - **The bug: "Fijar estos datos" looked like a no-op.** Confirming pinned into
   `state.mortgage` fine, but the empty screen rendered `EmptyPanel`, a static
@@ -59,6 +59,9 @@ desktop and the 375px mobile preset. What it changes:
 - **One "+" control at the left of the composer**, both variants, replacing
   the link icon and the paperclip. Empty screen copy: "Sube un documento o
   pega el link de un anuncio" — pasting a listing link is planned, not built.
+- **"Nueva consulta" shows after a PDF-only read.** It used to wait for a
+  first message, so a session that only read a schedule had no way back.
+  `App.tsx` derives the nav context from messages *or* mortgage.
 
 **Not done:** the five real PDFs have not been dropped (as opposed to picked)
 onto the deployed build. The drop goes through the same `attachSchedule`, so
@@ -150,7 +153,6 @@ the shipped Phase 4 behavior, then repeat the affected mobile and desktop QA.
 
 ## Open items
 
-- **PR #5 review and merge.** The cronograma UX pass, see above.
 - **"1 datos fijados".** The mobile summary and the panel header do not
   singularise. Pre-existing; newly easy to hit now that a schedule alone can
   populate the panel.
