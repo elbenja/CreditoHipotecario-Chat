@@ -155,7 +155,7 @@ export function DropZone({
             </>
           ) : (
             <>
-              <div className="flex items-end gap-4 text-slate-400">
+              <div className="flex items-end gap-4 text-ch-accent">
                 <Icon name="image-02" size={25} className="ch-drop-icon -rotate-[10deg]" />
                 <Icon name="file-02" size={31} className="ch-drop-icon ch-drop-float" />
                 <Icon name="folder-02" size={25} className="ch-drop-icon rotate-[10deg]" />
