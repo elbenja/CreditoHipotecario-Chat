@@ -95,6 +95,26 @@ describe('POST /api/chat', () => {
     expect(modes).toEqual(['chat']);
   });
 
+  it('pins a previously proposed initial payment after the user accepts it', async () => {
+    const accepted = {
+      kind: 'capture', reply: 'Listo.',
+      fields: [{ key: 'inicial', label: 'Cuota inicial', value: '20', suffix: '%', provenance: 'assumed' }],
+    };
+    const app = buildServer({ callModel: async () => ({ content: JSON.stringify(accepted), truncated: false }) });
+    const res = await app.inject({
+      method: 'POST', url: '/api/chat',
+      payload: { messages: [
+        { role: 'assistant', content: '¿Aceptas una cuota inicial del 20 %?' },
+        { role: 'user', content: 'sí' },
+      ], fields: [] },
+    });
+    await app.close();
+    const last = parseEvents(res.body).at(-1)!;
+    expect(last).toMatchObject({ event: 'envelope', data: {
+      envelope: { fields: [{ key: 'inicial', value: '20', provenance: 'assumed' }] },
+    } });
+  });
+
   it('emits fallback when the model breaks contract', async () => {
     const res = await post(async () => ({ content: 'Con 30% de inicial la cuota baja.', truncated: false }));
     const last = parseEvents(res.body).at(-1)!;

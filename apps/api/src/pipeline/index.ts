@@ -60,7 +60,23 @@ function repairAmount(value: string): string {
   return normalizeSoles(value) ?? value;
 }
 
-export function runPipeline(raw: string, userTurns: string[]): PipelineResult {
+const AFFIRMATIVE = /^(s[ií]|ok|acepto|de acuerdo|dale|correcto)(?:\s|[.!]|$)/i;
+
+function acceptedProposal(
+  field: { value: string; label: string; provenance: string },
+  userTurns: string[],
+  previousAssistant: string,
+): boolean {
+  const latestUser = userTurns.at(-1)?.trim() ?? '';
+  if (!AFFIRMATIVE.test(latestUser) || !previousAssistant.trim()) return false;
+  const escaped = field.value.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (!escaped) return false;
+  const valueWasProposed = new RegExp(`(^|\\D)${escaped}(?=\\D|$)`).test(previousAssistant);
+  const fieldWasNamed = previousAssistant.toLocaleLowerCase('es').includes(field.label.toLocaleLowerCase('es'));
+  return valueWasProposed && fieldWasNamed && field.provenance !== 'user';
+}
+
+export function runPipeline(raw: string, userTurns: string[], previousAssistant = ''): PipelineResult {
   // 1. Parse and validate.
   let parsed: unknown;
   try {
@@ -74,9 +90,10 @@ export function runPipeline(raw: string, userTurns: string[]): PipelineResult {
     if (!capture.success) {
       return { ok: false, prose: 'No pude registrar esos datos. ¿Puedes escribirlos de nuevo?', candidates: [] };
     }
-    // Capturing a fact must never fill the remaining form with guesses.
+    // Capture explicit facts and estimates the user just accepted. Other
+    // guesses stay out of the panel.
     const fields = enforceProvenance(capture.data.fields, userTurns)
-      .filter((field) => field.provenance === 'user')
+      .filter((field) => field.provenance === 'user' || acceptedProposal(field, userTurns, previousAssistant))
       .map((field) => ({ ...field, value: groupFieldValue(stripAffixes(field)) }));
     // A successful capture has a product-owned acknowledgement. The model
     // must not smuggle unsolicited advice into the confirmation sentence.

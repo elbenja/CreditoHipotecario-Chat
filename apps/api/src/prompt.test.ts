@@ -23,6 +23,16 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/aporta datos y adem[áa]s pide un c[áa]lculo.*usa el contrato de an[áa]lisis/i);
   });
 
+  it('estimates rent instead of asking the user for it', () => {
+    expect(SYSTEM_PROMPT).toMatch(/nunca preguntes al usuario por el alquiler/i);
+    expect(SYSTEM_PROMPT).toMatch(/provenance.*market/i);
+    expect(SYSTEM_PROMPT).not.toMatch(/askField.*alquiler/);
+  });
+
+  it('does not ask again for a field already present in the panel context', () => {
+    expect(SYSTEM_PROMPT).toMatch(/nunca uses askField para una clave que ya est[ée] presente/i);
+  });
+
   it('defines the scope boundary for refusals', () => {
     expect(SYSTEM_PROMPT).toMatch(/fuera de alcance/i);
   });

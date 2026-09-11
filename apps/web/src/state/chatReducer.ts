@@ -236,7 +236,10 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
           },
         ],
         fields,
-        pendingField: action.envelope.kind === 'capture' ? action.envelope.askField ?? null : null,
+        pendingField: action.envelope.kind === 'capture' && action.envelope.askField !== 'alquiler'
+          && !fields[action.envelope.askField ?? '']?.value.trim()
+          ? action.envelope.askField ?? null
+          : null,
         // Capturing data does not recalculate previous results. Keep their baseline.
         baseline: action.envelope.kind === 'capture'
           ? { ...deriveBaseline(fields), ...state.baseline }

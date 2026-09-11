@@ -425,6 +425,30 @@ describe('truncation', () => {
   });
 });
 
+describe('follow-up field questions', () => {
+  it('does not keep asking for a field that the same reply already fixed', () => {
+    const fixedInitial: AnalysisEnvelope = {
+      ...envelope,
+      kind: 'capture',
+      askField: 'inicial',
+      fields: [{ key: 'inicial', label: 'Cuota inicial', value: '20', suffix: '%', provenance: 'assumed', note: '' }],
+      metrics: [], scenarios: [], prose: [], followUps: [],
+    };
+    const s = chatReducer(initialState, { type: 'envelope', envelope: fixedInitial });
+    expect(s.fields.inicial?.value).toBe('20');
+    expect(s.pendingField).toBeNull();
+  });
+
+  it('never turns rent into a pending question for the user', () => {
+    const asksRent: AnalysisEnvelope = {
+      ...envelope,
+      kind: 'capture', askField: 'alquiler', fields: [], metrics: [], scenarios: [], prose: [], followUps: [],
+    };
+    const s = chatReducer(initialState, { type: 'envelope', envelope: asksRent });
+    expect(s.pendingField).toBeNull();
+  });
+});
+
 describe('reset', () => {
   const scenario: Scenario = {
     id: 'amoblado',

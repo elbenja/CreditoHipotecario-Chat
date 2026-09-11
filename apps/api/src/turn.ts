@@ -116,7 +116,8 @@ export async function* runTurn(body: ChatBody, callModel: CallModel): AsyncGener
       return;
     }
     const userTurns = messages.filter((m) => m.role === 'user').map((m) => m.content);
-    const result = runPipeline(content, userTurns);
+    const previousAssistant = messages.filter((m) => m.role === 'assistant').at(-1)?.content ?? '';
+    const result = runPipeline(content, userTurns, previousAssistant);
 
     yield { event: 'status', data: { phase: 'streaming' } };
     if (result.ok) {

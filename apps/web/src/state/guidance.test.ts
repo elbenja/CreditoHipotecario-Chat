@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { chatReducer, initialState } from './chatReducer';
-import { getFieldQuestion, getAnalysisSuggestions, toTurns } from './guidance';
+import { getFieldQuestion, getAnalysisSuggestions, getMissingFields, toTurns } from './guidance';
 import type { PinnedField } from '@chat/shared';
 
 const price: PinnedField = { key: 'precio', label: 'Precio', value: '300,000', provenance: 'user', note: '' };
@@ -36,6 +36,16 @@ describe('guided capture', () => {
     expect(getAnalysisSuggestions({ precio: price })).toEqual(['¿Cuánto pagaría al mes?']);
     expect(getAnalysisSuggestions({ precio: price, ubicacion: { ...price, key: 'ubicacion', value: 'Pueblo Libre' } }))
       .toContain('¿Cómo sería este depa como inversión?');
+  });
+
+  it('removes price and initial badges as soon as those fields are fixed', () => {
+    const initial: PinnedField = {
+      key: 'inicial', label: 'Cuota inicial', value: '20', suffix: '%', provenance: 'assumed', note: '',
+    };
+    const missing = getMissingFields({ precio: price, inicial: initial });
+    expect(missing).not.toContain('precio');
+    expect(missing).not.toContain('inicial');
+    expect(missing).not.toContain('alquiler');
   });
 });
 

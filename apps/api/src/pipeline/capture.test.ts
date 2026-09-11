@@ -43,3 +43,21 @@ it('preserves consent to estimates when a requested calculation also captures pr
   const result = runPipeline(JSON.stringify({ kind: 'clarification', reply, fields: [{ key: 'precio', label: 'Precio', value: '300,000', provenance: 'user' }] }), ['¿Cuánto pagaría por un depa de 300 mil soles?']);
   expect(result).toMatchObject({ ok: true, envelope: { kind: 'capture', verdict: reply, fields: [{ key: 'precio' }], metrics: [] } });
 });
+
+it('keeps an assumed value after the user accepts the exact proposal', () => {
+  const result = runPipeline(JSON.stringify({
+    kind: 'capture', reply: 'Listo.',
+    fields: [{ key: 'inicial', label: 'Cuota inicial', value: '20', suffix: '%', provenance: 'assumed' }],
+  }), ['sí'], '¿Aceptas una cuota inicial del 20 %?');
+  expect(result).toMatchObject({ ok: true, envelope: {
+    fields: [{ key: 'inicial', value: '20', provenance: 'assumed' }],
+  } });
+});
+
+it('still rejects an assumption that was not proposed before an affirmative answer', () => {
+  const result = runPipeline(JSON.stringify({
+    kind: 'capture', reply: 'Listo.',
+    fields: [{ key: 'inicial', label: 'Cuota inicial', value: '20', suffix: '%', provenance: 'assumed' }],
+  }), ['sí'], '¿Quieres que calcule la cuota mensual?');
+  expect(result).toMatchObject({ ok: true, envelope: { fields: [] } });
+});
