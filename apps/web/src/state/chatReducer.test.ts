@@ -1,4 +1,4 @@
-import type { AnalysisEnvelope, Scenario } from '@chat/shared';
+import type { AnalysisEnvelope, MortgageField, Scenario } from '@chat/shared';
 import { describe, expect, it } from 'vitest';
 import { chatReducer, initialState, selectDirtyKeys } from './chatReducer';
 
@@ -465,5 +465,73 @@ describe('reset', () => {
       state: before,
     });
     expect(after).toEqual(before);
+  });
+});
+
+describe('cronograma extraction', () => {
+  const READ: MortgageField[] = [
+    { key: 'tea', label: 'TEA', value: '8.99', suffix: '%', provenance: 'documento', note: '' },
+    { key: 'montoFinanciado', label: 'Monto financiado', value: '280,000', prefix: 'S/',
+      provenance: 'documento', note: '' },
+  ];
+
+  it('holds the read fields pending, without pinning them', () => {
+    const s = chatReducer(initialState, { type: 'extractionReady', fields: READ });
+    expect(s.pendingExtraction).toHaveLength(2);
+    expect(s.mortgage).toEqual({});
+  });
+
+  it('pins them on confirm and clears the pending set', () => {
+    let s = chatReducer(initialState, { type: 'extractionReady', fields: READ });
+    s = chatReducer(s, { type: 'confirmExtraction', fields: READ });
+    expect(s.mortgage.tea!.value).toBe('8.99');
+    expect(s.pendingExtraction).toBeNull();
+  });
+
+  it('pins what the user edited in the modal, not what was read', () => {
+    let s = chatReducer(initialState, { type: 'extractionReady', fields: READ });
+    const corrected = [{ ...READ[0]!, value: '9.10' }, READ[1]!];
+    s = chatReducer(s, { type: 'confirmExtraction', fields: corrected });
+    expect(s.mortgage.tea!.value).toBe('9.10');
+  });
+
+  it('pins nothing on cancel', () => {
+    let s = chatReducer(initialState, { type: 'extractionReady', fields: READ });
+    s = chatReducer(s, { type: 'cancelExtraction' });
+    expect(s.mortgage).toEqual({});
+    expect(s.pendingExtraction).toBeNull();
+  });
+
+  it('derives the down payment when the panel already holds a price', () => {
+    let s = initialState;
+    s = { ...s, fields: { ...s.fields, precio: {
+      key: 'precio', label: 'Precio', value: '300,000', prefix: 'S/',
+      provenance: 'user', note: '' } } };
+    s = chatReducer(s, { type: 'confirmExtraction', fields: READ });
+    expect(s.fields.inicial?.value).toBe('20,000');
+    expect(s.fields.inicial?.provenance).toBe('assumed');
+  });
+
+  it('does not invent a down payment when there is no price', () => {
+    const s = chatReducer(initialState, { type: 'confirmExtraction', fields: READ });
+    expect(s.fields.inicial).toBeUndefined();
+  });
+
+  it('never overwrites a down payment the user typed', () => {
+    let s = initialState;
+    s = { ...s, fields: { ...s.fields,
+      precio: { key: 'precio', label: 'Precio', value: '300,000', prefix: 'S/',
+        provenance: 'user', note: '' },
+      inicial: { key: 'inicial', label: 'Inicial', value: '45,000', prefix: 'S/',
+        provenance: 'user', note: '' } },
+      userEdited: ['inicial'] };
+    s = chatReducer(s, { type: 'confirmExtraction', fields: READ });
+    expect(s.fields.inicial!.value).toBe('45,000');
+  });
+
+  it('clears the mortgage group on reset', () => {
+    let s = chatReducer(initialState, { type: 'confirmExtraction', fields: READ });
+    s = chatReducer(s, { type: 'reset' });
+    expect(s.mortgage).toEqual({});
   });
 });

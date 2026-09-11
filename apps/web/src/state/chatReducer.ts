@@ -1,4 +1,4 @@
-import type { AnalysisEnvelope, PinnedField, Scenario } from '@chat/shared';
+import { deriveInicial, type AnalysisEnvelope, type MortgageField, type PinnedField, type Scenario } from '@chat/shared';
 
 export interface Candidate {
   key: string;
@@ -47,6 +47,11 @@ export interface ChatState {
   offline: boolean;
   /** A message typed while offline, held until the connection returns. */
   queued: string | null;
+  /** Credit terms read from an uploaded schedule. Separate from `fields`:
+   *  those describe the property, these describe the credit. */
+  mortgage: Record<string, MortgageField>;
+  /** Read but not yet confirmed. Nothing pins until the user says so. */
+  pendingExtraction: MortgageField[] | null;
 }
 
 export interface ChatError {
@@ -78,7 +83,10 @@ export type Action =
   | { type: 'undoDelete' }
   | { type: 'recalculate' }
   | { type: 'reset' }
-  | { type: 'restore'; state: ChatState };
+  | { type: 'restore'; state: ChatState }
+  | { type: 'extractionReady'; fields: MortgageField[] }
+  | { type: 'confirmExtraction'; fields: MortgageField[] }
+  | { type: 'cancelExtraction' };
 
 export const initialState: ChatState = {
   messages: [],
@@ -94,6 +102,8 @@ export const initialState: ChatState = {
   error: null,
   offline: false,
   queued: null,
+  mortgage: {},
+  pendingExtraction: null,
 };
 
 const deriveBaseline = (fields: Record<string, PinnedField>): Record<string, string> =>
@@ -340,6 +350,36 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         analyzeSteps: [],
         error: null,
       };
+
+    case 'extractionReady':
+      return { ...state, pendingExtraction: action.fields, status: 'idle' };
+
+    case 'cancelExtraction':
+      return { ...state, pendingExtraction: null };
+
+    case 'confirmExtraction': {
+      const mortgage = { ...state.mortgage };
+      for (const f of action.fields) mortgage[f.key] = f;
+
+      // The down payment is what the buyer covers that the bank did not, so it
+      // falls out of the two numbers. Never over a value the user owns.
+      const fields = { ...state.fields };
+      const financed = mortgage.montoFinanciado?.value;
+      const inicial = deriveInicial(fields.precio?.value, financed);
+      if (inicial && !state.userEdited.includes('inicial')) {
+        fields.inicial = {
+          key: 'inicial',
+          label: 'Inicial',
+          value: inicial,
+          prefix: 'S/',
+          // Derived, not read: the schedule never states a down payment.
+          provenance: 'assumed',
+          note: 'Calculada: precio menos el monto que financia el banco.',
+        };
+      }
+
+      return { ...state, mortgage, fields, pendingExtraction: null };
+    }
 
     case 'reset':
       // Everything the user ever gave us, gone — saved scenarios included.
