@@ -130,6 +130,7 @@ export function Composer({
               data-testid="attach-input"
               className="hidden"
               ref={fileRef}
+              disabled={disabled}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) onAttach(f);
@@ -139,9 +140,10 @@ export function Composer({
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
+              disabled={disabled}
               aria-label="Adjuntar cronograma"
               title="Leo solo la primera página. El archivo no se sube ni se guarda. Puedes tapar tus datos personales antes."
-              className="grid h-[34px] w-[34px] flex-none place-items-center rounded-full text-slate-400 transition-colors duration-180 ease-ch hover:text-slate-200"
+              className="grid h-[34px] w-[34px] flex-none place-items-center rounded-full text-slate-400 transition-colors duration-180 ease-ch hover:text-slate-200 disabled:opacity-40"
             >
               <Icon name="attachment-01" size={17} />
             </button>
