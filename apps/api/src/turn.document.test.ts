@@ -60,7 +60,24 @@ describe('document turns', () => {
     );
     const err = events.find((e) => e.event === 'error');
     expect((err!.data as { kind: string }).kind).toBe('document');
-    expect((err!.data as { message: string }).message).toMatch(/cronograma/i);
+    expect((err!.data as { message: string }).message).toBe(
+      'Esto no parece un cronograma ni un anuncio. Revisa que sea la primera página.',
+    );
+  });
+
+  it('emits a listing event when the PDF is an anuncio', async () => {
+    const events = await collect(
+      { messages: [{ role: 'user', content: 'mi anuncio' }], fields: [],
+        document: { kind: 'text', text: 'Proyecto ASPIRIA Barranco' } },
+      JSON.stringify({
+        tipo: 'anuncio', proyecto: 'ASPIRIA', distrito: 'Barranco',
+        modelos: [{ nombre: 'TIPO 7', area: '41.75', precioDesde: '363,906' }], dudosos: [],
+      }),
+    );
+    const listing = events.find((e) => e.event === 'listing');
+    expect(listing).toBeDefined();
+    expect((listing!.data as { listing: { fuente: { host: string } } }).listing.fuente.host).toBe('pdf');
+    expect(events.some((e) => e.event === 'extraction')).toBe(false);
   });
 
   it('does not run the out-of-scope guardrail on a document turn', async () => {

@@ -2,13 +2,16 @@ import {
   ExtractionSchema,
   MortgageFieldSchema,
   type Extraction,
+  type Listing,
   type MortgageField,
   type MortgageKey,
 } from '@chat/shared';
+import { runListingPipeline } from './listing.ts';
 
 export type DocumentResult =
-  | { ok: true; fields: MortgageField[] }
-  | { ok: false; reason: 'noSchedule' | 'unparsable' };
+  | { ok: true; kind: 'cronograma'; fields: MortgageField[] }
+  | { ok: true; kind: 'anuncio'; listing: Listing }
+  | { ok: false; reason: 'otro' | 'unparsable' };
 
 interface Presentation {
   label: string;
@@ -50,6 +53,16 @@ export function runDocumentPipeline(raw: string): DocumentResult {
     parsed = JSON.parse(stripFences(raw));
   } catch {
     return { ok: false, reason: 'unparsable' };
+  }
+
+  // The prompt asks for a type first. A reply with no `tipo` is read as a
+  // cronograma so an older-shaped answer still extracts.
+  const tipo = typeof parsed === 'object' && parsed !== null ? (parsed as { tipo?: unknown }).tipo : undefined;
+  if (tipo === 'otro') return { ok: false, reason: 'otro' };
+  if (tipo === 'anuncio') {
+    const r = runListingPipeline(raw, { host: 'pdf' });
+    if (r.ok) return { ok: true, kind: 'anuncio', listing: r.listing };
+    return { ok: false, reason: r.reason === 'notListing' ? 'otro' : 'unparsable' };
   }
 
   const result = ExtractionSchema.safeParse(parsed);
@@ -95,6 +108,6 @@ export function runDocumentPipeline(raw: string): DocumentResult {
   }
 
   // Parsed cleanly but carried nothing: this was not a payment schedule.
-  if (fields.length === 0) return { ok: false, reason: 'noSchedule' };
-  return { ok: true, fields };
+  if (fields.length === 0) return { ok: false, reason: 'otro' };
+  return { ok: true, kind: 'cronograma', fields };
 }

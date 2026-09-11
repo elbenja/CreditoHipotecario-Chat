@@ -11,6 +11,7 @@ const FULL = JSON.stringify({
 function fieldsOf(raw: string) {
   const r = runDocumentPipeline(raw);
   if (!r.ok) throw new Error(`expected ok, got ${r.reason}`);
+  if (r.kind !== 'cronograma') throw new Error(`expected cronograma, got ${r.kind}`);
   return Object.fromEntries(r.fields.map((f) => [f.key, f]));
 }
 
@@ -77,9 +78,9 @@ describe('runDocumentPipeline', () => {
     expect(runDocumentPipeline('```json\n' + FULL + '\n```').ok).toBe(true);
   });
 
-  it('reports noSchedule when nothing readable came back', () => {
+  it('reports otro when nothing readable came back', () => {
     const r = runDocumentPipeline(JSON.stringify({ dudosos: [] }));
-    expect(r).toEqual({ ok: false, reason: 'noSchedule' });
+    expect(r).toEqual({ ok: false, reason: 'otro' });
   });
 
   it('reports unparsable when the reply is not JSON', () => {
@@ -113,10 +114,39 @@ describe('runDocumentPipeline', () => {
 
     for (const { raw, label } of testCases) {
       const r = runDocumentPipeline(raw);
-      if (!r.ok) continue; // ok to have no schedule; we only check fields that exist
+      if (!r.ok || r.kind !== 'cronograma') continue; // ok to have no schedule; we only check fields that exist
       for (const field of r.fields) {
         expect(field.provenance, `${label}: field ${field.key}`).toMatch(/^(documento|assumed)$/);
       }
     }
+  });
+});
+
+describe('runDocumentPipeline — tipo dispatch', () => {
+  const LISTING = {
+    tipo: 'anuncio', proyecto: 'ASPIRIA', distrito: 'Barranco',
+    modelos: [{ nombre: 'TIPO 7', area: '41.75', precioDesde: '363,906' }], dudosos: [],
+  };
+
+  it('routes tipo anuncio to a listing stamped as read from a PDF', () => {
+    const r = runDocumentPipeline(JSON.stringify(LISTING));
+    expect(r.ok && r.kind === 'anuncio' && r.listing.fuente).toEqual({ host: 'pdf' });
+  });
+
+  it('routes tipo cronograma to mortgage fields', () => {
+    const r = runDocumentPipeline(JSON.stringify({ ...JSON.parse(FULL), tipo: 'cronograma' }));
+    expect(r.ok && r.kind).toBe('cronograma');
+  });
+
+  it('reports otro when the model says so', () => {
+    expect(runDocumentPipeline(JSON.stringify({ tipo: 'otro' }))).toEqual({ ok: false, reason: 'otro' });
+  });
+
+  it('reports otro for an anuncio with no readable model', () => {
+    expect(runDocumentPipeline(JSON.stringify({ ...LISTING, modelos: [] }))).toEqual({ ok: false, reason: 'otro' });
+  });
+
+  it('still reads a reply with no tipo as a cronograma (older prompt shape)', () => {
+    expect(runDocumentPipeline(FULL).ok).toBe(true);
   });
 });

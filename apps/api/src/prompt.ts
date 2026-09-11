@@ -95,50 +95,6 @@ export type DocumentInput =
   | { kind: 'image'; dataUrl: string };
 
 /**
- * Every bank names the same figure differently, so the synonyms are part of the
- * contract rather than a hint. Measured on the BIF phone photo: 9/10 fields
- * without this table, 10/10 with it.
- */
-export const DOCUMENT_PROMPT = `Esta es la primera página de un cronograma de pagos de un banco peruano. Extrae las condiciones del crédito.
-
-Cada banco nombra lo mismo de forma distinta. Sinónimos:
-- montoFinanciado: "Monto Prestamo", "Importe", "IMPORTE CONCEDIDO", "IMPORTE PRESTAMO", "MONTO DE CREDITO"
-- cuota: "Total Cuota", "Imp. Cuota", "CUOTA"
-- tea: "T.E.A.", "TEA Fija a N dias", "INTERES EFECTIVO ANUAL", "TASA DE INTERES COMPENSATORIA EFECTIVA ANUAL"
-- tcea: "T.C.E.A.", "Tasa Costo Efectivo Anual", "COSTO EFECTIVO"
-- plazoCuotas: "Nro. de Cuotas", "Nro.Cuotas", "PLAZO TOTAL", "CUOTAS POR PAGAR", "PLAZO"
-- seguroDesgravamen: "Tasa Seguro de Desgravamen", "Tasa Desgrav.", "SEG.DESG", "TASA ANUAL SEGURO DESGRAVAMEN"
-- seguroInmueble: "Seguro Todo Riesgo", "Tasa de Bien", "SEGURO HIPOTECARIO", "TASA ANUAL SEGURO INMUEBLE"
-- valorInmueble: "Monto Asegurado", "Imp. Bien", "valor del bien", "tasación"
-- totalAPagar: "Monto Total a Pagar", "TOTALES A PAGAR"
-
-El documento puede venir subrayado, resaltado o con anotaciones a mano. Ignóralas: lee lo impreso.
-
-Responde ÚNICAMENTE con este JSON, sin texto alrededor y sin bloques de markdown:
-{"montoFinanciado":null,"cuota":null,"tea":null,"teaTipo":"fija|variable","tcea":null,"plazoCuotas":null,"seguroDesgravamen":null,"seguroInmueble":null,"valorInmueble":null,"totalAPagar":null,"dudosos":[]}
-
-REGLAS
-- Copia las cifras EXACTAMENTE como aparecen, con sus comas y decimales. No las conviertas ni las redondees.
-- Usa null en cada campo que el documento no traiga. No inventes.
-- "dudosos": la lista de los campos que NO leíste con certeza. Es mejor declarar una duda que acertar por casualidad.
-- Si el documento no es un cronograma de pagos, devuelve todos los campos en null.`;
-
-export function buildDocumentMessages(doc: DocumentInput): ChatMessage[] {
-  if (doc.kind === 'text') {
-    return [{ role: 'user', content: `${DOCUMENT_PROMPT}\n\n---\n${doc.text}` }];
-  }
-  return [
-    {
-      role: 'user',
-      content: [
-        { type: 'text', text: DOCUMENT_PROMPT },
-        { type: 'image_url', image_url: { url: doc.dataUrl } },
-      ],
-    },
-  ];
-}
-
-/**
  * The listing shape, shared by the link route and the PDF route's "anuncio"
  * branch so a saved Urbania page and a fetched Nexo page extract identically.
  */
@@ -163,4 +119,57 @@ Si el texto no es un anuncio de un departamento, responde {"proyecto":null,"dist
 
 export function buildListingMessages(text: string): ChatMessage[] {
   return [{ role: 'user', content: `${LISTING_PROMPT}\n\n---\n${text}` }];
+}
+
+/**
+ * Every bank names the same figure differently, so the synonyms are part of the
+ * contract rather than a hint. Measured on the BIF phone photo: 9/10 fields
+ * without this table, 10/10 with it.
+ */
+export const DOCUMENT_PROMPT = `Esta es la primera página de un documento. Primero decide qué es:
+- "cronograma": el cronograma de pagos de un crédito hipotecario de un banco peruano.
+- "anuncio": el anuncio de venta de un departamento o de un proyecto inmobiliario (portal, inmobiliaria o constructora), aunque sea una página web guardada como PDF.
+- "otro": cualquier otra cosa.
+
+Responde ÚNICAMENTE con un objeto JSON, sin texto alrededor y sin bloques de markdown. El objeto lleva "tipo" y, según el tipo, los campos de abajo.
+
+SI ES UN CRONOGRAMA, responde:
+{"tipo":"cronograma","montoFinanciado":null,"cuota":null,"tea":null,"teaTipo":"fija|variable","tcea":null,"plazoCuotas":null,"seguroDesgravamen":null,"seguroInmueble":null,"valorInmueble":null,"totalAPagar":null,"dudosos":[]}
+
+Cada banco nombra lo mismo de forma distinta. Sinónimos:
+- montoFinanciado: "Monto Prestamo", "Importe", "IMPORTE CONCEDIDO", "IMPORTE PRESTAMO", "MONTO DE CREDITO"
+- cuota: "Total Cuota", "Imp. Cuota", "CUOTA"
+- tea: "T.E.A.", "TEA Fija a N dias", "INTERES EFECTIVO ANUAL", "TASA DE INTERES COMPENSATORIA EFECTIVA ANUAL"
+- tcea: "T.C.E.A.", "Tasa Costo Efectivo Anual", "COSTO EFECTIVO"
+- plazoCuotas: "Nro. de Cuotas", "Nro.Cuotas", "PLAZO TOTAL", "CUOTAS POR PAGAR", "PLAZO"
+- seguroDesgravamen: "Tasa Seguro de Desgravamen", "Tasa Desgrav.", "SEG.DESG", "TASA ANUAL SEGURO DESGRAVAMEN"
+- seguroInmueble: "Seguro Todo Riesgo", "Tasa de Bien", "SEGURO HIPOTECARIO", "TASA ANUAL SEGURO INMUEBLE"
+- valorInmueble: "Monto Asegurado", "Imp. Bien", "valor del bien", "tasación"
+- totalAPagar: "Monto Total a Pagar", "TOTALES A PAGAR"
+
+El documento puede venir subrayado, resaltado o con anotaciones a mano. Ignóralas: lee lo impreso.
+
+REGLAS DEL CRONOGRAMA
+- Copia las cifras EXACTAMENTE como aparecen, con sus comas y decimales. No las conviertas ni las redondees.
+- Usa null en cada campo que el documento no traiga. No inventes.
+- "dudosos": la lista de los campos que NO leíste con certeza. Es mejor declarar una duda que acertar por casualidad.
+
+SI ES UN ANUNCIO, responde con "tipo":"anuncio" y estos campos:
+${LISTING_FIELDS_BLOCK}
+
+SI ES OTRA COSA, responde {"tipo":"otro"}.`;
+
+export function buildDocumentMessages(doc: DocumentInput): ChatMessage[] {
+  if (doc.kind === 'text') {
+    return [{ role: 'user', content: `${DOCUMENT_PROMPT}\n\n---\n${doc.text}` }];
+  }
+  return [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: DOCUMENT_PROMPT },
+        { type: 'image_url', image_url: { url: doc.dataUrl } },
+      ],
+    },
+  ];
 }

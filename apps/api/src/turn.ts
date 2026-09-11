@@ -68,17 +68,19 @@ export async function* runTurn(body: ChatBody, callModel: CallModel): AsyncGener
       const { content } = await callModel(buildDocumentMessages(body.document), 'document');
       const result = runDocumentPipeline(content);
       yield { event: 'status', data: { phase: 'streaming' } };
-      if (result.ok) {
+      if (result.ok && result.kind === 'cronograma') {
         yield { event: 'extraction', data: { fields: result.fields } };
+      } else if (result.ok) {
+        yield { event: 'listing', data: { listing: result.listing } };
       } else {
         yield {
           event: 'error',
           data: {
             kind: 'document',
             message:
-              result.reason === 'noSchedule'
-                ? 'Esto no parece un cronograma de pagos. Revisa que sea la primera página.'
-                : 'No pude leer las condiciones de ese cronograma.',
+              result.reason === 'otro'
+                ? 'Esto no parece un cronograma ni un anuncio. Revisa que sea la primera página.'
+                : 'No pude leer las condiciones de ese documento.',
           },
         };
       }
