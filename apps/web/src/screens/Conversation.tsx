@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { streamChat } from '../api/streamChat';
 import { AnalyzeSteps } from '../components/AnalyzeSteps';
 import { AssistantAnswer } from '../components/AssistantAnswer';
 import { Composer } from '../components/Composer';
+import { ConfirmExtraction } from '../components/ConfirmExtraction';
 import { ErrorNotice } from '../components/ErrorNotice';
 import { Icon } from '../components/Icon';
 import { MetricSkeleton } from '../components/MetricSkeleton';
@@ -10,11 +12,22 @@ import { OfflineBanner } from '../components/OfflineBanner';
 import { OutOfScopeAnswer } from '../components/OutOfScopeAnswer';
 import { Pill } from '../components/Pill';
 import { PinnedPanel } from '../components/PinnedPanel';
+import { PdfReadError, readFirstPage, type PdfErrorCode } from '../pdf/readPdf';
 import { Thinking } from '../components/Thinking';
 import { TruncatedNotice } from '../components/TruncatedNotice';
 import { UndoBar } from '../components/UndoBar';
 import { UserBubble } from '../components/UserBubble';
-import { selectDirtyKeys, type ChatState } from '../state/chatReducer';
+import { selectDirtyKeys, type Action, type ChatState } from '../state/chatReducer';
+
+// Every failure the reader can throw, in the copy the user actually sees.
+// A password-protected schedule is not "unreadable" — it needs its own line,
+// or the person has no idea what to do next.
+const PDF_ERRORS: Record<PdfErrorCode, string> = {
+  notPdf: 'Eso no es un PDF. Sube el cronograma que te dio el banco.',
+  tooLarge: 'Ese archivo pasa los 20 MB. Sube solo el cronograma.',
+  encrypted: 'Ese PDF tiene contraseña y no puedo abrirlo.',
+  unreadable: 'No pude leer ese PDF.',
+};
 
 export function Conversation({
   state,
@@ -36,11 +49,18 @@ export function Conversation({
   onContinue,
   onShorten,
   composerSeed,
+  dispatch,
 }: {
   state: ChatState;
   onSend: (text: string) => void;
   onEdit: (key: string, value: string) => void;
   onEditMortgage?: (key: string, value: string) => void;
+  /** Owns the attach-a-cronograma flow: reading the PDF client-side and
+   *  streaming the extraction never fits the screen's other named callbacks,
+   *  since it produces several actions (status, analyzeStep, extraction,
+   *  error) rather than one. Optional so a caller that never attaches — a
+   *  test, say — need not wire it, and the attach control simply stays off. */
+  dispatch?: (action: Action) => void;
   onAcceptProposal: (key: string) => void;
   onRejectProposal: (key: string) => void;
   onPinCandidate: (key: string, label: string, value: string) => void;
@@ -85,6 +105,39 @@ export function Conversation({
     // 01: the input clears in the same frame the bubble appears.
     setValue('');
     onSend(text);
+  };
+
+  // Reading the PDF happens in the browser and never touches the network;
+  // only the extracted text (or a page-1 render) is sent on. `document`
+  // shadows the global of the same name, so it is bound as `doc` below.
+  const attach = async (file: File) => {
+    if (!dispatch) return;
+    dispatch({ type: 'status', phase: 'thinking' });
+
+    let doc;
+    try {
+      doc = await readFirstPage(file);
+    } catch (err) {
+      const code = err instanceof PdfReadError ? err.code : 'unreadable';
+      dispatch({ type: 'error', kind: 'api', message: PDF_ERRORS[code], retry: null });
+      return;
+    }
+
+    await streamChat(
+      {
+        messages: [{ role: 'user', content: 'Adjunto el cronograma de pagos.' }],
+        fields: Object.values(state.fields),
+        document: doc,
+      },
+      (e) => {
+        const data = e.data as Record<string, any>;
+        if (e.event === 'status') dispatch({ type: 'status', phase: data.phase });
+        else if (e.event === 'analyzeStep') dispatch({ type: 'analyzeStep', label: data.label });
+        else if (e.event === 'extraction') dispatch({ type: 'extractionReady', fields: data.fields });
+        else if (e.event === 'error')
+          dispatch({ type: 'error', kind: 'api', message: data.message, retry: null });
+      },
+    );
   };
 
   let suggestions: string[] = [];
@@ -210,6 +263,7 @@ export function Conversation({
               suggestions={suggestions}
               onSuggestion={send}
               suggestionClassName="hidden md:flex"
+              onAttach={dispatch ? attach : undefined}
             />
             {/*
               Every figure on this screen is model-produced. Said once, under
@@ -224,6 +278,7 @@ export function Conversation({
 
         <MobileBottomSheet
           fields={Object.values(state.fields)}
+          mortgage={Object.values(state.mortgage)}
           proposals={state.proposals}
           changes={state.changes}
           savedScenarios={state.savedScenarios}
@@ -242,6 +297,7 @@ export function Conversation({
 
       <PinnedPanel
         fields={Object.values(state.fields)}
+        mortgage={Object.values(state.mortgage)}
         proposals={state.proposals}
         changes={state.changes}
         savedScenarios={state.savedScenarios}
@@ -258,6 +314,14 @@ export function Conversation({
       />
 
       <UndoBar visible={showUndo} onUndo={undo} onExpire={() => setShowUndo(false)} />
+
+      {state.pendingExtraction && (
+        <ConfirmExtraction
+          fields={state.pendingExtraction}
+          onConfirm={(fields) => dispatch?.({ type: 'confirmExtraction', fields })}
+          onCancel={() => dispatch?.({ type: 'cancelExtraction' })}
+        />
+      )}
     </div>
   );
 }

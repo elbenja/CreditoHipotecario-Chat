@@ -199,6 +199,7 @@ export default function App() {
           onContinue={() => send('Continúa desde donde te quedaste.')}
           onShorten={() => send('Resúmelo más corto, por favor.')}
           composerSeed={composerSeed}
+          dispatch={dispatch}
         />
       )}
 
