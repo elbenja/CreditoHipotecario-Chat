@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { chatReducer, initialState } from './chatReducer';
-import { getFieldQuestion, getAnalysisSuggestions, getMissingFields, toTurns } from './guidance';
+import { canExploreScenarios, getFieldQuestion, getAnalysisSuggestions, getMissingFields, toTurns } from './guidance';
 import type { PinnedField } from '@chat/shared';
 
 const price: PinnedField = { key: 'precio', label: 'Precio', value: '300,000', provenance: 'user', note: '' };
@@ -46,6 +46,19 @@ describe('guided capture', () => {
     expect(missing).not.toContain('precio');
     expect(missing).not.toContain('inicial');
     expect(missing).not.toContain('alquiler');
+  });
+
+  it('offers scenario cards only after the mortgage inputs are defined', () => {
+    const field = (key: PinnedField['key'], value: string): PinnedField => ({
+      key, label: key, value, provenance: 'user', note: '',
+    });
+    expect(canExploreScenarios({ precio: price })).toBe(false);
+    expect(canExploreScenarios({
+      precio: price,
+      inicial: field('inicial', '20'),
+      tasa: field('tasa', '8'),
+      plazo: field('plazo', '20'),
+    })).toBe(true);
   });
 });
 

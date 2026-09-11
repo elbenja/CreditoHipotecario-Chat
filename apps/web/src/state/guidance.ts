@@ -2,6 +2,9 @@ import type { FieldKey, PinnedField } from '@chat/shared';
 import type { Message } from './chatReducer';
 
 export const STARTER_FIELDS: FieldKey[] = ['ubicacion', 'precio', 'area', 'inicial', 'tasa'];
+export const SCENARIO_BADGE_LABEL = 'Qué pasa si mueves una palanca';
+
+const SCENARIO_REQUIRED_FIELDS: FieldKey[] = ['precio', 'inicial', 'tasa', 'plazo'];
 export const FIELD_LABELS: Record<FieldKey, string> = {
   ubicacion: 'Ubicación', precio: 'Precio', area: 'Área', inicial: 'Cuota inicial',
   tasa: 'Tasa', plazo: 'Plazo', alquiler: 'Alquiler',
@@ -40,6 +43,10 @@ export function getAnalysisSuggestions(fields: Record<string, PinnedField>): str
   if (fields.inicial?.value.trim()) suggestions.push('¿Qué cambia si aumento la inicial?');
   if (fields.ubicacion?.value.trim()) suggestions.push('¿Cómo sería este depa como inversión?');
   return suggestions;
+}
+
+export function canExploreScenarios(fields: Record<string, PinnedField>): boolean {
+  return SCENARIO_REQUIRED_FIELDS.every((key) => Boolean(fields[key]?.value.trim()));
 }
 
 /** Keep the assistant's questions: a bare answer needs the context it answers. */

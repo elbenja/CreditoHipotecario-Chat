@@ -33,6 +33,11 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/nunca uses askField para una clave que ya est[ée] presente/i);
   });
 
+  it('maps the scenario badge phrase to the existing scenario contract', () => {
+    expect(SYSTEM_PROMPT).toMatch(/Qué pasa si mueves una palanca/i);
+    expect(SYSTEM_PROMPT).toMatch(/2 a 3 escenarios/i);
+  });
+
   it('defines the scope boundary for refusals', () => {
     expect(SYSTEM_PROMPT).toMatch(/fuera de alcance/i);
   });

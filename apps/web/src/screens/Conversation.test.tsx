@@ -76,6 +76,23 @@ function renderConversation(conversationState: ChatState = state) {
   );
 }
 
+function scenarioReadyState(): ChatState {
+  const fields = Object.fromEntries([
+    ['precio', field],
+    ['inicial', { ...field, key: 'inicial', label: 'Cuota inicial', value: '20', suffix: '%' }],
+    ['tasa', { ...field, key: 'tasa', label: 'Tasa', value: '8', suffix: '%' }],
+    ['plazo', { ...field, key: 'plazo', label: 'Plazo', value: '20', suffix: 'años' }],
+  ]) as ChatState['fields'];
+  return {
+    ...state,
+    fields,
+    messages: [
+      state.messages[0]!,
+      { id: 'capture', role: 'assistant', envelope: { ...envelope, kind: 'capture', fields: [], metrics: [], prose: [], followUps: [] } },
+    ],
+  };
+}
+
 describe('Conversation mobile integration', () => {
   beforeAll(() => {
     HTMLElement.prototype.scrollIntoView = vi.fn();
@@ -188,6 +205,43 @@ describe('Conversation mobile integration', () => {
     });
     expect(screen.getByText('Kimi rechazó la solicitud')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Reintentar/ })).not.toBeInTheDocument();
+  });
+
+  it('shows the scenario badge first with the existing bookmark-add icon', async () => {
+    const user = userEvent.setup();
+    const onSend = vi.fn();
+    render(
+      <Conversation
+        state={scenarioReadyState()}
+        onAskField={vi.fn()}
+        onSend={onSend}
+        onEdit={vi.fn()}
+        onAcceptProposal={vi.fn()}
+        onRejectProposal={vi.fn()}
+        onPinCandidate={vi.fn()}
+        savedIds={[]}
+        onSaveScenario={vi.fn()}
+        onDeleteScenario={vi.fn()}
+        onUndoDelete={vi.fn()}
+        onRecalculate={vi.fn()}
+        onRevertChange={vi.fn()}
+        onDismissChanges={vi.fn()}
+        onRetry={vi.fn()}
+        onEditQuestion={vi.fn()}
+        onContinue={vi.fn()}
+        onShorten={vi.fn()}
+        composerSeed={null}
+      />,
+    );
+
+    const badge = screen.getByRole('button', { name: 'Qué pasa si mueves una palanca' });
+    expect(badge).toHaveClass('text-slate-400');
+    expect(badge.querySelector('.hgi-bookmark-add-02')).toBeInTheDocument();
+    const normalSuggestion = screen.getByRole('button', { name: '¿Cuánto pagaría al mes?' });
+    expect(badge.compareDocumentPosition(normalSuggestion) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    await user.click(badge);
+    expect(onSend).toHaveBeenCalledWith('Qué pasa si mueves una palanca');
   });
 });
 

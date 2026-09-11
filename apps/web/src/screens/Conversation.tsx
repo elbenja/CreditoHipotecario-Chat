@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FieldKey } from '@chat/shared';
 import { FieldSuggestions } from '../components/FieldSuggestions';
-import { getAnalysisSuggestions } from '../state/guidance';
+import { canExploreScenarios, getAnalysisSuggestions, SCENARIO_BADGE_LABEL } from '../state/guidance';
 import { AnalyzeSteps } from '../components/AnalyzeSteps';
 import { AssistantAnswer } from '../components/AssistantAnswer';
 import { Composer } from '../components/Composer';
@@ -81,6 +81,7 @@ export function Conversation({
   const capturing = lastMessage?.role === 'assistant-question' ||
     (lastMessage?.role === 'assistant' && lastMessage.envelope.kind === 'capture');
   const contextualSuggestions = state.pendingField ? [] : getAnalysisSuggestions(state.fields);
+  const showScenarioBadge = !state.pendingField && canExploreScenarios(state.fields);
   const hasAnalysis = state.messages.some((message) => message.role === 'assistant' &&
     (message.envelope.kind === 'analysis' || message.envelope.metrics.length > 0 || message.envelope.scenarios.length > 0));
   const dirtyKeys = hasAnalysis ? selectDirtyKeys(state) : [];
@@ -226,10 +227,20 @@ export function Conversation({
             {capturing && !busy && !state.error && onAskField && (
               <div className="flex flex-col gap-6 pb-2">
                 <FieldSuggestions fields={state.fields} onAsk={onAskField} selected={state.pendingField} disabled={state.queued !== null} />
-                {contextualSuggestions.length > 0 && (
+                {(showScenarioBadge || contextualSuggestions.length > 0) && (
                   <div>
                     <p className="mb-3 text-[10px] font-semibold uppercase tracking-[.1em] text-slate-400">Ahora puedes preguntar</p>
                     <div className="flex flex-wrap gap-2">
+                      {showScenarioBadge && (
+                        <Pill
+                          onClick={() => send(SCENARIO_BADGE_LABEL)}
+                          disabled={state.queued !== null}
+                          className="flex min-h-[44px] items-center gap-2 text-left text-slate-400"
+                        >
+                          <Icon name="bookmark-add-02" size={15} className="text-slate-400" />
+                          {SCENARIO_BADGE_LABEL}
+                        </Pill>
+                      )}
                       {contextualSuggestions.map((suggestion) => (
                         <Pill key={suggestion} onClick={() => send(suggestion)} disabled={state.queued !== null} className="min-h-[44px] text-left">{suggestion}</Pill>
                       ))}
