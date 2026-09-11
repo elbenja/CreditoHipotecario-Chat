@@ -123,3 +123,36 @@ describe('cronograma fixtures: interbank-page1.txt', () => {
     expect(redactionMarkerCount(interbank)).toBe(3);
   });
 });
+
+const aspiria = readFileSync(path.join(fixturesDir, 'nexo-aspiria.txt'), 'utf8');
+const single = readFileSync(path.join(fixturesDir, 'nexo-single.txt'), 'utf8');
+
+describe('listing fixtures', () => {
+  it('nexo-aspiria.txt opens with a JSON-LD Product block and carries the three models', () => {
+    expect(aspiria.split('\n')[0]).toMatch(/"@type"\s*:\s*"Product"/);
+    expect(aspiria).toContain('TIPO 3');
+    expect(aspiria).toContain('82.96');
+    expect(aspiria).toContain('664,806');
+    expect(aspiria).toContain('363,906');
+    expect(aspiria).toContain('Barranco');
+  });
+
+  it('nexo-single.txt opens with a JSON-LD Product block', () => {
+    expect(single.split('\n')[0]).toMatch(/"@type"\s*:\s*"Product"/);
+  });
+
+  it('neither fixture carries an email address or a long digit run', () => {
+    for (const text of [aspiria, single]) {
+      // Every Nexo listing page's footer prints the site's own published
+      // support address verbatim ("Contáctanos info@nexoinmobiliario.pe") —
+      // confirmed identical across every candidate URL fetched while
+      // building these fixtures, so it isn't something a redaction step
+      // could avoid. It is Nexo's contact address, not a person's; excluded
+      // by name rather than dropping the assertion, so a *different*,
+      // unexpected email address still fails the test.
+      const emails = text.match(/[\w.+-]+@[\w-]+\.[\w.]+/g) ?? [];
+      expect(emails.filter((e) => e.toLowerCase() !== 'info@nexoinmobiliario.pe')).toEqual([]);
+      expect(text.match(/\d{9,}/g) ?? []).toEqual([]);
+    }
+  });
+});
