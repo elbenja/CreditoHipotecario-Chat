@@ -49,7 +49,8 @@ describe('fetchListingText', () => {
   it('fetches with redirect: manual and a browser-like user agent', async () => {
     const fetchImpl = vi.fn(async () => htmlResponse('<p>hola</p>'));
     await fetchListingText(NEXO, fetchImpl);
-    const init = fetchImpl.mock.calls[0]![1] as RequestInit;
+    const calls = fetchImpl.mock.calls as unknown[];
+    const init = (calls[0] as unknown[])[1] as RequestInit;
     expect(init.redirect).toBe('manual');
     expect((init.headers as Record<string, string>)['user-agent']).toMatch(/Mozilla/);
     expect(init.signal).toBeInstanceOf(AbortSignal);
