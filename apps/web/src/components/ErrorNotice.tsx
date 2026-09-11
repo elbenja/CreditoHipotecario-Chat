@@ -10,6 +10,13 @@ export function ErrorNotice({
   onRetry: () => void;
   onEdit: () => void;
 }) {
+  const title = error.kind === 'request'
+    ? 'Kimi rechazó la solicitud'
+    : error.kind === 'limit'
+      ? 'Kimi no alcanzó a responder'
+      : 'No pude completar el análisis';
+  const canRetry = error.kind === 'api' || error.kind === 'offline';
+
   return (
     <div className="ch-line flex items-start gap-[11px]">
       <img src="/assets/logo-mark.svg" alt="" className="mt-[3px] h-4 w-4 opacity-50" />
@@ -19,12 +26,12 @@ export function ErrorNotice({
           {/* Amber, never red: red in a money app reads as "you lost money". */}
           <Icon name="alert-02" size={16} className="text-[#f59e0b]" />
           <span className="text-[13.5px] font-semibold text-slate-100">
-            No pude completar el análisis
+            {title}
           </span>
         </div>
         <p className="mt-2 text-[12.5px] leading-[1.55] text-slate-400">{error.message}</p>
         <div className="mt-[14px] flex items-center gap-[9px]">
-          {error.retry && (
+          {canRetry && error.retry && (
             <button
               type="button"
               onClick={onRetry}

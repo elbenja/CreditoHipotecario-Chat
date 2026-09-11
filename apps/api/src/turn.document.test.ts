@@ -39,6 +39,19 @@ describe('document turns', () => {
     expect(data.fields.map((f) => f.key).sort()).toEqual(['cuota', 'tea']);
   });
 
+  it('uses the document model policy for extraction', async () => {
+    const modes: (string | undefined)[] = [];
+    for await (const _event of runTurn(
+      { messages: [{ role: 'user', content: 'mi cronograma' }], fields: [],
+        document: { kind: 'text', text: 'TEA 6.30' } },
+      async (_messages, mode) => {
+        modes.push(mode);
+        return { content: EXTRACTION, truncated: false };
+      },
+    )) { /* consume */ }
+    expect(modes).toEqual(['document']);
+  });
+
   it('emits a document error when the reply is not a schedule', async () => {
     const events = await collect(
       { messages: [{ role: 'user', content: 'mi cronograma' }], fields: [],

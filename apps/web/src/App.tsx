@@ -52,7 +52,9 @@ export default function App() {
         else if (e.event === 'error')
           dispatch({
             type: 'error',
-            kind: data.kind === 'offline' ? 'offline' : 'api',
+            kind: data.kind === 'offline' || data.kind === 'request' || data.kind === 'limit'
+              ? data.kind
+              : 'api',
             message: data.message,
             retry: turns.filter((t) => t.role === 'user').at(-1)?.content ?? null,
           });

@@ -13,10 +13,14 @@ describe('SYSTEM_PROMPT', () => {
   });
 
   it('limits output to what was requested without requiring three metrics', () => {
-    expect(SYSTEM_PROMPT).toMatch(/m[áa]ximo 3 p[áa]rrafos/i);
-    expect(SYSTEM_PROMPT).toContain('\"metrics\": de 0 a 3');
-    expect(SYSTEM_PROMPT).toContain('\"followUps\": de 0 a 3');
+    expect(SYSTEM_PROMPT).toMatch(/m[áa]ximo 1 p[áa]rrafo/i);
+    expect(SYSTEM_PROMPT).toContain('\"metrics\": de 0 a 2');
+    expect(SYSTEM_PROMPT).toContain('\"followUps\": de 0 a 2');
     expect(SYSTEM_PROMPT).toContain('CONTRATO CORTO DE CAPTURA');
+  });
+
+  it('prioritizes an explicit analysis request even when the same turn adds data', () => {
+    expect(SYSTEM_PROMPT).toMatch(/aporta datos y adem[áa]s pide un c[áa]lculo.*usa el contrato de an[áa]lisis/i);
   });
 
   it('defines the scope boundary for refusals', () => {
@@ -55,6 +59,18 @@ describe('buildMessages', () => {
       [],
     );
     expect(msgs.at(-1)).toEqual({ role: 'assistant', content: 'dos' });
+  });
+
+  it('drops blank turns before sending history to the model', () => {
+    const msgs = buildMessages(
+      [
+        { role: 'user', content: 'uno' },
+        { role: 'assistant', content: '   ' },
+        { role: 'user', content: '' },
+      ],
+      [],
+    );
+    expect(msgs.slice(1)).toEqual([{ role: 'user', content: 'uno' }]);
   });
 
   it('injects the pinned fields as system context when present', () => {

@@ -52,7 +52,12 @@ export async function streamChat(
   }
 
   if (!res.ok || !res.body) {
-    onEvent({ event: 'error', data: { kind: 'api', message: 'Se cayó la conexión con el modelo.' } });
+    onEvent({
+      event: 'error',
+      data: res.status === 400
+        ? { kind: 'request', message: 'La solicitud enviada no fue válida. Edita la pregunta e inténtalo de nuevo.' }
+        : { kind: 'api', message: 'Se cayó la conexión con el modelo.' },
+    });
     return;
   }
 

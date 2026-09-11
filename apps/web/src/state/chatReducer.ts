@@ -78,7 +78,7 @@ export interface ChatState {
 export interface ChatError {
   /** 'document' is the server's kind for a schedule that failed to extract —
    *  distinct from 'api' (the model call itself failing). */
-  kind: 'api' | 'offline' | 'document';
+  kind: 'api' | 'offline' | 'document' | 'request' | 'limit';
   message: string;
   /** The question that failed, so "Reintentar" can resend exactly it. */
   retry: string | null;
@@ -91,7 +91,7 @@ export type Action =
   | { type: 'analyzeStep'; label: string }
   | { type: 'envelope'; envelope: AnalysisEnvelope; truncated?: boolean; outOfScope?: boolean }
   | { type: 'fallback'; prose: string; candidates: Candidate[]; truncated?: boolean }
-  | { type: 'error'; kind: 'api' | 'offline' | 'document'; message: string; retry: string | null }
+  | { type: 'error'; kind: ChatError['kind']; message: string; retry: string | null }
   | { type: 'clearError' }
   | { type: 'setOffline'; offline: boolean }
   | { type: 'queue'; content: string }

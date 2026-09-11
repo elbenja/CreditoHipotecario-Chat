@@ -22,16 +22,16 @@ describe('runPipeline', () => {
     expect(r.ok).toBe(true);
   });
 
-  it('caps prose at three items', () => {
+  it('caps prose at one item', () => {
     const r = runPipeline(JSON.stringify(base), turns);
     if (!r.ok) throw new Error('expected ok');
-    expect(r.envelope.prose).toHaveLength(3);
+    expect(r.envelope.prose).toHaveLength(1);
   });
 
-  it('caps followUps at three items', () => {
+  it('caps followUps at two items', () => {
     const r = runPipeline(JSON.stringify(base), turns);
     if (!r.ok) throw new Error('expected ok');
-    expect(r.envelope.followUps).toHaveLength(3);
+    expect(r.envelope.followUps).toHaveLength(2);
   });
 
   it('downgrades a value the user never stated', () => {
@@ -176,10 +176,10 @@ describe('runPipeline', () => {
     expect(r.envelope.fields[0]!.value).toBe('20');
   });
 
-  it('caps metrics at three', () => {
+  it('caps metrics at two', () => {
     const many = Array.from({ length: 5 }, (_, i) => ({ label: `M${i}`, value: 'S/ 1', delta: null, context: '' }));
     const r = runPipeline(JSON.stringify({ ...base, metrics: many }), turns);
     if (!r.ok) throw new Error('expected ok');
-    expect(r.envelope.metrics).toHaveLength(3);
+    expect(r.envelope.metrics).toHaveLength(2);
   });
 });

@@ -44,7 +44,7 @@ export function getAnalysisSuggestions(fields: Record<string, PinnedField>): str
 
 /** Keep the assistant's questions: a bare answer needs the context it answers. */
 export function toTurns(messages: Message[]): { role: 'user' | 'assistant'; content: string }[] {
-  return messages.map((message) => {
+  const turns: { role: 'user' | 'assistant'; content: string }[] = messages.map((message) => {
     if (message.role === 'user') return {
       role: 'user',
       content: message.respondingTo ? `${FIELD_LABELS[message.respondingTo]}: ${message.content}` : message.content,
@@ -53,4 +53,5 @@ export function toTurns(messages: Message[]): { role: 'user' | 'assistant'; cont
     if (message.role === 'assistant-fallback') return { role: 'assistant', content: message.prose };
     return { role: 'assistant', content: [message.envelope.verdict, ...message.envelope.prose].join('\n') };
   });
+  return turns.filter((turn) => turn.content.trim().length > 0);
 }

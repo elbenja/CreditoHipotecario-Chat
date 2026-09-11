@@ -1,11 +1,11 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
-import type { ModelReply } from '../kimi.ts';
+import type { ModelMode, ModelReply } from '../kimi.ts';
 import { parseChatBody, runTurn } from '../turn.ts';
 import type { ChatMessage } from '../prompt.ts';
 
 export interface ServerDeps {
-  callModel: (messages: ChatMessage[]) => Promise<ModelReply>;
+  callModel: (messages: ChatMessage[], mode: ModelMode) => Promise<ModelReply>;
 }
 
 // The default 1 MiB bodyLimit is sized for text turns, not the image route:

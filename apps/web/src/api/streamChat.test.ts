@@ -71,4 +71,11 @@ describe('streamChat', () => {
     );
     expect(seen).toEqual(['status', 'extraction']);
   });
+
+  it('distinguishes an HTTP 400 rejection from a connection failure', async () => {
+    const seen: { event: string; data: unknown }[] = [];
+    const rejected = vi.fn(async () => ({ ok: false, status: 400 })) as unknown as typeof fetch;
+    await streamChat({ messages: [{ role: 'user', content: 'x' }], fields: [] }, (e) => seen.push(e), rejected);
+    expect(seen[0]).toMatchObject({ event: 'error', data: { kind: 'request' } });
+  });
 });

@@ -6,11 +6,26 @@ import OpenAI from 'openai';
 import type { ChatMessage } from './prompt.ts';
 
 const BASE_URL = process.env.MOONSHOT_BASE_URL ?? 'https://api.moonshot.ai/v1';
-// kimi-k2.7-code-highspeed, not kimi-k2.6: measured on this workload, k2.6
-// spends ~112s "thinking" before its first token while highspeed answers in
-// ~16s, for identical envelope quality and identical (exact) mortgage
-// arithmetic. See docs/superpowers/specs — latency section.
-const MODEL = process.env.MOONSHOT_MODEL ?? 'kimi-k2.7-code-highspeed';
+const DOCUMENT_MODEL = process.env.MOONSHOT_DOCUMENT_MODEL
+  ?? process.env.MOONSHOT_MODEL
+  ?? 'kimi-k2.7-code-highspeed';
+const CHAT_MODEL = process.env.MOONSHOT_CHAT_MODEL ?? 'kimi-k2.6';
+
+/** Enough for the compact JSON contract, without funding an unbounded reasoning trace. */
+export const CHAT_COMPLETION_LIMIT = 1200;
+const DOCUMENT_COMPLETION_LIMIT = 4000;
+
+export type ModelMode = 'chat' | 'document';
+
+export function getModelPolicy(mode: ModelMode): {
+  model: string;
+  maxCompletionTokens: number;
+  thinking?: { type: 'disabled' };
+} {
+  return mode === 'chat'
+    ? { model: CHAT_MODEL, maxCompletionTokens: CHAT_COMPLETION_LIMIT, thinking: { type: 'disabled' } }
+    : { model: DOCUMENT_MODEL, maxCompletionTokens: DOCUMENT_COMPLETION_LIMIT };
+}
 
 let client: OpenAI | null = null;
 
@@ -27,26 +42,64 @@ export interface ModelReply {
   truncated: boolean;
 }
 
+export type ModelErrorKind = 'request' | 'connection' | 'upstream';
+
+export class ModelCallError extends Error {
+  readonly kind: ModelErrorKind;
+  readonly status?: number;
+
+  constructor(
+    kind: ModelErrorKind,
+    message: string,
+    status?: number,
+    options?: ErrorOptions,
+  ) {
+    super(message, options);
+    this.name = 'ModelCallError';
+    this.kind = kind;
+    this.status = status;
+  }
+}
+
+export function classifyModelError(error: unknown): { kind: ModelErrorKind; status?: number } {
+  const value = typeof error === 'object' && error !== null
+    ? error as { status?: unknown; name?: unknown }
+    : {};
+  const status = typeof value.status === 'number' ? value.status : undefined;
+  if (status === 400) return { kind: 'request', status };
+  if (error instanceof TypeError || value.name === 'APIConnectionError') return { kind: 'connection' };
+  return status === undefined ? { kind: 'connection' } : { kind: 'upstream', status };
+}
+
 /** Returns the raw assistant text. Parsing and validation belong to the pipeline. */
-export async function callKimi(messages: ChatMessage[]): Promise<ModelReply> {
-  const res = await getClient().chat.completions.create({
-    model: MODEL,
-    // ChatMessage is a discriminated union keyed on role, exactly like the
-    // SDK's own ChatCompletionMessageParam union (only a user turn may carry
-    // image_url parts), so it satisfies the SDK type structurally — no cast.
-    messages,
-    // No temperature: the Moonshot models used here reject anything but 1
-    // ("invalid temperature: only 1 is allowed for this model"), so let the
-    // model default apply rather than sending a value it refuses.
-    // Generous on purpose: these models spend reasoning tokens before emitting
-    // any content. Measured on a page-1 crop: ~2,200 completion tokens, almost
-    // all of them reasoning. A low ceiling yields '' and no error at all.
-    max_tokens: 4000,
-    response_format: { type: 'json_object' },
-  });
-  const choice = res.choices[0];
-  return {
-    content: choice?.message?.content ?? '',
-    truncated: choice?.finish_reason === 'length',
-  };
+export async function callKimi(messages: ChatMessage[], mode: ModelMode = 'chat'): Promise<ModelReply> {
+  try {
+    const policy = getModelPolicy(mode);
+    const request = {
+      model: policy.model,
+      // ChatMessage is a discriminated union keyed on role, exactly like the
+      // SDK's own ChatCompletionMessageParam union.
+      messages,
+      // This product needs a small structured answer, not a hidden reasoning
+      // trace. Disabling thinking makes the ceiling apply to useful JSON.
+      ...(policy.thinking ? { thinking: policy.thinking } : {}),
+      max_completion_tokens: policy.maxCompletionTokens,
+      response_format: { type: 'json_object' as const },
+    };
+    const res = await getClient().chat.completions.create(request);
+    const choice = res.choices[0];
+    const details = res.usage?.prompt_tokens_details;
+    console.info(
+      `[kimi] mode=${mode} finish=${choice?.finish_reason ?? 'none'} input=${res.usage?.prompt_tokens ?? 0} ` +
+      `cached=${details?.cached_tokens ?? 0} output=${res.usage?.completion_tokens ?? 0}`,
+    );
+    return {
+      content: choice?.message?.content ?? '',
+      truncated: choice?.finish_reason === 'length',
+    };
+  } catch (error) {
+    const classified = classifyModelError(error);
+    const message = error instanceof Error ? error.message : 'Model request failed';
+    throw new ModelCallError(classified.kind, message, classified.status, { cause: error });
+  }
 }

@@ -18,6 +18,14 @@ describe('guided capture', () => {
     ]);
   });
 
+  it('excludes empty assistant messages from the model history', () => {
+    expect(toTurns([
+      { id: '1', role: 'user', content: 'hola' },
+      { id: '2', role: 'assistant-fallback', prose: '   ', candidates: [], truncated: true },
+      { id: '3', role: 'assistant-question', field: 'precio', content: '' },
+    ])).toEqual([{ role: 'user', content: 'hola' }]);
+  });
+
   it('uses the existing value when asking for a correction', () => {
     expect(getFieldQuestion('precio', price)).toContain('300,000');
     expect(getFieldQuestion('precio', price)).toContain('nuevo');

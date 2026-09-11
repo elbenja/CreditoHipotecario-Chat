@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { ModelCallError } from '../kimi.ts';
 import { buildServer } from './chat.ts';
 
 const envelope = {
@@ -78,6 +79,22 @@ describe('POST /api/chat', () => {
     expect(events.at(-1)!.event).toBe('envelope');
   });
 
+  it('uses the compact chat model policy for conversational turns', async () => {
+    const modes: (string | undefined)[] = [];
+    const app = buildServer({
+      callModel: async (_messages, mode) => {
+        modes.push(mode);
+        return { content: JSON.stringify(envelope), truncated: false };
+      },
+    });
+    await app.inject({
+      method: 'POST', url: '/api/chat',
+      payload: { messages: [{ role: 'user', content: 'hola' }], fields: [] },
+    });
+    await app.close();
+    expect(modes).toEqual(['chat']);
+  });
+
   it('emits fallback when the model breaks contract', async () => {
     const res = await post(async () => ({ content: 'Con 30% de inicial la cuota baja.', truncated: false }));
     const last = parseEvents(res.body).at(-1)!;
@@ -131,11 +148,46 @@ describe('POST /api/chat', () => {
     expect((last.data as { kind: string }).kind).toBe('api');
   });
 
+  it('reports a rejected request separately from a connection failure', async () => {
+    const res = await post(async () => {
+      throw new ModelCallError('request', 'invalid request', 400);
+    });
+    const last = parseEvents(res.body).at(-1)!;
+    expect(last.event).toBe('error');
+    expect(last.data).toMatchObject({ kind: 'request' });
+  });
+
+  it('does not emit a truncated reply when the model produced no content', async () => {
+    const res = await post(async () => ({ content: '   ', truncated: true }));
+    const last = parseEvents(res.body).at(-1)!;
+    expect(last.event).toBe('error');
+    expect(last.data).toMatchObject({ kind: 'limit' });
+    expect(parseEvents(res.body).some((event) => event.event === 'fallback' || event.event === 'envelope')).toBe(false);
+  });
+
   it('rejects a request with no messages', async () => {
     const app = buildServer({ callModel: async () => ({ content: '', truncated: false }) });
     const res = await app.inject({ method: 'POST', url: '/api/chat', payload: { messages: [], fields: [] } });
     await app.close();
     expect(res.statusCode).toBe(400);
+  });
+
+  it('removes blank turns at the API boundary', async () => {
+    const callModel = vi.fn(async (..._args: unknown[]) => ({ content: JSON.stringify(envelope), truncated: false }));
+    const app = buildServer({ callModel });
+    await app.inject({
+      method: 'POST',
+      url: '/api/chat',
+      payload: {
+        messages: [
+          { role: 'user', content: 'hola' },
+          { role: 'assistant', content: '   ' },
+        ],
+        fields: [],
+      },
+    });
+    await app.close();
+    expect(callModel.mock.calls[0]![0]).not.toContainEqual({ role: 'assistant', content: '   ' });
   });
 
   it('refuses an out-of-scope question without calling the model', async () => {

@@ -60,6 +60,5 @@ export const REFUSAL_ENVELOPE: AnalysisEnvelope = {
   followUps: [
     'Comparar tu depa contra un depósito a plazo',
     'Ver si amortizar rinde más',
-    '¿Cuánto me presta el banco?',
   ],
 };

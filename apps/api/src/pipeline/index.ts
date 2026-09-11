@@ -13,9 +13,9 @@ export type PipelineResult =
   | { ok: true; envelope: AnalysisEnvelope }
   | { ok: false; prose: string; candidates: Candidate[] };
 
-const MAX_PROSE = 3;
-const MAX_FOLLOW_UPS = 3;
-const MAX_METRICS = 3;
+const MAX_PROSE = 1;
+const MAX_FOLLOW_UPS = 2;
+const MAX_METRICS = 2;
 
 /** A value we may rewrite: the WHOLE string is a soles amount, nothing else. */
 const CURRENCY_ONLY = /^[+-]?\s*S\/\.?\s*[\d.,]+$/;

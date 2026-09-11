@@ -168,6 +168,27 @@ describe('Conversation mobile integration', () => {
     renderConversation();
     expect(screen.getByText('números indicativos · POC')).toBeTruthy();
   });
+
+  it('does not offer Continue for a legacy empty truncated reply', () => {
+    renderConversation({
+      ...state,
+      messages: [
+        state.messages[0]!,
+        { id: 'empty', role: 'assistant-fallback', prose: '   ', candidates: [], truncated: true },
+      ],
+    });
+    expect(screen.queryByRole('button', { name: 'Continuar' })).not.toBeInTheDocument();
+  });
+
+  it('labels a model rejection without calling it a connection failure', () => {
+    renderConversation({
+      ...state,
+      status: 'error',
+      error: { kind: 'request', message: 'La solicitud no fue válida.', retry: 'hola' },
+    });
+    expect(screen.getByText('Kimi rechazó la solicitud')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Reintentar/ })).not.toBeInTheDocument();
+  });
 });
 
 describe('Conversation attach flow', () => {

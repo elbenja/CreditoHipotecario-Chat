@@ -190,7 +190,7 @@ export function Conversation({
                       </div>
                     </div>
                   )}
-                  {m.truncated && <TruncatedNotice onContinue={onContinue} onShorten={onShorten} />}
+                  {m.truncated && m.prose.trim() && <TruncatedNotice onContinue={onContinue} onShorten={onShorten} />}
                 </div>
               );
             })}

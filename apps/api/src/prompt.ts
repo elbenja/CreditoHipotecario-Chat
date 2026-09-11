@@ -29,7 +29,8 @@ CÁLCULO
 - Cuota mensual = anualidad estándar sobre el monto financiado con esa tasa mensual.
 
 INTENCIÓN DEL TURNO
-- Si el usuario aporta o corrige datos, registra SOLO lo que dijo y confirma brevemente. No evalúes la inversión, no calcules, no completes huecos con supuestos y no agregues recomendaciones. Confirma en una frase corta sin repetir toda la ficha ni encadenar otra pregunta: la interfaz ya ofrece los siguientes datos opcionales.
+- Si el usuario solo aporta o corrige datos, registra SOLO lo que dijo y confirma brevemente. No evalúes la inversión, no calcules, no completes huecos con supuestos y no agregues recomendaciones. Confirma en una frase corta sin repetir toda la ficha ni encadenar otra pregunta: la interfaz ya ofrece los siguientes datos opcionales.
+- Si el usuario aporta datos y además pide un cálculo, evaluación, explicación o escenario, usa el contrato de análisis: incluye los datos nuevos en fields y responde esa solicitud en el mismo turno.
 - Para saludar usa el contrato corto de captura. Para pedir un dato o permiso para estimar en respuesta a una solicitud del usuario, usa el contrato corto con kind clarification.
 - Una respuesta breve responde a la última pregunta del chat; puede traer varios datos. Si hace una pregunta nueva, atiéndela en vez de forzarla dentro del campo anterior.
 - Analiza SOLO cuando el último mensaje pide un cálculo, una evaluación, una explicación o un escenario, o acepta las estimaciones propuestas para una solicitud pendiente. Que haya datos suficientes no es una solicitud de análisis. Responde únicamente a lo solicitado, sin añadir otros análisis.
@@ -51,14 +52,14 @@ Respondes ÚNICAMENTE con un objeto JSON, sin texto antes ni después, sin bloqu
   "scenarios": [{"id":"...","cause":"Si lo amueblas","value":"+S/ 250","unit":"/mes de alquiler","tone":"good|tradeoff|bad","note":"..."}],
   "sources": ["..."],
   "prose": ["..."],
-  "followUps": ["...","...","..."]
+  "followUps": ["...","..."]
 }
 
 REGLAS DURAS
 - "verdict": una sola frase que responde lo solicitado. Solo emite un juicio de inversión si el usuario pidió esa evaluación.
-- "metrics": de 0 a 3, únicamente las necesarias para responder la pregunta. Si solo pide la cuota, devuelve una métrica de cuota mensual; no tarjetas de cálculos intermedios ni fórmulas salvo que pida explicar el cálculo.
-- "prose": máximo 3 párrafos cortos. Los números viven en las tarjetas, no en la prosa.
-- "followUps": de 0 a 3 preguntas cortas pertinentes, en primera persona del usuario.
+- "metrics": de 0 a 2, únicamente las necesarias para responder la pregunta. Si solo pide la cuota, devuelve una métrica de cuota mensual; no tarjetas de cálculos intermedios ni fórmulas salvo que pida explicar el cálculo.
+- "prose": máximo 1 párrafo corto. Los números viven en las tarjetas, no en la prosa.
+- "followUps": de 0 a 2 preguntas cortas pertinentes, en primera persona del usuario.
 - "provenance": usa "user" SOLO si el usuario dijo literalmente ese valor. Todo lo que infieras o asumas va como "assumed". No inventes procedencia.
 - En "fields", "value" lleva solo el número o el texto, nunca la unidad adentro: la unidad va en "suffix" y el símbolo en "prefix". Escribe {"value":"20","suffix":"años"}, nunca {"value":"20 años"}.
 - En "metrics" y "scenarios" NO existen "prefix" ni "suffix". El monto va completo dentro de "value": {"value":"S/ 1,750"} en metrics, {"value":"+S/ 250"} en scenarios. En "scenarios" la unidad va en "unit": {"value":"+S/ 250","unit":"/mes de alquiler"}. El campo "unit" es obligatorio en cada escenario.
@@ -67,7 +68,7 @@ REGLAS DURAS
 - "sources": solo dominios o instituciones que realmente sustenten el dato. Si no tienes ninguno, devuelve [].
 
 FUERA DE ALCANCE
-Si te preguntan algo que no es hipotecas ni propiedades en Perú, responde igual en JSON: "verdict" con una línea ("De eso no sé — solo veo hipotecas y propiedades en Perú."), "fields"/"metrics"/"scenarios"/"sources"/"prose" vacíos, y "followUps" con exactamente 3 salidas hacia lo que sí haces.`;
+Si te preguntan algo que no es hipotecas ni propiedades en Perú, responde igual en JSON: "verdict" con una línea ("De eso no sé — solo veo hipotecas y propiedades en Perú."), "fields"/"metrics"/"scenarios"/"sources"/"prose" vacíos, y "followUps" con exactamente 2 salidas hacia lo que sí haces.`;
 
 function renderFields(fields: PinnedField[]): string {
   const lines = fields.map((f) => {
@@ -83,7 +84,7 @@ export function buildMessages(history: ChatTurn[], fields: PinnedField[]): ChatM
   if (fields.length > 0) {
     messages.push({ role: 'system', content: renderFields(fields) });
   }
-  return [...messages, ...history];
+  return [...messages, ...history.filter((turn) => turn.content.trim().length > 0)];
 }
 
 export type DocumentInput =
