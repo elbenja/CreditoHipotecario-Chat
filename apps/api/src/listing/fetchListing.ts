@@ -108,6 +108,9 @@ export async function fetchListingText(url: string, fetchImpl: typeof fetch = fe
     const type = res.headers.get('content-type') ?? '';
     if (!/text\/html|application\/xhtml/i.test(type)) throw new ListingFetchError('notHtml');
     return htmlToText(await readCapped(res));
+  } catch (e) {
+    if (e instanceof ListingFetchError) throw e;
+    throw new ListingFetchError('network');
   } finally {
     clearTimeout(timer);
   }

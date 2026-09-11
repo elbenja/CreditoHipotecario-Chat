@@ -86,4 +86,12 @@ describe('fetchListingText', () => {
     const fetchImpl = vi.fn(async () => htmlResponse('<h1>ASPIRIA</h1><script type="application/ld+json">{"a":1}</script>'));
     expect(await fetchListingText(NEXO, fetchImpl)).toBe('{"a":1}\nASPIRIA');
   });
+
+  it('maps a body read error to network', async () => {
+    const fetchImpl = vi.fn(async () => new Response(
+      new ReadableStream({ start(c) { c.error(new Error('boom')); } }),
+      { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } }
+    ));
+    expect(await codeOf(fetchListingText(NEXO, fetchImpl))).toBe('network');
+  });
 });
