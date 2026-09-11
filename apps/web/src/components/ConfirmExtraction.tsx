@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { MortgageField } from '@chat/shared';
 
 /**
@@ -16,6 +16,7 @@ export function ConfirmExtraction({
   onCancel: () => void;
 }) {
   const [draft, setDraft] = useState(fields);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -25,16 +26,67 @@ export function ConfirmExtraction({
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
 
+  // Mounted only while open (no `open` prop — the parent controls mounting), so
+  // "on close" here means unmount: grab the pre-open focus now and hand it back
+  // in the cleanup, trap Tab in a cycle while mounted, and lock body scroll —
+  // same idiom as MobileBottomSheet's dialog.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const getFocusable = () =>
+      dialogRef.current
+        ? Array.from(
+            dialogRef.current.querySelectorAll<HTMLElement>(
+              'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+            ),
+          )
+        : [];
+
+    // Land on the first field, not the confirm button — the point of this
+    // dialog is reading the figures before accepting them.
+    (getFocusable()[0] ?? dialogRef.current)?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialogRef.current?.focus();
+        return;
+      }
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus();
+    };
+  }, []);
+
   const edit = (key: string, value: string) =>
     setDraft((d) => d.map((f) => (f.key === key ? { ...f, value } : f)));
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-5">
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label="Revisar lo que leí del cronograma"
-        className="ch-rise max-h-[85vh] w-full max-w-[440px] overflow-y-auto rounded-xl border border-ch-border bg-ch-panel p-5"
+        tabIndex={-1}
+        className="ch-rise max-h-[85vh] w-full max-w-[440px] overflow-y-auto rounded-xl border border-ch-border bg-ch-panel p-5 outline-none"
       >
         <h2 className="font-jakarta text-[19px] font-extrabold tracking-[-.02em] text-white">
           Esto leí de tu cronograma

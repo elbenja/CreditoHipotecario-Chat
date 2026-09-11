@@ -51,4 +51,51 @@ describe('ConfirmExtraction', () => {
     render(<ConfirmExtraction fields={FIELDS} onConfirm={vi.fn()} onCancel={vi.fn()} />);
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
   });
+
+  it('moves focus into the dialog on mount, onto the first field rather than the confirm button', () => {
+    render(<ConfirmExtraction fields={FIELDS} onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByLabelText('TEA')).toHaveFocus();
+  });
+
+  it('traps Tab within the dialog, cycling from the last focusable element back to the first', async () => {
+    const user = userEvent.setup();
+    render(<ConfirmExtraction fields={FIELDS} onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    const dialog = screen.getByRole('dialog');
+    const tea = screen.getByLabelText('TEA');
+    const confirmButton = screen.getByRole('button', { name: /fijar/i });
+
+    confirmButton.focus();
+    await user.tab();
+    expect(tea).toHaveFocus();
+
+    await user.tab({ shift: true });
+    expect(confirmButton).toHaveFocus();
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
+  it('returns focus to the previously focused element on unmount', () => {
+    const trigger = document.createElement('button');
+    document.body.appendChild(trigger);
+    trigger.focus();
+    expect(trigger).toHaveFocus();
+
+    const { unmount } = render(
+      <ConfirmExtraction fields={FIELDS} onConfirm={vi.fn()} onCancel={vi.fn()} />,
+    );
+    expect(trigger).not.toHaveFocus();
+
+    unmount();
+    expect(trigger).toHaveFocus();
+    trigger.remove();
+  });
+
+  it('locks body scroll while mounted and releases it on unmount', () => {
+    const { unmount } = render(
+      <ConfirmExtraction fields={FIELDS} onConfirm={vi.fn()} onCancel={vi.fn()} />,
+    );
+    expect(document.body).toHaveStyle({ overflow: 'hidden' });
+
+    unmount();
+    expect(document.body).not.toHaveStyle({ overflow: 'hidden' });
+  });
 });
