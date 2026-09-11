@@ -137,3 +137,30 @@ export function buildDocumentMessages(doc: DocumentInput): ChatMessage[] {
     },
   ];
 }
+
+/**
+ * The listing shape, shared by the link route and the PDF route's "anuncio"
+ * branch so a saved Urbania page and a fetched Nexo page extract identically.
+ */
+export const LISTING_FIELDS_BLOCK = `{"proyecto":"nombre del proyecto o del anuncio","constructora":null,"direccion":null,"distrito":"distrito","entrega":null,"etapa":null,"modelos":[{"nombre":null,"area":null,"precioDesde":null,"dormitorios":null}],"dudosos":[]}
+
+REGLAS DEL ANUNCIO
+- "proyecto": el nombre del proyecto (una constructora vende varios modelos) o, si es un solo departamento en reventa, el título del anuncio.
+- "direccion": solo la calle y el número, sin el distrito. "distrito": el distrito de Lima o la ciudad. Obligatorio.
+- "modelos": UNA entrada por cada modelo o tipología que la página lista con su propio precio o área. Un anuncio de un solo departamento devuelve un solo modelo con "nombre" null.
+- "precioDesde": el precio "desde" de ese modelo, en soles, copiado EXACTAMENTE como aparece (con sus comas). Si la página solo trae dólares, copia el monto en dólares y añade "precioDesde" a "dudosos".
+- "area": el área en m² de ese modelo, solo el número. "dormitorios": solo el número.
+- "etapa": "En planos", "En construcción" o "Entrega inmediata" si la página lo dice. "entrega": la fecha de entrega si la dice.
+- Usa null en cada campo que la página no traiga. No inventes.
+- "dudosos": los nombres de los campos que NO leíste con certeza ("precioDesde", "area", "distrito", "direccion"…). Es mejor declarar una duda que acertar por casualidad.`;
+
+export const LISTING_PROMPT = `Este es el texto de un anuncio de venta de un departamento o proyecto inmobiliario en el Perú. Si empieza con uno o más bloques JSON-LD (application/ld+json), ese bloque es la fuente más fiable para el nombre, el distrito, la constructora y el precio más bajo; los precios y áreas de cada modelo están en el texto de la página.
+
+Responde ÚNICAMENTE con este JSON, sin texto alrededor y sin bloques de markdown:
+${LISTING_FIELDS_BLOCK}
+
+Si el texto no es un anuncio de un departamento, responde {"proyecto":null,"distrito":null,"modelos":[],"dudosos":[]}.`;
+
+export function buildListingMessages(text: string): ChatMessage[] {
+  return [{ role: 'user', content: `${LISTING_PROMPT}\n\n---\n${text}` }];
+}

@@ -1,6 +1,6 @@
 import type { PinnedField } from '@chat/shared';
 import { describe, expect, it } from 'vitest';
-import { SYSTEM_PROMPT, buildMessages } from './prompt.ts';
+import { SYSTEM_PROMPT, buildMessages, LISTING_PROMPT, buildListingMessages } from './prompt.ts';
 
 describe('SYSTEM_PROMPT', () => {
   it('states the Peruvian market', () => {
@@ -104,5 +104,21 @@ describe('buildMessages', () => {
   it('omits the field block when nothing is pinned', () => {
     const msgs = buildMessages([{ role: 'user', content: 'hola' }], []);
     expect(msgs.filter((m) => m.role === 'system')).toHaveLength(1);
+  });
+});
+
+describe('buildListingMessages', () => {
+  it('sends the listing prompt and the page text as one user turn', () => {
+    const [m] = buildListingMessages('{"@type":"Product"}\nProyecto ASPIRIA');
+    expect(m!.role).toBe('user');
+    expect(m!.content).toContain(LISTING_PROMPT);
+    expect(m!.content).toContain('Proyecto ASPIRIA');
+  });
+
+  it('asks for the listing shape and tells the model JSON-LD is the most reliable source', () => {
+    expect(LISTING_PROMPT).toContain('"modelos"');
+    expect(LISTING_PROMPT).toContain('"precioDesde"');
+    expect(LISTING_PROMPT).toMatch(/ld\+json|JSON-LD/);
+    expect(LISTING_PROMPT).toContain('"dudosos"');
   });
 });
