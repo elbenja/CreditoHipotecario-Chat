@@ -10,12 +10,11 @@ rediscovered.
 
 ## Deliberately not built
 
-**Drag and drop.** The spec's flow says "attach button in the composer, plus
-drag and drop", and only the button was built. It was left out of the final fix
-wave on purpose: that wave carried four correctness fixes, and the process
-allows exactly one, so bundling additive feature work risked the fixes. This is
-the one item that leaves the spec unmet, and it is the project owner's call
-whether it blocks anything.
+**Drag and drop.** ~~The spec's flow says "attach button in the composer, plus
+drag and drop", and only the button was built.~~ Built 2026-09-11 in the
+cronograma UX pass (`DropZone`, branch `ux-composer-cronograma`), after PR #4
+merged. Kept out of Fase B's final fix wave on purpose at the time: that wave
+carried four correctness fixes, and the process allows exactly one.
 
 ## Worth fixing when the area is next touched
 
