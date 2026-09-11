@@ -111,6 +111,10 @@ export default function App() {
     dispatch({ type: 'editField', key, value });
   }, []);
 
+  const editMortgage = useCallback((key: string, value: string) => {
+    dispatch({ type: 'editMortgageField', key, value });
+  }, []);
+
   const acceptProposal = useCallback((key: string) => {
     dispatch({ type: 'acceptProposal', key });
   }, []);
@@ -167,6 +171,7 @@ export default function App() {
           state={state}
           onSend={send}
           onEdit={edit}
+          onEditMortgage={editMortgage}
           onAcceptProposal={acceptProposal}
           onRejectProposal={rejectProposal}
           onPinCandidate={pinCandidate}

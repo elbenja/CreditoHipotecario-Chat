@@ -16,6 +16,7 @@ export function PinnedPanel({
   changes = [],
   busy = false,
   onEdit,
+  onEditMortgage,
   onAcceptProposal,
   onRejectProposal,
   onDeleteScenario,
@@ -32,6 +33,7 @@ export function PinnedPanel({
   changes?: FieldChange[];
   busy?: boolean;
   onEdit: (key: string, value: string) => void;
+  onEditMortgage?: (key: string, value: string) => void;
   onAcceptProposal?: (key: string) => void;
   onRejectProposal?: (key: string) => void;
   onDeleteScenario?: (id: string) => void;
@@ -96,7 +98,7 @@ export function PinnedPanel({
             onRejectProposal={onRejectProposal}
           />
         ))}
-        <MortgageGroup fields={mortgage} onEdit={onEdit} />
+        <MortgageGroup fields={mortgage} onEdit={onEditMortgage} />
         <SavedScenarios scenarios={savedScenarios} onDelete={(id) => onDeleteScenario?.(id)} />
       </div>
 

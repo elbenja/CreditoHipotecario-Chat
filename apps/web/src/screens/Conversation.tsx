@@ -20,6 +20,7 @@ export function Conversation({
   state,
   onSend,
   onEdit,
+  onEditMortgage,
   onAcceptProposal,
   onRejectProposal,
   onPinCandidate,
@@ -39,6 +40,7 @@ export function Conversation({
   state: ChatState;
   onSend: (text: string) => void;
   onEdit: (key: string, value: string) => void;
+  onEditMortgage?: (key: string, value: string) => void;
   onAcceptProposal: (key: string) => void;
   onRejectProposal: (key: string) => void;
   onPinCandidate: (key: string, label: string, value: string) => void;
@@ -228,6 +230,7 @@ export function Conversation({
           dirtyKeys={selectDirtyKeys(state)}
           busy={busy}
           onEdit={onEdit}
+          onEditMortgage={onEditMortgage}
           onAcceptProposal={onAcceptProposal}
           onRejectProposal={onRejectProposal}
           onDeleteScenario={deleteScenario}
@@ -245,6 +248,7 @@ export function Conversation({
         dirtyKeys={selectDirtyKeys(state)}
         busy={busy}
         onEdit={onEdit}
+        onEditMortgage={onEditMortgage}
         onAcceptProposal={onAcceptProposal}
         onRejectProposal={onRejectProposal}
         onDeleteScenario={deleteScenario}

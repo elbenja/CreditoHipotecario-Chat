@@ -13,6 +13,7 @@ type MobileBottomSheetProps = {
   changes?: FieldChange[];
   busy?: boolean;
   onEdit: (key: string, value: string) => void;
+  onEditMortgage?: (key: string, value: string) => void;
   onAcceptProposal?: (key: string) => void;
   onRejectProposal?: (key: string) => void;
   onDeleteScenario?: (id: string) => void;
@@ -30,6 +31,7 @@ export function MobileBottomSheet({
   changes = [],
   busy = false,
   onEdit,
+  onEditMortgage,
   onAcceptProposal,
   onRejectProposal,
   onDeleteScenario,
@@ -226,6 +228,7 @@ export function MobileBottomSheet({
               changes={changes}
               busy={busy}
               onEdit={onEdit}
+              onEditMortgage={onEditMortgage}
               onAcceptProposal={onAcceptProposal}
               onRejectProposal={onRejectProposal}
               onDeleteScenario={onDeleteScenario}
