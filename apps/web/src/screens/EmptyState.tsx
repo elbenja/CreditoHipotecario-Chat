@@ -108,6 +108,8 @@ export function EmptyState({
         <MobileBottomSheet
           fields={fields}
           mortgage={mortgage}
+          mortgageChanges={state.mortgageChanges}
+          mortgageRevision={state.mortgageRevision}
           busy={busy}
           onEdit={onEdit}
           onEditMortgage={onEditMortgage}
@@ -164,6 +166,8 @@ export function EmptyState({
         <PinnedPanel
           fields={fields}
           mortgage={mortgage}
+          mortgageChanges={state.mortgageChanges}
+          mortgageRevision={state.mortgageRevision}
           busy={busy}
           onEdit={onEdit}
           onEditMortgage={onEditMortgage}

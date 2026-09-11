@@ -176,6 +176,60 @@
       ch-drop-icon 240ms cubic-bezier(0.2, 0.7, 0.2, 1) 60ms both,
       ch-drop-float 2.4s ease-in-out 300ms infinite;
   }
+  /* Card 12: the group's count crossfades, never counts; the "N del PDF"
+     pill slides in from the left. */
+  @keyframes ch-count-out {
+    from {
+      opacity: 1;
+      translate: 0 0;
+    }
+    to {
+      opacity: 0;
+      translate: 0 -7px;
+    }
+  }
+  @keyframes ch-count-in {
+    from {
+      opacity: 0;
+      translate: 0 7px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+  @keyframes ch-badge {
+    from {
+      opacity: 0;
+      translate: -6px 0;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+  /* Card 13: a row a schedule touched opens with a 12% accent wash that
+     decays in 900ms — enough to find it, not enough to stay. */
+  @keyframes ch-wash {
+    from {
+      background-color: rgba(244, 188, 68, 0.12);
+    }
+    to {
+      background-color: rgba(244, 188, 68, 0);
+    }
+  }
+  .ch-count-out {
+    animation: ch-count-out 180ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .ch-count-in {
+    animation: ch-count-in 180ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .ch-badge {
+    animation: ch-badge 180ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .ch-wash {
+    animation: ch-wash 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
   .ch-scan {
     animation: ch-scan 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
   }

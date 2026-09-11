@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { FieldGroup } from './FieldGroup';
@@ -11,53 +11,89 @@ describe('FieldGroup', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('starts open by default', () => {
-    render(<FieldGroup title="Propiedad" count={6}>{rows(6)}</FieldGroup>);
-    expect(screen.getByRole('button', { name: /propiedad/i })).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('Fila 5')).toBeInTheDocument();
-  });
-
-  it('starts open at the collapse threshold or fewer', () => {
-    render(<FieldGroup title="Hipoteca" count={4} collapseAbove={4}>{rows(4)}</FieldGroup>);
+  // The credit is what the user just uploaded; hiding it behind a chevron
+  // made "Fijar estos datos" look like it had done nothing.
+  it('starts open, however many rows it holds', () => {
+    render(<FieldGroup title="Hipoteca" count={9}>{rows(9)}</FieldGroup>);
     expect(screen.getByRole('button', { name: /hipoteca/i })).toHaveAttribute('aria-expanded', 'true');
-  });
-
-  it('starts collapsed past the threshold, so it does not bury the other group', () => {
-    render(<FieldGroup title="Hipoteca" count={5} collapseAbove={4}>{rows(5)}</FieldGroup>);
-    expect(screen.getByRole('button', { name: /hipoteca/i })).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByText('Fila 0')).not.toBeInTheDocument();
+    expect(screen.getByText('Fila 8')).toBeInTheDocument();
   });
 
   it('toggles', async () => {
-    render(<FieldGroup title="Hipoteca" count={5} collapseAbove={4}>{rows(5)}</FieldGroup>);
+    render(<FieldGroup title="Hipoteca" count={5}>{rows(5)}</FieldGroup>);
     const toggle = screen.getByRole('button', { name: /hipoteca/i });
     await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('Fila 0')).not.toBeInTheDocument();
+    await userEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('Fila 0')).toBeInTheDocument();
   });
 
   it('shows the count in the header', () => {
-    render(<FieldGroup title="Hipoteca" count={5} collapseAbove={4}>{rows(5)}</FieldGroup>);
+    render(<FieldGroup title="Hipoteca" count={5}>{rows(5)}</FieldGroup>);
     expect(screen.getByRole('button', { name: /hipoteca/i })).toHaveTextContent('5');
   });
 
-  // PinnedPanel mounts this group unconditionally, before an upload's fields
-  // arrive — so the initializer alone (`useState(count <= n)`) sees zero,
-  // opens, and then never re-evaluates once nine land. Only a reload (a fresh
-  // mount with the fields already present) got this right.
-  it('collapses once rows arrive after mounting with none, not only after a reload', () => {
-    const { rerender } = render(<FieldGroup title="Hipoteca" count={0} collapseAbove={4}>{rows(0)}</FieldGroup>);
-    rerender(<FieldGroup title="Hipoteca" count={9} collapseAbove={4}>{rows(9)}</FieldGroup>);
-    expect(screen.getByRole('button', { name: /hipoteca/i })).toHaveAttribute('aria-expanded', 'false');
+  it('keeps the user’s choice to close it even as rows arrive afterward', async () => {
+    const { rerender } = render(<FieldGroup title="Hipoteca" count={5}>{rows(5)}</FieldGroup>);
+    const toggle = screen.getByRole('button', { name: /hipoteca/i });
+    await userEvent.click(toggle);
+    rerender(<FieldGroup title="Hipoteca" count={9}>{rows(9)}</FieldGroup>);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
+});
+
+// Card 12: a change that lands while the group is shut is a task the user
+// still owes a look, so a pill stays on the header until they open it. The
+// group never opens itself.
+describe('FieldGroup notice', () => {
+  it('shows nothing while the group is open — the rows show the change', () => {
+    render(
+      <FieldGroup title="Hipoteca" count={4} notice={{ count: 4, revision: 1 }}>{rows(4)}</FieldGroup>,
+    );
+    expect(screen.queryByText('4 del PDF')).not.toBeInTheDocument();
   });
 
-  it('keeps the user’s own choice even as more rows arrive afterward', async () => {
-    const { rerender } = render(<FieldGroup title="Hipoteca" count={5} collapseAbove={4}>{rows(5)}</FieldGroup>);
+  it('flags a change that lands while shut, and does not auto-expand', async () => {
+    const { rerender } = render(
+      <FieldGroup title="Hipoteca" count={7} notice={{ count: 7, revision: 1 }}>{rows(7)}</FieldGroup>,
+    );
     const toggle = screen.getByRole('button', { name: /hipoteca/i });
-    await userEvent.click(toggle); // opens it by hand, against the collapsed-above-4 rule
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.click(toggle);
 
-    rerender(<FieldGroup title="Hipoteca" count={9} collapseAbove={4}>{rows(9)}</FieldGroup>);
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    rerender(
+      <FieldGroup title="Hipoteca" count={11} notice={{ count: 4, revision: 2 }}>{rows(11)}</FieldGroup>,
+    );
+    expect(screen.getByText('4 del PDF')).toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('clears the pill once the group is opened', async () => {
+    const { rerender } = render(
+      <FieldGroup title="Hipoteca" count={7} notice={{ count: 7, revision: 1 }}>{rows(7)}</FieldGroup>,
+    );
+    const toggle = screen.getByRole('button', { name: /hipoteca/i });
+    await userEvent.click(toggle);
+    rerender(
+      <FieldGroup title="Hipoteca" count={11} notice={{ count: 4, revision: 2 }}>{rows(11)}</FieldGroup>,
+    );
+    await userEvent.click(toggle);
+    expect(screen.queryByText('4 del PDF')).not.toBeInTheDocument();
+    // And it stays cleared if they close it again: it was seen.
+    await userEvent.click(toggle);
+    expect(screen.queryByText('4 del PDF')).not.toBeInTheDocument();
+  });
+
+  it('crossfades the count instead of counting up', () => {
+    const { rerender } = render(<FieldGroup title="Hipoteca" count={7}>{rows(7)}</FieldGroup>);
+    rerender(<FieldGroup title="Hipoteca" count={11}>{rows(11)}</FieldGroup>);
+    const toggle = screen.getByRole('button', { name: /hipoteca/i });
+    // Both numbers are in the DOM for the 180ms crossfade; the old one is
+    // hidden from assistive tech and goes when its animation ends.
+    expect(toggle).toHaveTextContent('11');
+    const old = screen.getByText('7');
+    expect(old).toHaveAttribute('aria-hidden', 'true');
+    fireEvent.animationEnd(old);
+    expect(screen.queryByText('7')).not.toBeInTheDocument();
   });
 });

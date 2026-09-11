@@ -4,12 +4,16 @@ import { Icon } from './Icon';
 export function PinnedFieldRow({
   field,
   proposal,
+  change,
   onChange,
   onAcceptProposal,
   onRejectProposal,
 }: {
   field: PinnedField | MortgageField;
   proposal?: PinnedField;
+  /** Card 13: the last schedule touched this row. `null` means it was new;
+   *  a string is the value it replaced, shown struck through beneath. */
+  change?: string | null;
   onChange: (key: string, value: string) => void;
   onAcceptProposal?: (key: string) => void;
   onRejectProposal?: (key: string) => void;
@@ -28,7 +32,11 @@ export function PinnedFieldRow({
   const dotTitle = fromDocument ? 'Lo leí del banco' : notFromUser ? 'Lo asumí yo' : 'Lo dijiste tú';
 
   return (
-    <div className="rounded-[10px] border border-transparent px-3 py-[11px] transition-colors duration-180 ease-ch hover:border-ch-border">
+    <div
+      className={`rounded-[10px] border border-transparent px-3 py-[11px] transition-colors duration-180 ease-ch hover:border-ch-border ${
+        change !== undefined ? 'ch-wash' : ''
+      }`}
+    >
       <div className="flex items-center gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-[.1em] text-slate-500 md:text-[10px]">
           {field.label}
@@ -56,6 +64,13 @@ export function PinnedFieldRow({
 
       {field.note && (
         <p className="mt-[5px] text-[11.5px] font-medium leading-[1.45] text-slate-400 md:text-[11px]">{field.note}</p>
+      )}
+
+      {/* Seeing the change is worth more than knowing there was one. */}
+      {typeof change === 'string' && (
+        <p className="mt-[5px] text-[11px] text-slate-400">
+          antes <s>{change}{field.suffix ? ` ${field.suffix}` : ''}</s> · leído del PDF
+        </p>
       )}
 
       {/*
