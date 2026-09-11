@@ -14,6 +14,7 @@ export function Composer({
   suggestions = [],
   onSuggestion,
   suggestionClassName = '',
+  onAttach,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -24,9 +25,11 @@ export function Composer({
   suggestions?: string[];
   onSuggestion?: (s: string) => void;
   suggestionClassName?: string;
+  onAttach?: (file: File) => void;
 }) {
   const [focused, setFocused] = useState(false);
   const boxRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   // Measured, not counted: 'auto' first so the box can shrink back when the
   // user deletes, then grow to whatever the content actually needs.
@@ -119,6 +122,31 @@ export function Composer({
           disabled={disabled}
           className="min-w-0 flex-1 resize-none overflow-y-auto bg-transparent text-[14.5px] leading-[22px] text-white outline-none placeholder:text-slate-500"
         />
+        {onAttach && (
+          <>
+            <input
+              type="file"
+              accept="application/pdf"
+              data-testid="attach-input"
+              className="hidden"
+              ref={fileRef}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onAttach(f);
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              aria-label="Adjuntar cronograma"
+              title="Leo solo la primera página. El archivo no se sube ni se guarda. Puedes tapar tus datos personales antes."
+              className="grid h-[34px] w-[34px] flex-none place-items-center rounded-full text-slate-400 transition-colors duration-180 ease-ch hover:text-slate-200"
+            >
+              <Icon name="attachment-01" size={17} />
+            </button>
+          </>
+        )}
         {/* Primary CTA: slate-50 background, per the product rule. */}
         <button
           type="button"

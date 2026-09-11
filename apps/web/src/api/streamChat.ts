@@ -1,4 +1,5 @@
 import type { PinnedField } from '@chat/shared';
+import type { DocumentInput } from '../pdf/readPdf';
 
 /**
  * In production the API lives on another host. Locally this stays empty so the
@@ -14,6 +15,7 @@ export interface SSEEvent {
 export interface ChatRequest {
   messages: { role: 'user' | 'assistant'; content: string }[];
   fields: PinnedField[];
+  document?: DocumentInput;
 }
 
 /** Parse whole `event:`/`data:` blocks. An incomplete trailing block is skipped. */
@@ -71,7 +73,7 @@ export async function streamChat(
       const complete = buffer.slice(0, lastBreak + 2);
       buffer = buffer.slice(lastBreak + 2);
       for (const e of parseSSE(complete)) {
-        if (e.event === 'envelope' || e.event === 'fallback' || e.event === 'error') {
+        if (e.event === 'envelope' || e.event === 'fallback' || e.event === 'error' || e.event === 'extraction') {
           sawTerminal = true;
         }
         onEvent(e);

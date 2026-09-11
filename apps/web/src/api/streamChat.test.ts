@@ -58,4 +58,17 @@ describe('streamChat', () => {
     await streamChat({ messages: [{ role: 'user', content: 'x' }], fields: [] }, (e) => seen.push(e), failing);
     expect(seen[0]!.event).toBe('error');
   });
+
+  // A document turn's terminal event is 'extraction', not 'envelope' — the
+  // stream closing right after it must not be mistaken for a dropped
+  // connection.
+  it('does not synthesise a dropped-connection error after an extraction event', async () => {
+    const seen: string[] = [];
+    await streamChat(
+      { messages: [{ role: 'user', content: 'mi cronograma' }], fields: [], document: { kind: 'text', text: 'TEA 6.30' } },
+      (e) => seen.push(e.event),
+      mockFetch('event: status\ndata: {"phase":"analyzing"}\n\nevent: extraction\ndata: {"fields":[]}\n\n'),
+    );
+    expect(seen).toEqual(['status', 'extraction']);
+  });
 });
