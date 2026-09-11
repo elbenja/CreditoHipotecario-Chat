@@ -17,6 +17,26 @@ describe('PinnedPanel', () => {
     render(<PinnedPanel fields={[]} onEdit={vi.fn()} />);
     expect(screen.queryByText(/lo leí del banco/i)).not.toBeInTheDocument();
   });
+
+  // The property and the credit are two different things, and each gets its
+  // own collapsible group — a flat list of nine rows reads as one blob.
+  it('splits the rows into a Propiedad group and a Hipoteca group', () => {
+    render(<PinnedPanel
+      fields={[{ key: 'precio', label: 'Precio', value: '300000', provenance: 'user', note: '' }]}
+      mortgage={[{ key: 'tea', label: 'TEA', value: '8.99', provenance: 'documento', note: '' }]}
+      onEdit={vi.fn()}
+    />);
+    expect(screen.getByRole('button', { name: /^propiedad/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /hipoteca/i })).toBeInTheDocument();
+    expect(screen.getByLabelText('Precio')).toBeInTheDocument();
+    expect(screen.getByLabelText('TEA')).toBeInTheDocument();
+  });
+
+  it('omits a group that has nothing in it', () => {
+    render(<PinnedPanel fields={[]} mortgage={[{ key: 'tea', label: 'TEA', value: '8.99', provenance: 'documento', note: '' }]} onEdit={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: /^propiedad/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /hipoteca/i })).toBeInTheDocument();
+  });
 });
 
 // Regression coverage for the defect where mortgage rows shared the property

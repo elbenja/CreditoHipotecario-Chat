@@ -124,6 +124,12 @@ describe('attaching a cronograma — empty variant', () => {
     expect(onAttach).toHaveBeenCalledWith(file);
   });
 
+  it('tells the user both ways in: upload a document, or paste a listing link', () => {
+    render(<Composer value="" onChange={vi.fn()} onSubmit={vi.fn()} placeholder="x"
+      variant="empty" onAttach={vi.fn()} />);
+    expect(screen.getByText('Sube un documento o pega el link de un anuncio')).toBeInTheDocument();
+  });
+
   it('has no attach control in the empty variant when the screen does not pass one', () => {
     render(<Composer value="" onChange={vi.fn()} onSubmit={vi.fn()} placeholder="x" variant="empty" />);
     expect(screen.queryByLabelText(/adjuntar cronograma/i)).not.toBeInTheDocument();

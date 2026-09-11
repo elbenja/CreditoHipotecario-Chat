@@ -1,6 +1,6 @@
 export function Thinking() {
   return (
-    <div className="flex w-fit items-center gap-[6px] rounded-full bg-ch-panel px-4 py-3">
+    <div data-testid="thinking" className="flex w-fit items-center gap-[6px] rounded-full bg-ch-panel px-4 py-3">
       {[0, 1, 2].map((i) => (
         <span
           key={i}

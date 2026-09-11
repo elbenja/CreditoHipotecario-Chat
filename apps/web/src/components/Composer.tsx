@@ -56,6 +56,36 @@ export function Composer({
     submit();
   };
 
+  // One control, at the left in both variants: a "+" that opens the picker.
+  // The hidden input is what tests and the OS dialog talk to.
+  const attachControl = onAttach && (
+    <>
+      <input
+        type="file"
+        accept="application/pdf"
+        data-testid="attach-input"
+        className="hidden"
+        ref={fileRef}
+        disabled={disabled}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onAttach(f);
+          e.target.value = '';
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        disabled={disabled}
+        aria-label="Adjuntar cronograma"
+        title="Leo solo la primera página. El archivo no se sube ni se guarda. Puedes tapar tus datos personales antes."
+        className="grid h-[34px] w-[34px] flex-none place-items-center rounded-full border border-ch-border-hover text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500 hover:text-white disabled:opacity-40"
+      >
+        <Icon name="plus-sign" size={16} />
+      </button>
+    </>
+  );
+
   if (variant === 'empty') {
     return (
       <div className="rounded-xl border border-ch-border bg-ch-panel px-[18px] pb-[14px] pt-[18px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-[0_0_0_3px_rgba(244,188,68,.35)] hover:border-ch-border-hover">
@@ -69,38 +99,12 @@ export function Composer({
           disabled={disabled}
           className="w-full resize-none overflow-y-auto bg-transparent text-[14.5px] leading-[22px] text-white outline-none placeholder:text-slate-500"
         />
-        <div className="mt-[14px] flex items-center">
-          <span className="flex items-center gap-[6px] text-[11.5px] text-slate-400">
-            <Icon name="link-02" size={13} />o pega el link de un anuncio
+        <div className="mt-[14px] flex items-center gap-[10px]">
+          {attachControl}
+          <span className="text-[11.5px] text-slate-400">
+            Sube un documento o pega el link de un anuncio
           </span>
           <div className="flex-1" />
-          {onAttach && (
-            <>
-              <input
-                type="file"
-                accept="application/pdf"
-                data-testid="attach-input"
-                className="hidden"
-                ref={fileRef}
-                disabled={disabled}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) onAttach(f);
-                  e.target.value = '';
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                disabled={disabled}
-                aria-label="Adjuntar cronograma"
-                title="Leo solo la primera página. El archivo no se sube ni se guarda. Puedes tapar tus datos personales antes."
-                className="mr-2 grid h-[34px] w-[34px] flex-none place-items-center rounded-full text-slate-400 transition-colors duration-180 ease-ch hover:text-slate-200 disabled:opacity-40"
-              >
-                <Icon name="attachment-01" size={17} />
-              </button>
-            </>
-          )}
           <button
             type="button"
             onClick={submit}
@@ -134,10 +138,11 @@ export function Composer({
         </div>
       )}
       <div
-        className={`flex items-end gap-[14px] rounded-xl border border-ch-border bg-ch-panel py-[15px] pl-[18px] pr-[15px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-[0_0_0_3px_rgba(244,188,68,.35)] hover:border-ch-border-hover ${
+        className={`flex items-end gap-[14px] rounded-xl border border-ch-border bg-ch-panel px-[15px] py-[15px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-[0_0_0_3px_rgba(244,188,68,.35)] hover:border-ch-border-hover ${
           disabled ? 'opacity-50' : ''
         }`}
       >
+        {attachControl}
         {/* Disabled, not hidden: the message is pending, not lost. */}
         <textarea
           ref={boxRef}
@@ -151,33 +156,6 @@ export function Composer({
           disabled={disabled}
           className="min-w-0 flex-1 resize-none overflow-y-auto bg-transparent text-[14.5px] leading-[22px] text-white outline-none placeholder:text-slate-500"
         />
-        {onAttach && (
-          <>
-            <input
-              type="file"
-              accept="application/pdf"
-              data-testid="attach-input"
-              className="hidden"
-              ref={fileRef}
-              disabled={disabled}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) onAttach(f);
-                e.target.value = '';
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={disabled}
-              aria-label="Adjuntar cronograma"
-              title="Leo solo la primera página. El archivo no se sube ni se guarda. Puedes tapar tus datos personales antes."
-              className="grid h-[34px] w-[34px] flex-none place-items-center rounded-full text-slate-400 transition-colors duration-180 ease-ch hover:text-slate-200 disabled:opacity-40"
-            >
-              <Icon name="attachment-01" size={17} />
-            </button>
-          </>
-        )}
         {/* Primary CTA: slate-50 background, per the product rule. */}
         <button
           type="button"

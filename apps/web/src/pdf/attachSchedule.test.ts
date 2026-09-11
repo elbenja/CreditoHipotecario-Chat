@@ -60,3 +60,20 @@ describe('attachSchedule error kind', () => {
     );
   });
 });
+
+describe('attachSchedule progress', () => {
+  beforeEach(() => {
+    vi.mocked(readFirstPage).mockReset();
+    vi.mocked(streamChat).mockReset();
+  });
+
+  it('announces the file before reading it, so the screen can show the row', async () => {
+    vi.mocked(readFirstPage).mockResolvedValue({ kind: 'text', text: 'TEA 6.30' });
+    vi.mocked(streamChat).mockResolvedValue(undefined);
+
+    const actions: Action[] = [];
+    await attachSchedule(pdf(), (a) => actions.push(a), []);
+
+    expect(actions[0]).toEqual({ type: 'attachStart', name: 'cronograma.pdf', size: 1 });
+  });
+});

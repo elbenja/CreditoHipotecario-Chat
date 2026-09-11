@@ -1,5 +1,5 @@
 import { useReducer } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { AnalysisEnvelope, MortgageField, PinnedField } from '@chat/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -280,7 +280,7 @@ describe('Conversation attach flow', () => {
     await userEvent.upload(screen.getByTestId('attach-input'), pdf());
 
     expect(await screen.findByRole('dialog', { name: /revisar lo que leí/i })).toBeInTheDocument();
-    expect(screen.queryByText('Tu hipoteca')).not.toBeInTheDocument();
+    expect(screen.queryByText('Hipoteca')).not.toBeInTheDocument();
   });
 
   it('pins the confirmed fields into the panel', async () => {
@@ -297,7 +297,7 @@ describe('Conversation attach flow', () => {
     await user.click(screen.getByRole('button', { name: 'Fijar estos datos' }));
 
     expect(screen.queryByRole('dialog', { name: /revisar lo que leí/i })).not.toBeInTheDocument();
-    expect(screen.getAllByText('Tu hipoteca').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Hipoteca').length).toBeGreaterThan(0);
     expect(screen.getAllByDisplayValue('6.30%').length).toBeGreaterThan(0);
   });
 
@@ -315,7 +315,7 @@ describe('Conversation attach flow', () => {
     await user.click(screen.getByRole('button', { name: 'Descartar' }));
 
     expect(screen.queryByRole('dialog', { name: /revisar lo que leí/i })).not.toBeInTheDocument();
-    expect(screen.queryByText('Tu hipoteca')).not.toBeInTheDocument();
+    expect(screen.queryByText('Hipoteca')).not.toBeInTheDocument();
   });
 
   // Pins Finding 1: a second attach must not be possible while a read is in
@@ -329,5 +329,48 @@ describe('Conversation attach flow', () => {
 
     expect(await screen.findByLabelText('Adjuntar cronograma')).toBeDisabled();
     expect(screen.getByTestId('attach-input')).toBeDisabled();
+  });
+
+  // Card 09: a read in flight shows the file's own row, not the generic
+  // thinking dots — the user needs to see that *their file* is being read.
+  it('shows the file being read instead of the thinking dots', async () => {
+    vi.mocked(readFirstPage).mockReturnValue(new Promise(() => {}));
+    render(<Harness />);
+
+    await userEvent.upload(screen.getByTestId('attach-input'), pdf('bcp-2026.pdf'));
+
+    expect(await screen.findByText('bcp-2026.pdf')).toBeInTheDocument();
+    expect(screen.getByText('Leyendo tu cronograma…')).toBeInTheDocument();
+    expect(screen.queryByTestId('thinking')).not.toBeInTheDocument();
+  });
+
+  // Card 10: a schedule dropped anywhere on the chat column goes through the
+  // same flow as the picker.
+  it('reads a PDF dropped on the chat', async () => {
+    vi.mocked(readFirstPage).mockReturnValue(new Promise(() => {}));
+    render(<Harness />);
+
+    const file = pdf('soltado.pdf');
+    const dt = { items: [{ kind: 'file', type: 'application/pdf' }], files: [file], types: ['Files'] };
+    const composer = screen.getByPlaceholderText('Pregunta lo que quieras…');
+    fireEvent.dragEnter(composer, { dataTransfer: dt });
+    expect(screen.getByText('Suelta tu cronograma aquí')).toBeInTheDocument();
+    fireEvent.drop(composer, { dataTransfer: dt });
+
+    expect(await screen.findByText('soltado.pdf')).toBeInTheDocument();
+    expect(readFirstPage).toHaveBeenCalledWith(file);
+  });
+
+  it('takes the row down once the read is ready to review', async () => {
+    vi.mocked(readFirstPage).mockResolvedValue({ kind: 'text', text: 'TEA 6.30' });
+    vi.mocked(streamChat).mockImplementation(async (_body, onEvent) => {
+      onEvent({ event: 'extraction', data: { fields: mortgageFields } });
+    });
+    render(<Harness />);
+
+    await userEvent.upload(screen.getByTestId('attach-input'), pdf('bcp-2026.pdf'));
+
+    expect(await screen.findByRole('dialog', { name: /revisar lo que leí/i })).toBeInTheDocument();
+    expect(screen.queryByText('bcp-2026.pdf')).not.toBeInTheDocument();
   });
 });

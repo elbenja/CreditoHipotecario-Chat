@@ -2,7 +2,7 @@ import type { MortgageField, PinnedField, Scenario } from '@chat/shared';
 import type { FieldChange } from '../state/chatReducer';
 import { ChangesStrip } from './ChangesStrip';
 import { DirtyBand } from './DirtyBand';
-import { MortgageGroup } from './MortgageGroup';
+import { FieldGroup } from './FieldGroup';
 import { PinnedFieldRow } from './PinnedField';
 import { SavedScenarios } from './SavedScenarios';
 import { Icon } from './Icon';
@@ -88,17 +88,24 @@ export function PinnedPanel({
           onRevert={(k) => onRevertChange?.(k)}
           onDismiss={() => onDismissChanges?.()}
         />
-        {fields.map((f) => (
-          <PinnedFieldRow
-            key={f.key}
-            field={f}
-            proposal={proposals[f.key]}
-            onChange={onEdit}
-            onAcceptProposal={onAcceptProposal}
-            onRejectProposal={onRejectProposal}
-          />
-        ))}
-        <MortgageGroup fields={mortgage} onEdit={onEditMortgage} />
+        <FieldGroup title="Propiedad" count={fields.length}>
+          {fields.map((f) => (
+            <PinnedFieldRow
+              key={f.key}
+              field={f}
+              proposal={proposals[f.key]}
+              onChange={onEdit}
+              onAcceptProposal={onAcceptProposal}
+              onRejectProposal={onRejectProposal}
+            />
+          ))}
+        </FieldGroup>
+        {/* Past four rows the credit would bury the property, so it starts shut. */}
+        <FieldGroup title="Hipoteca" count={mortgage.length} collapseAbove={4} divider={fields.length > 0}>
+          {mortgage.map((f) => (
+            <PinnedFieldRow key={f.key} field={f} onChange={(key, value) => onEditMortgage?.(key, value)} />
+          ))}
+        </FieldGroup>
         <SavedScenarios scenarios={savedScenarios} onDelete={(id) => onDeleteScenario?.(id)} />
       </div>
 

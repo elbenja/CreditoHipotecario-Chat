@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Composer } from '../components/Composer';
 import { ConfirmExtraction } from '../components/ConfirmExtraction';
+import { DropZone } from '../components/DropZone';
 import { EmptyPanel } from '../components/EmptyPanel';
 import { Icon } from '../components/Icon';
+import { MobileBottomSheet } from '../components/MobileBottomSheet';
 import { Pill } from '../components/Pill';
+import { PinnedPanel } from '../components/PinnedPanel';
+import { UploadingRow } from '../components/UploadingRow';
 import { attachSchedule } from '../pdf/attachSchedule';
 import type { Action, ChatState } from '../state/chatReducer';
 
@@ -34,8 +38,26 @@ export function EmptyState({
   const attach = (file: File) =>
     dispatch ? attachSchedule(file, dispatch, Object.values(state.fields)) : undefined;
 
+  // A schedule confirmed before the first message pins into state, and the
+  // placeholder panel would hide it: the moment there is anything pinned, the
+  // real panel takes over on both breakpoints.
+  const fields = Object.values(state.fields);
+  const mortgage = Object.values(state.mortgage);
+  const hasData = fields.length + mortgage.length > 0;
+  const onEdit = (key: string, value: string) => dispatch?.({ type: 'editField', key, value });
+  const onEditMortgage = (key: string, value: string) =>
+    dispatch?.({ type: 'editMortgageField', key, value });
+
+  const progress = state.attachment && (
+    <div className="mt-3">
+      <UploadingRow attachment={state.attachment} status={state.status} steps={state.analyzeSteps} />
+    </div>
+  );
+
   return (
     <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+      {/* Everything but the panel takes a dropped schedule (card 10). */}
+      <DropZone onDrop={attach} disabled={busy || !dispatch} className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden px-5 pt-3 md:hidden">
         <div className="mx-auto w-full max-w-transcript">
           <h1 className="font-jakarta text-[27px] font-extrabold leading-[1.18] tracking-[-.03em] text-white">
@@ -76,15 +98,26 @@ export function EmptyState({
           disabled={busy}
           onAttach={dispatch ? attach : undefined}
         />
+        {progress}
         {state.status === 'error' && state.error && (
           <p className="mt-2 text-[12px] font-medium text-[#f59e0b]">{state.error.message}</p>
         )}
       </div>
 
-      <div className="mobile-safe-bottom mt-3 flex min-h-[62px] flex-none items-center gap-3 border-t border-ch-border px-5 text-[12.5px] font-medium text-slate-400 md:hidden">
-        <span className="flex-1">Ningún dato fijado todavía</span>
-        <Icon name="arrow-up-01" size={16} className="text-ch-border-hover" />
-      </div>
+      {hasData ? (
+        <MobileBottomSheet
+          fields={fields}
+          mortgage={mortgage}
+          busy={busy}
+          onEdit={onEdit}
+          onEditMortgage={onEditMortgage}
+        />
+      ) : (
+        <div className="mobile-safe-bottom mt-3 flex min-h-[62px] flex-none items-center gap-3 border-t border-ch-border px-5 text-[12.5px] font-medium text-slate-400 md:hidden">
+          <span className="flex-1">Ningún dato fijado todavía</span>
+          <Icon name="arrow-up-01" size={16} className="text-ch-border-hover" />
+        </div>
+      )}
 
       <div className="hidden flex-1 flex-col justify-center px-14 md:flex">
         <div className="mx-auto w-full max-w-transcript">
@@ -106,6 +139,7 @@ export function EmptyState({
               disabled={busy}
               onAttach={dispatch ? attach : undefined}
             />
+            {progress}
             {state.status === 'error' && state.error && (
               <p className="mt-2 text-[12px] font-medium text-[#f59e0b]">{state.error.message}</p>
             )}
@@ -124,7 +158,19 @@ export function EmptyState({
         </div>
       </div>
 
-      <EmptyPanel />
+      </DropZone>
+
+      {hasData ? (
+        <PinnedPanel
+          fields={fields}
+          mortgage={mortgage}
+          busy={busy}
+          onEdit={onEdit}
+          onEditMortgage={onEditMortgage}
+        />
+      ) : (
+        <EmptyPanel />
+      )}
 
       {dispatch && state.pendingExtraction && (
         <ConfirmExtraction

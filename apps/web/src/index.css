@@ -101,6 +101,87 @@
       opacity: 0;
     }
   }
+  /* Card 09: the scan line sweeps the file icon while page 1 is read. */
+  @keyframes ch-scan {
+    0% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(34px);
+      opacity: 0;
+    }
+  }
+  /* Reading page 1 has no measurable progress, so the bar runs to 90% and
+     the row switches to width:100% when the server takes over. */
+  @keyframes ch-bar {
+    from {
+      width: 0;
+    }
+    to {
+      width: 90%;
+    }
+  }
+  /* Card 10: the drop veil fades in, its icons rise with a stagger and the
+     middle one keeps floating while the file hovers. */
+  @keyframes ch-veil {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes ch-drop-icon {
+    from {
+      opacity: 0;
+      translate: 0 8px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+  @keyframes ch-drop-float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -3px;
+    }
+  }
+  .ch-veil {
+    animation: ch-veil 180ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  /* `translate`, not `transform`: the outer icons carry a rotate utility on
+     transform, and an animated transform would silently replace it. */
+  .ch-drop-icon {
+    animation: ch-drop-icon 240ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .ch-drop-icon:nth-child(2) {
+    animation-delay: 60ms;
+  }
+  .ch-drop-icon:nth-child(3) {
+    animation-delay: 120ms;
+  }
+  .ch-drop-float {
+    animation:
+      ch-drop-icon 240ms cubic-bezier(0.2, 0.7, 0.2, 1) 60ms both,
+      ch-drop-float 2.4s ease-in-out 300ms infinite;
+  }
+  .ch-scan {
+    animation: ch-scan 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+  }
+  .ch-bar {
+    animation: ch-bar 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
   .ch-enter {
     animation: ch-enter 240ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
