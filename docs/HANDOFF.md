@@ -1,13 +1,49 @@
-# Handoff — Phase 4 implemented, UX review in progress
+# Handoff — Fase B built, PR #4 open, one manual check left
 
-Written 2026-09-07 after deployment and updated 2026-09-08 after the Phase 4
-merge. Start here in a new chat.
+Written 2026-09-07 after deployment, updated 2026-09-08 after the Phase 4
+merge, and updated 2026-09-11 after Fase B. Start here in a new chat.
 
 ## Where things stand
 
-Phases 1–4 are built. The pre-Phase 4 POC was **deployed and verified live**.
-Phase 4 passed local automated and visual QA and is merged to `main`; its live
-mobile deployment still needs a recorded verification pass.
+Phases 1–4 are built and merged to `main`. The pre-Phase 4 POC was **deployed
+and verified live**; Phase 4's live mobile deployment still needs a recorded
+verification pass.
+
+**Fase B — attaching the bank's payment schedule — is built and open as
+[PR #4](https://github.com/elbenja/CreditoHipotecario-Chat/pull/4)**, branch
+`fase-b-cronograma`. 351 tests (baseline 244), typecheck and build clean.
+
+One thing blocks the merge, and it needs a human: **run the five real bank PDFs
+through the file picker end to end**, with a live model call. It could not be
+automated — vite returns 403 for paths outside the workspace and that guard was
+deliberately not weakened, and driving the OS file picker would have put client
+PII through five live model calls. What *was* verified in a real browser, with
+synthetic PDFs: the pdf.js worker resolves, text extraction and canvas render
+work, all four error codes surface correctly, and the text-vs-scan threshold
+routes right.
+
+If that run fails, the first suspect is `response_format: { type: 'json_object' }`
+in `apps/api/src/kimi.ts` on image turns — it was kept on a deliberate ruling
+with no evidence either way, and the fix is one line.
+
+The one spec item not built is **drag and drop**. It and eleven other known
+follow-ups are in `docs/superpowers/plans/2026-09-10-fase-b-follow-ups.md`.
+
+## Running it locally
+
+Both servers are needed — the web dev server proxies `/api` to port 8787:
+
+```bash
+pnpm --filter @chat/api dev   # port 8787
+pnpm --filter @chat/web dev   # port 5173
+```
+
+`.claude/launch.json` has both as named configs. `bitcoin` still trips the
+out-of-scope guardrail before any model call, so it is a free way to check the
+whole path is wired.
+
+The attach control lives in the composer, on both the empty screen and the
+conversation. It is disabled while a read is in flight.
 
 | | URL |
 | --- | --- |
@@ -78,6 +114,11 @@ the shipped Phase 4 behavior, then repeat the affected mobile and desktop QA.
 
 ## Open items
 
+- **Fase B manual verification — blocks PR #4.** The five real schedules
+  through the file picker, scored field by field. See above.
+- **Drag and drop — a decision, not a bug.** The spec asks for it; it was kept
+  out of the final fix wave on purpose, because that wave carried four
+  correctness fixes and the process allows only one.
 - **Phase 4 UX review — active.** Record concrete findings, prioritize them,
   and execute only the approved improvements in a follow-up plan.
 - **Phase 4 live verification — not yet recorded.** Confirm M1–M3 on the
