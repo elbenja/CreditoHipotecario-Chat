@@ -165,7 +165,7 @@ export default function App() {
         onReset={reset}
       />
       {state.messages.length === 0 ? (
-        <EmptyState onSubmit={send} />
+        <EmptyState onSubmit={send} state={state} dispatch={dispatch} />
       ) : (
         <Conversation
           state={state}

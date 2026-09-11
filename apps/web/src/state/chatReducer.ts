@@ -55,7 +55,9 @@ export interface ChatState {
 }
 
 export interface ChatError {
-  kind: 'api' | 'offline';
+  /** 'document' is the server's kind for a schedule that failed to extract —
+   *  distinct from 'api' (the model call itself failing). */
+  kind: 'api' | 'offline' | 'document';
   message: string;
   /** The question that failed, so "Reintentar" can resend exactly it. */
   retry: string | null;
@@ -67,7 +69,7 @@ export type Action =
   | { type: 'analyzeStep'; label: string }
   | { type: 'envelope'; envelope: AnalysisEnvelope; truncated?: boolean; outOfScope?: boolean }
   | { type: 'fallback'; prose: string; candidates: Candidate[]; truncated?: boolean }
-  | { type: 'error'; kind: 'api' | 'offline'; message: string; retry: string | null }
+  | { type: 'error'; kind: 'api' | 'offline' | 'document'; message: string; retry: string | null }
   | { type: 'clearError' }
   | { type: 'setOffline'; offline: boolean }
   | { type: 'queue'; content: string }
@@ -372,8 +374,12 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
       return { ...state, pendingExtraction: null };
 
     case 'confirmExtraction': {
-      const mortgage = { ...state.mortgage };
-      for (const f of action.fields) mortgage[f.key] = f;
+      // A confirmed extraction replaces the mortgage group rather than
+      // merging into it: two uploads are two different credits, and merging
+      // by key would let a key bank A had but B didn't survive alongside B's
+      // figures, still labelled 'documento' as if it came from the same
+      // schedule.
+      const mortgage = Object.fromEntries(action.fields.map((f) => [f.key, f]));
 
       // The down payment is what the buyer covers that the bank did not, so it
       // falls out of the two numbers. Never over a value the user owns.

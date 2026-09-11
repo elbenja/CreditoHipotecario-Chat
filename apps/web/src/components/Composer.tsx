@@ -66,6 +66,7 @@ export function Composer({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
+          disabled={disabled}
           className="w-full resize-none overflow-y-auto bg-transparent text-[14.5px] leading-[22px] text-white outline-none placeholder:text-slate-500"
         />
         <div className="mt-[14px] flex items-center">
@@ -73,10 +74,38 @@ export function Composer({
             <Icon name="link-02" size={13} />o pega el link de un anuncio
           </span>
           <div className="flex-1" />
+          {onAttach && (
+            <>
+              <input
+                type="file"
+                accept="application/pdf"
+                data-testid="attach-input"
+                className="hidden"
+                ref={fileRef}
+                disabled={disabled}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onAttach(f);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={disabled}
+                aria-label="Adjuntar cronograma"
+                title="Leo solo la primera página. El archivo no se sube ni se guarda. Puedes tapar tus datos personales antes."
+                className="mr-2 grid h-[34px] w-[34px] flex-none place-items-center rounded-full text-slate-400 transition-colors duration-180 ease-ch hover:text-slate-200 disabled:opacity-40"
+              >
+                <Icon name="attachment-01" size={17} />
+              </button>
+            </>
+          )}
           <button
             type="button"
             onClick={submit}
-            className="grid h-[34px] w-[34px] place-items-center rounded-full bg-ch-card text-white transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px active:opacity-85"
+            disabled={disabled}
+            className="grid h-[34px] w-[34px] place-items-center rounded-full bg-ch-card text-white transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px active:opacity-85 disabled:opacity-40"
             aria-label="Enviar"
           >
             <Icon name="arrow-right-01" size={17} />
