@@ -42,11 +42,12 @@ export async function readFirstPage(file: File): Promise<DocumentInput> {
   if (file.size > MAX_BYTES) throw new PdfReadError('tooLarge');
 
   let doc: pdfjs.PDFDocumentProxy;
-  const loadingTask = pdfjs.getDocument({ data: await file.arrayBuffer() });
+  let loadingTask: ReturnType<typeof pdfjs.getDocument> | undefined;
   try {
+    loadingTask = pdfjs.getDocument({ data: await file.arrayBuffer() });
     doc = await loadingTask.promise;
   } catch (err) {
-    void loadingTask.destroy();
+    void loadingTask?.destroy();
     const name = (err as { name?: string })?.name;
     throw new PdfReadError(name === 'PasswordException' ? 'encrypted' : 'unreadable');
   }

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('pdfjs-dist', () => ({
   GlobalWorkerOptions: {},
@@ -17,6 +17,22 @@ function fakeFile(name: string, type: string, bytes: number): File {
   return f;
 }
 
+/** A file whose arrayBuffer() itself rejects, mimicking NotReadableError:
+ *  the picked file was moved/renamed, its drive was ejected, permission was
+ *  revoked, or a cloud-backed file went offline before we could read it. */
+function fakeUnreadableFile(name: string, type: string, bytes: number): File {
+  const f = new File([new Uint8Array(1)], name, { type });
+  Object.defineProperty(f, 'size', { value: bytes });
+  Object.defineProperty(f, 'arrayBuffer', {
+    value: async () => {
+      const error = new Error('The requested file could not be read.');
+      error.name = 'NotReadableError';
+      throw error;
+    },
+  });
+  return f;
+}
+
 /** Mimics a PDFDocumentLoadingTask whose .promise rejects, so we can assert
  *  the failure path destroys the loading task instead of leaking its worker.
  *  The rejection is marked handled immediately so an unawaited promise here
@@ -28,6 +44,10 @@ function fakeFailingLoadingTask(error: unknown) {
 }
 
 describe('readFirstPage guards', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('rejects a file that is not a PDF before opening it', async () => {
     await expect(readFirstPage(fakeFile('foto.png', 'image/png', 1000)))
       .rejects.toMatchObject({ code: 'notPdf' });
@@ -64,5 +84,16 @@ describe('readFirstPage guards', () => {
 
     expect(getDocument).toHaveBeenCalled();
     expect(task.destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('wraps a failure to even read the file (e.g. NotReadableError) as unreadable, without touching a loading task', async () => {
+    const error = new Error('The requested file could not be read.');
+    error.name = 'NotReadableError';
+
+    await expect(
+      readFirstPage(fakeUnreadableFile('movido.pdf', 'application/pdf', 1000)),
+    ).rejects.toMatchObject({ code: 'unreadable' });
+
+    expect(getDocument).not.toHaveBeenCalled();
   });
 });
