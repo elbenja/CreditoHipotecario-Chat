@@ -153,6 +153,11 @@ the shipped Phase 4 behavior, then repeat the affected mobile and desktop QA.
 
 ## Open items
 
+- **Fase A — pegar el link de un anuncio. Researched, never designed.** The
+  composer already promises it ("Sube un documento o pega el link de un
+  anuncio") and pasting a link does nothing. Urbania is blocked by Cloudflare;
+  Nexo Inmobiliario is open with JSON-LD on every listing. There is no spec and
+  no plan — start a fresh chat at `docs/HANDOFF-fase-a-links.md`.
 - **"1 datos fijados".** The mobile summary and the panel header do not
   singularise. Pre-existing; newly easy to hit now that a schedule alone can
   populate the panel.
