@@ -14,6 +14,7 @@ function normalizeText(s: string): string {
  */
 function normalizeNumber(s: string): string {
   return s
+    .replace(/[ \u00A0\u202F]/g, '') // spaces used as thousands separators
     .replace(/[.,](?=\d{3}(?!\d))/g, '') // thousands separators
     .replace(/,/g, '.') // any remaining comma is a decimal point
     .replace(/\.0+$/, ''); // 8.0 -> 8
@@ -42,7 +43,7 @@ interface NumberMention {
  */
 function numberMentions(text: string): NumberMention[] {
   const out: NumberMention[] = [];
-  const re = /\d[\d.,]*/g;
+  const re = /\d(?:[\d.,]|[ \u00A0\u202F](?=\d{3}\b))*/g;
   let m: RegExpExecArray | null;
 
   while ((m = re.exec(text)) !== null) {
@@ -127,7 +128,7 @@ function appearsIn(
 
   // A model may fold a currency marker into the value itself; strip before testing.
   const bare = value.replace(/S\/\.?/gi, '').replace(/[$€]/g, '').trim();
-  if (/^[\d.,]+$/.test(bare)) {
+  if (/^[\d., \u00A0\u202F]+$/.test(bare)) {
     return numericMatch(key, normalizeNumber(bare), mentions);
   }
   return textualMatch(value, text);

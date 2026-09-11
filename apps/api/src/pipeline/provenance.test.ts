@@ -29,6 +29,11 @@ describe('enforceProvenance', () => {
     expect(enforceProvenance([field()], turns)[0]!.provenance).toBe('user');
   });
 
+  it('matches a price written with spaces between thousands', () => {
+    const turns = ['El precio es 866 000 soles'];
+    expect(enforceProvenance([field({ value: '866,000' })], turns)[0]!.provenance).toBe('user');
+  });
+
   it('downgrades to assumed when the value is absent', () => {
     const turns = ['Un depa en Pueblo Libre'];
     expect(enforceProvenance([field()], turns)[0]!.provenance).toBe('assumed');

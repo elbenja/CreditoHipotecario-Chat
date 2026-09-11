@@ -33,6 +33,34 @@ it('passes a clarification key through and validates its contextual short answer
   expect(answer).toMatchObject({ ok: true, envelope: { fields: [{ key: 'plazo', value: '20', provenance: 'user' }] } });
 });
 
+it('captures a down payment and term instead of repeating the same question', () => {
+  const question = '¿Cuánto tienes para cuota inicial y a qué plazo quieres financiar?';
+  const result = runPipeline(JSON.stringify({
+    kind: 'clarification', reply: question, fields: [],
+  }), ['11% de inicial; a 22 anos'], question);
+
+  expect(result).toMatchObject({ ok: true, envelope: {
+    kind: 'capture',
+    verdict: 'Listo, recibí los datos de la propiedad.',
+    fields: [
+      { key: 'inicial', value: '11', suffix: '%', provenance: 'user' },
+      { key: 'plazo', value: '22', suffix: 'años', provenance: 'user' },
+    ],
+  } });
+});
+
+it('does not recover a value the user explicitly rejected', () => {
+  const question = '¿Cuánto tienes para cuota inicial?';
+  const result = runPipeline(JSON.stringify({
+    kind: 'clarification', reply: question, fields: [],
+  }), ['No tengo 11% de inicial'], question);
+
+  expect(result).toMatchObject({ ok: true, envelope: {
+    verdict: 'No pude identificar el dato en tu respuesta. ¿Puedes escribirlo otra vez con su unidad?',
+    fields: [],
+  } });
+});
+
 it('does not forward unsolicited advice inside a successful data confirmation', () => {
   const result = runPipeline(JSON.stringify({ kind: 'capture', reply: 'Listo. Dime el alquiler para evaluar la rentabilidad.', fields: [{ key: 'ubicacion', label: 'Ubicación', value: 'Pueblo Libre', provenance: 'user' }] }), ['Pueblo Libre']);
   expect(result).toMatchObject({ ok: true, envelope: { verdict: 'Listo, recibí los datos de la propiedad.' } });

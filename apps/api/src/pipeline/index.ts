@@ -62,6 +62,31 @@ function repairAmount(value: string): string {
 
 const AFFIRMATIVE = /^(s[ií]|ok|acepto|de acuerdo|dale|correcto)(?:\s|[.!]|$)/i;
 
+function extractExplicitCaptureFields(userTurn: string): AnalysisEnvelope['fields'] {
+  const text = userTurn.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const fields: AnalysisEnvelope['fields'] = [];
+  const initial = /(?:([\d]{1,2}(?:[.,]\d+)?)\s*%\s*(?:de\s+)?(?:cuota\s+)?inicial\b|\b(?:cuota\s+)?inicial(?:\s+de|\s*:)?\s*([\d]{1,2}(?:[.,]\d+)?)\s*%)/.exec(text);
+  const term = /\b(?:(?:a|en)\s+|plazo(?:\s+de|\s*:)?\s*)(\d{1,2})\s+anos?\b/.exec(text);
+
+  if (initial) {
+    fields.push({
+      key: 'inicial', label: 'Cuota inicial', value: (initial[1] ?? initial[2]!).replace(',', '.'),
+      suffix: '%', provenance: 'user', note: '',
+    });
+  }
+  if (term?.[1]) {
+    fields.push({
+      key: 'plazo', label: 'Plazo', value: term[1], suffix: 'años', provenance: 'user', note: '',
+    });
+  }
+  return fields;
+}
+
+function sameReply(a: string, b: string): boolean {
+  const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('es');
+  return Boolean(a.trim() && b.trim()) && normalize(a) === normalize(b);
+}
+
 function acceptedProposal(
   field: { value: string; label: string; provenance: string },
   userTurns: string[],
@@ -95,15 +120,28 @@ export function runPipeline(raw: string, userTurns: string[], previousAssistant 
     const fields = enforceProvenance(capture.data.fields, userTurns)
       .filter((field) => field.provenance === 'user' || acceptedProposal(field, userTurns, previousAssistant))
       .map((field) => ({ ...field, value: groupFieldValue(stripAffixes(field)) }));
+    const fieldKeys = new Set(fields.map((field) => field.key));
+    const latestUser = userTurns.at(-1) ?? '';
+    const recovered = enforceProvenance(extractExplicitCaptureFields(latestUser), [latestUser])
+      .filter((field) => field.provenance === 'user')
+      .filter((field) => !fieldKeys.has(field.key));
+    fields.push(...recovered);
+    const repeatedQuestion = sameReply(capture.data.reply, previousAssistant);
+    const completedRepeatedQuestion = repeatedQuestion && fields.length > 0;
+    const completedCapture = capture.data.kind === 'capture' && fields.length > 0;
     // A successful capture has a product-owned acknowledgement. The model
     // must not smuggle unsolicited advice into the confirmation sentence.
-    const verdict = capture.data.kind === 'capture' && !capture.data.askField && capture.data.fields.length > 0
-      ? fields.length > 0
-        ? 'Listo, recibí los datos de la propiedad.'
-        : 'No pude confirmar esos datos. ¿Puedes precisarlos?'
-      : capture.data.reply;
+    const verdict = completedCapture || completedRepeatedQuestion
+      ? 'Listo, recibí los datos de la propiedad.'
+      : repeatedQuestion
+        ? 'No pude identificar el dato en tu respuesta. ¿Puedes escribirlo otra vez con su unidad?'
+        : capture.data.kind === 'capture' && capture.data.fields.length > 0
+          ? 'No pude confirmar esos datos. ¿Puedes precisarlos?'
+          : capture.data.reply;
     return { ok: true, envelope: {
-      kind: 'capture', verdict, askField: capture.data.askField, fields,
+      kind: 'capture', verdict,
+      askField: completedCapture || completedRepeatedQuestion ? undefined : capture.data.askField,
+      fields,
       metrics: [], scenarios: [], sources: [], prose: [], followUps: [],
     } };
   }

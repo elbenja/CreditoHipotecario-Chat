@@ -235,9 +235,9 @@ export function Conversation({
                         <Pill
                           onClick={() => send(SCENARIO_BADGE_LABEL)}
                           disabled={state.queued !== null}
-                          className="flex min-h-[44px] items-center gap-2 text-left text-slate-400"
+                          className="flex min-h-[44px] items-center gap-2 text-left text-ch-accent"
                         >
-                          <Icon name="bookmark-add-02" size={15} className="text-slate-400" />
+                          <Icon name="bookmark-add-02" size={15} className="text-ch-accent" />
                           {SCENARIO_BADGE_LABEL}
                         </Pill>
                       )}

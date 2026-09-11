@@ -235,7 +235,7 @@ describe('Conversation mobile integration', () => {
     );
 
     const badge = screen.getByRole('button', { name: 'Qué pasa si mueves una palanca' });
-    expect(badge).toHaveClass('text-slate-400');
+    expect(badge).toHaveClass('text-ch-accent');
     expect(badge.querySelector('.hgi-bookmark-add-02')).toBeInTheDocument();
     const normalSuggestion = screen.getByRole('button', { name: '¿Cuánto pagaría al mes?' });
     expect(badge.compareDocumentPosition(normalSuggestion) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

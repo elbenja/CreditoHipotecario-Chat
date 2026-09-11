@@ -33,6 +33,12 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/nunca uses askField para una clave que ya est[ée] presente/i);
   });
 
+  it('captures every explicit field in a multi-value answer without repeating the question', () => {
+    expect(SYSTEM_PROMPT).toMatch(/extrae todos los datos expl[íi]citos/i);
+    expect(SYSTEM_PROMPT).toMatch(/no repitas la pregunta anterior/i);
+    expect(SYSTEM_PROMPT).toMatch(/pregunta por un solo dato/i);
+  });
+
   it('maps the scenario badge phrase to the existing scenario contract', () => {
     expect(SYSTEM_PROMPT).toMatch(/Qué pasa si mueves una palanca/i);
     expect(SYSTEM_PROMPT).toMatch(/2 a 3 escenarios/i);
