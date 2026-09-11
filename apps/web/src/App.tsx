@@ -158,12 +158,18 @@ export default function App() {
     setBeforeReset(null);
   }, [beforeReset]);
 
+  // The reset control needs something to forget. A schedule read before the
+  // first message counts: without this, a PDF-only session had no way back.
+  const context =
+    state.messages.length > 0
+      ? 'Depa Pueblo Libre · sin guardar'
+      : Object.keys(state.mortgage).length > 0
+        ? 'Cronograma leído · sin guardar'
+        : undefined;
+
   return (
     <div className="relative flex h-full flex-col">
-      <TopNav
-        context={state.messages.length > 0 ? 'Depa Pueblo Libre · sin guardar' : undefined}
-        onReset={reset}
-      />
+      <TopNav context={context} onReset={reset} />
       {state.messages.length === 0 ? (
         <EmptyState onSubmit={send} state={state} dispatch={dispatch} />
       ) : (
