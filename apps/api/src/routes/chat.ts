@@ -1,11 +1,14 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import type { ModelMode, ModelReply } from '../kimi.ts';
+import { fetchListingText, type FetchListing } from '../listing/fetchListing.ts';
 import { parseChatBody, runTurn } from '../turn.ts';
 import type { ChatMessage } from '../prompt.ts';
 
 export interface ServerDeps {
   callModel: (messages: ChatMessage[], mode: ModelMode) => Promise<ModelReply>;
+  /** Injectable so tests never touch the network. */
+  fetchListing?: FetchListing;
 }
 
 // The default 1 MiB bodyLimit is sized for text turns, not the image route:
@@ -51,7 +54,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     });
 
     try {
-      for await (const { event, data } of runTurn(body, deps.callModel)) {
+      for await (const { event, data } of runTurn(body, deps.callModel, deps.fetchListing ?? fetchListingText)) {
         reply.raw.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
       }
     } finally {

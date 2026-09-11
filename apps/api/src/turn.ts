@@ -1,9 +1,11 @@
-import { PinnedFieldSchema } from '@chat/shared';
+import { PinnedFieldSchema, isListingHost } from '@chat/shared';
 import { z } from 'zod';
+import { fetchListingText, type FetchListing } from './listing/fetchListing.ts';
 import { runDocumentPipeline } from './pipeline/document.ts';
 import { runPipeline } from './pipeline/index.ts';
+import { runListingPipeline } from './pipeline/listing.ts';
 import { REFUSAL_ENVELOPE, isOutOfScope } from './pipeline/scope.ts';
-import { buildDocumentMessages, buildMessages, type ChatMessage } from './prompt.ts';
+import { buildDocumentMessages, buildListingMessages, buildMessages, type ChatMessage } from './prompt.ts';
 import { ModelCallError, type ModelMode, type ModelReply } from './kimi.ts';
 
 const DocumentSchema = z.union([
@@ -16,12 +18,28 @@ const DocumentSchema = z.union([
   }),
 ]);
 
+// The browser already checked the host; check it again here because this
+// endpoint is public and the body is whatever the caller sends.
+const ListingRequestSchema = z.object({
+  url: z
+    .string()
+    .url()
+    .refine((u) => {
+      try {
+        return isListingHost(new URL(u).hostname);
+      } catch {
+        return false;
+      }
+    }, 'host not allowed'),
+});
+
 const BodySchema = z.object({
   messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string() }))
     .transform((messages) => messages.filter((message) => message.content.trim().length > 0))
     .refine((messages) => messages.length > 0),
   fields: z.array(PinnedFieldSchema).default([]),
   document: DocumentSchema.optional(),
+  listing: ListingRequestSchema.optional(),
 });
 
 export type ChatBody = z.infer<typeof BodySchema>;
@@ -51,10 +69,59 @@ function modelErrorData(error: unknown): { kind: 'request' | 'api'; message: str
  * the Fastify server and the Vercel function both drive this, so local and
  * deployed behaviour cannot drift.
  */
-export async function* runTurn(body: ChatBody, callModel: CallModel): AsyncGenerator<SSEEvent> {
+export async function* runTurn(
+  body: ChatBody,
+  callModel: CallModel,
+  fetchListing: FetchListing = fetchListingText,
+): AsyncGenerator<SSEEvent> {
   const { messages, fields } = body;
 
   yield { event: 'status', data: { phase: 'thinking' } };
+
+  // A link turn, like a document turn, branches before the guardrail: the
+  // message is the URL and the page is the payload.
+  if (body.listing) {
+    const { url } = body.listing;
+    yield { event: 'analyzeStep', data: { label: 'Leyendo el anuncio' } };
+    yield { event: 'status', data: { phase: 'analyzing' } };
+
+    let text: string;
+    try {
+      text = await fetchListing(url);
+    } catch (err) {
+      console.error('[chat] listing fetch failed:', err);
+      yield { event: 'status', data: { phase: 'streaming' } };
+      yield {
+        event: 'error',
+        data: { kind: 'listing', message: 'No pude abrir ese anuncio. Prueba de nuevo o pégame los datos.' },
+      };
+      return;
+    }
+
+    try {
+      const { content } = await callModel(buildListingMessages(text), 'document');
+      const result = runListingPipeline(content, { host: new URL(url).hostname.toLowerCase(), url });
+      yield { event: 'status', data: { phase: 'streaming' } };
+      if (result.ok) {
+        yield { event: 'listing', data: { listing: result.listing } };
+      } else {
+        yield {
+          event: 'error',
+          data: {
+            kind: 'listing',
+            message:
+              result.reason === 'notListing'
+                ? 'Esa página no parece un anuncio de un departamento.'
+                : 'No pude leer los datos del anuncio.',
+          },
+        };
+      }
+    } catch (err) {
+      console.error('[chat] listing extraction failed:', err);
+      yield { event: 'error', data: modelErrorData(err) };
+    }
+    return;
+  }
 
   // Document turns branch before the out-of-scope guardrail: on an upload the
   // accompanying message text is incidental or odd (or literally off-topic),

@@ -241,3 +241,33 @@ describe('POST /api/chat', () => {
     expect(callModel).toHaveBeenCalledOnce();
   });
 });
+
+describe('POST /api/chat with a listing', () => {
+  it('answers 400 for a host outside the allowlist and never fetches', async () => {
+    const fetchListing = vi.fn();
+    const app = buildServer({ callModel: async () => ({ content: '', truncated: false }), fetchListing });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat',
+      payload: { messages: [{ role: 'user', content: 'x' }], fields: [], listing: { url: 'https://urbania.pe/x' } },
+    });
+    await app.close();
+    expect(res.statusCode).toBe(400);
+    expect(fetchListing).not.toHaveBeenCalled();
+  });
+
+  it('streams a listing event through the injected fetcher', async () => {
+    const reply = JSON.stringify({ proyecto: 'A', distrito: 'Lince', modelos: [{ area: '55', precioDesde: '300,000' }], dudosos: [] });
+    const app = buildServer({
+      callModel: async () => ({ content: reply, truncated: false }),
+      fetchListing: async () => 'texto',
+    });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat',
+      payload: { messages: [{ role: 'user', content: 'x' }], fields: [], listing: { url: 'https://nexoinmobiliario.pe/departamentos/lince/a-1' } },
+    });
+    await app.close();
+    expect(parseEvents(res.body).at(-1)!.event).toBe('listing');
+  });
+});

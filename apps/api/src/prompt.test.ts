@@ -122,3 +122,13 @@ describe('buildListingMessages', () => {
     expect(LISTING_PROMPT).toContain('"dudosos"');
   });
 });
+
+describe('renderFields with anuncio provenance', () => {
+  it('tells the model a field was read from the listing, not stated by the user', () => {
+    const [, fieldsMsg] = buildMessages([], [
+      { key: 'precio', label: 'Precio', value: '363,906', prefix: 'S/', provenance: 'anuncio', note: '' },
+    ]);
+    expect(fieldsMsg!.content).toContain('(anuncio)');
+    expect(fieldsMsg!.content).toMatch(/anuncio.*leído del anuncio/i);
+  });
+});

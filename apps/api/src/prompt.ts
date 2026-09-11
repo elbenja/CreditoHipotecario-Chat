@@ -79,7 +79,7 @@ function renderFields(fields: PinnedField[]): string {
     const suffix = f.suffix ? ` ${f.suffix}` : '';
     return `- ${f.label}: ${prefix}${f.value}${suffix} (${f.provenance})`;
   });
-  return `Datos actuales del panel; su procedencia está indicada entre paréntesis. Respétalos salvo que los contradiga explícitamente:\n${lines.join('\n')}`;
+  return `Datos actuales del panel; su procedencia está indicada entre paréntesis. Respétalos salvo que los contradiga explícitamente. Un dato con procedencia "anuncio" fue leído del anuncio de la propiedad, no lo dijo el usuario: trátalo como dato firme del anuncio y nunca lo devuelvas como "user":\n${lines.join('\n')}`;
 }
 
 export function buildMessages(history: ChatTurn[], fields: PinnedField[]): ChatMessage[] {
