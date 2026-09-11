@@ -29,8 +29,18 @@ desktop and the 375px mobile preset. What it changes:
   before the first message. `EmptyState` now renders the real `PinnedPanel`
   (desktop) and `MobileBottomSheet` (mobile) the moment anything is pinned.
 - **The panel has two collapsible groups, Propiedad and Hipoteca.**
-  `MortgageGroup` became the generic `FieldGroup`; Hipoteca still starts shut
-  past four rows. The header counts both groups.
+  `MortgageGroup` became the generic `FieldGroup`. Both start open, always —
+  the old "shut past four rows" rule hid the credit the user had just
+  uploaded. The header counts both groups.
+- **Cards 12/13 — the group says what changed.** The reducer keeps
+  `mortgageChanges` (per key, the value the last schedule replaced, or null
+  when new) and bumps `mortgageRevision` on every confirm. Open group: each
+  touched row gets a 900 ms accent wash and, when it replaced something,
+  "antes 8.000 % · leído del PDF" beneath. Shut group: the count crossfades
+  (never counts) and a "N del PDF" pill stays on the header until the user
+  opens it — nothing auto-expands. One deliberate departure from card 13:
+  it keeps the dot amber "until the user confirms", but here the modal *is*
+  the confirmation, so a confirmed row is green as Fase B defined it.
 - **Cards 09/03 — a progress row for the attachment.** New reducer field
   `attachment: { name, size } | null` (never persisted), set by `attachStart`
   and cleared on extraction, error or cancel. `UploadingRow` shows the file,

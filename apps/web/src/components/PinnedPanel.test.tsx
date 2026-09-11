@@ -41,6 +41,28 @@ describe('PinnedPanel', () => {
     expect(screen.getByText('2 fijados')).toBeInTheDocument();
   });
 
+  // Card 13: a row the last schedule changed says what it replaced.
+  it('shows the value a schedule replaced, struck through, under the row', () => {
+    render(<PinnedPanel
+      fields={[]}
+      mortgage={[{ key: 'tea', label: 'TEA', value: '6.80', suffix: '%', provenance: 'documento', note: '' }]}
+      mortgageChanges={{ tea: '8.00' }}
+      onEdit={vi.fn()}
+    />);
+    expect(screen.getByText('8.00 %')).toBeInTheDocument();
+    expect(screen.getByText(/leído del PDF/)).toBeInTheDocument();
+  });
+
+  it('says nothing under a row that was simply new', () => {
+    render(<PinnedPanel
+      fields={[]}
+      mortgage={[{ key: 'tea', label: 'TEA', value: '6.80', suffix: '%', provenance: 'documento', note: '' }]}
+      mortgageChanges={{ tea: null }}
+      onEdit={vi.fn()}
+    />);
+    expect(screen.queryByText(/leído del PDF/)).not.toBeInTheDocument();
+  });
+
   it('omits a group that has nothing in it', () => {
     render(<PinnedPanel fields={[]} mortgage={[{ key: 'tea', label: 'TEA', value: '8.99', provenance: 'documento', note: '' }]} onEdit={vi.fn()} />);
     expect(screen.queryByRole('button', { name: /^propiedad/i })).not.toBeInTheDocument();

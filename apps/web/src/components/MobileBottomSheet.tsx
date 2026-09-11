@@ -7,6 +7,8 @@ import { PinnedPanel } from './PinnedPanel';
 type MobileBottomSheetProps = {
   fields: PinnedField[];
   mortgage?: MortgageField[];
+  mortgageChanges?: Record<string, string | null>;
+  mortgageRevision?: number;
   proposals?: Record<string, PinnedField>;
   savedScenarios?: Scenario[];
   dirtyKeys?: string[];
@@ -25,6 +27,8 @@ type MobileBottomSheetProps = {
 export function MobileBottomSheet({
   fields,
   mortgage = [],
+  mortgageChanges,
+  mortgageRevision,
   proposals = {},
   savedScenarios = [],
   dirtyKeys = [],
@@ -222,6 +226,8 @@ export function MobileBottomSheet({
               mode="mobile"
               fields={fields}
               mortgage={mortgage}
+              mortgageChanges={mortgageChanges}
+              mortgageRevision={mortgageRevision}
               proposals={proposals}
               savedScenarios={savedScenarios}
               dirtyKeys={dirtyKeys}

@@ -52,6 +52,13 @@ export interface ChatState {
   mortgage: Record<string, MortgageField>;
   /** Read but not yet confirmed. Nothing pins until the user says so. */
   pendingExtraction: MortgageField[] | null;
+  /** What the last confirmed schedule did to each mortgage key: the value it
+   *  replaced, or null when the key was new. A key the user has since
+   *  retyped is dropped. Drives the per-row "antes X" line. */
+  mortgageChanges: Record<string, string | null>;
+  /** Bumped on every confirmed schedule, so a collapsed group can tell a
+   *  change it has not yet shown from one it has. */
+  mortgageRevision: number;
   /** The schedule being read right now, so the screen can show its progress
    *  row. Set when the read starts, cleared when it is ready to review or
    *  fails. Never persisted: a reload mid-read has no read to show. */
@@ -113,6 +120,8 @@ export const initialState: ChatState = {
   mortgage: {},
   pendingExtraction: null,
   attachment: null,
+  mortgageChanges: {},
+  mortgageRevision: 0,
 };
 
 const deriveBaseline = (fields: Record<string, PinnedField>): Record<string, string> =>
@@ -311,6 +320,8 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
           // Retyped, so it is no longer what the bank's schedule said.
           [action.key]: { ...existing, value: action.value, provenance: 'user' },
         },
+        // And no longer "what the PDF changed" either.
+        mortgageChanges: omit(state.mortgageChanges, action.key),
       };
     }
 
@@ -398,6 +409,16 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
       // schedule.
       const mortgage = Object.fromEntries(action.fields.map((f) => [f.key, f]));
 
+      // Cards 12/13: remember what each pinned key replaced, so the panel can
+      // show the change rather than just announce one. A key whose value the
+      // new schedule left untouched still counts as pinned by it, but has no
+      // "antes" to show.
+      const mortgageChanges: Record<string, string | null> = {};
+      for (const f of action.fields) {
+        const prev = state.mortgage[f.key]?.value;
+        mortgageChanges[f.key] = prev !== undefined && prev !== f.value ? prev : null;
+      }
+
       // The down payment is what the buyer covers that the bank did not, so it
       // falls out of the two numbers. Never over a value the user owns.
       const fields = { ...state.fields };
@@ -415,7 +436,14 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         };
       }
 
-      return { ...state, mortgage, fields, pendingExtraction: null };
+      return {
+        ...state,
+        mortgage,
+        fields,
+        pendingExtraction: null,
+        mortgageChanges,
+        mortgageRevision: state.mortgageRevision + 1,
+      };
     }
 
     case 'reset':

@@ -10,6 +10,8 @@ import { Icon } from './Icon';
 export function PinnedPanel({
   fields,
   mortgage = [],
+  mortgageChanges = {},
+  mortgageRevision = 0,
   proposals = {},
   savedScenarios = [],
   dirtyKeys = [],
@@ -27,6 +29,9 @@ export function PinnedPanel({
 }: {
   fields: PinnedField[];
   mortgage?: MortgageField[];
+  /** Cards 12/13: what the last schedule changed, and which revision it was. */
+  mortgageChanges?: Record<string, string | null>;
+  mortgageRevision?: number;
   proposals?: Record<string, PinnedField>;
   savedScenarios?: Scenario[];
   dirtyKeys?: string[];
@@ -104,10 +109,19 @@ export function PinnedPanel({
             />
           ))}
         </FieldGroup>
-        {/* Past four rows the credit would bury the property, so it starts shut. */}
-        <FieldGroup title="Hipoteca" count={mortgage.length} collapseAbove={4} divider={fields.length > 0}>
+        <FieldGroup
+          title="Hipoteca"
+          count={mortgage.length}
+          notice={{ count: Object.keys(mortgageChanges).length, revision: mortgageRevision }}
+          divider={fields.length > 0}
+        >
           {mortgage.map((f) => (
-            <PinnedFieldRow key={f.key} field={f} onChange={(key, value) => onEditMortgage?.(key, value)} />
+            <PinnedFieldRow
+              key={f.key}
+              field={f}
+              change={mortgageChanges[f.key]}
+              onChange={(key, value) => onEditMortgage?.(key, value)}
+            />
           ))}
         </FieldGroup>
         <SavedScenarios scenarios={savedScenarios} onDelete={(id) => onDeleteScenario?.(id)} />

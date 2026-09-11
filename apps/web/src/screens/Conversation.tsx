@@ -251,6 +251,8 @@ export function Conversation({
         <MobileBottomSheet
           fields={Object.values(state.fields)}
           mortgage={Object.values(state.mortgage)}
+          mortgageChanges={state.mortgageChanges}
+          mortgageRevision={state.mortgageRevision}
           proposals={state.proposals}
           changes={state.changes}
           savedScenarios={state.savedScenarios}
@@ -270,6 +272,8 @@ export function Conversation({
       <PinnedPanel
         fields={Object.values(state.fields)}
         mortgage={Object.values(state.mortgage)}
+        mortgageChanges={state.mortgageChanges}
+        mortgageRevision={state.mortgageRevision}
         proposals={state.proposals}
         changes={state.changes}
         savedScenarios={state.savedScenarios}

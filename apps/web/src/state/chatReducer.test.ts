@@ -553,6 +553,50 @@ describe('cronograma extraction', () => {
   });
 });
 
+// Cards 12 and 13: the panel has to show *what* a confirmed schedule changed,
+// not only that something did. The reducer records, per pinned key, the value
+// it replaced (if any), and bumps a revision so the collapsed group can flag
+// the change until it is opened.
+describe('what a confirmed schedule changed', () => {
+  const FIRST: MortgageField[] = [
+    { key: 'tea', label: 'TEA', value: '8.00', suffix: '%', provenance: 'documento', note: '' },
+    { key: 'plazoCuotas', label: 'Plazo', value: '240', suffix: 'cuotas', provenance: 'documento', note: '' },
+  ];
+  const SECOND: MortgageField[] = [
+    { key: 'tea', label: 'TEA', value: '6.80', suffix: '%', provenance: 'documento', note: '' },
+    { key: 'plazoCuotas', label: 'Plazo', value: '240', suffix: 'cuotas', provenance: 'documento', note: '' },
+    { key: 'cuota', label: 'Cuota', value: '2,100', prefix: 'S/', provenance: 'documento', note: '' },
+  ];
+
+  it('marks every pinned key on a first upload, with nothing to compare against', () => {
+    const s = chatReducer(initialState, { type: 'confirmExtraction', fields: FIRST });
+    expect(s.mortgageChanges).toEqual({ tea: null, plazoCuotas: null });
+    expect(s.mortgageRevision).toBe(1);
+  });
+
+  it('keeps the value a second upload replaced, and skips one it left as it was', () => {
+    let s = chatReducer(initialState, { type: 'confirmExtraction', fields: FIRST });
+    s = chatReducer(s, { type: 'confirmExtraction', fields: SECOND });
+    expect(s.mortgageChanges).toEqual({ tea: '8.00', plazoCuotas: null, cuota: null });
+    expect(s.mortgageRevision).toBe(2);
+  });
+
+  it('drops the mark once the user retypes that field', () => {
+    let s = chatReducer(initialState, { type: 'confirmExtraction', fields: FIRST });
+    s = chatReducer(s, { type: 'confirmExtraction', fields: SECOND });
+    s = chatReducer(s, { type: 'editMortgageField', key: 'tea', value: '7.00' });
+    expect(s.mortgageChanges.tea).toBeUndefined();
+    expect(s.mortgageChanges.plazoCuotas).toBeNull();
+  });
+
+  it('clears everything on reset', () => {
+    let s = chatReducer(initialState, { type: 'confirmExtraction', fields: FIRST });
+    s = chatReducer(s, { type: 'reset' });
+    expect(s.mortgageChanges).toEqual({});
+    expect(s.mortgageRevision).toBe(0);
+  });
+});
+
 describe('attachment in flight', () => {
   const FILE = { name: 'cronograma-bcp.pdf', size: 248_000 };
   const READ: MortgageField[] = [
