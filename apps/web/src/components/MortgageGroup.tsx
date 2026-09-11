@@ -11,7 +11,7 @@ export function MortgageGroup({
   onEdit,
 }: {
   fields: MortgageField[];
-  onEdit: (key: string, value: string) => void;
+  onEdit?: (key: string, value: string) => void;
 }) {
   const [open, setOpen] = useState(fields.length <= COLLAPSE_ABOVE);
   if (fields.length === 0) return null;
@@ -36,7 +36,7 @@ export function MortgageGroup({
         />
       </button>
       {open && fields.map((f) => (
-        <PinnedFieldRow key={f.key} field={f} onChange={onEdit} />
+        <PinnedFieldRow key={f.key} field={f} onChange={(key, value) => onEdit?.(key, value)} />
       ))}
     </div>
   );

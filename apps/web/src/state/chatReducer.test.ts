@@ -535,3 +535,35 @@ describe('cronograma extraction', () => {
     expect(s.mortgage).toEqual({});
   });
 });
+
+describe('editMortgageField', () => {
+  const READ: MortgageField[] = [
+    { key: 'tea', label: 'TEA', value: '8.99', suffix: '%', provenance: 'documento', note: '' },
+  ];
+
+  it('updates the value of a pinned mortgage field', () => {
+    let s = chatReducer(initialState, { type: 'confirmExtraction', fields: READ });
+    s = chatReducer(s, { type: 'editMortgageField', key: 'tea', value: '9.10' });
+    expect(s.mortgage.tea!.value).toBe('9.10');
+  });
+
+  it('marks a retyped mortgage field as user-stated, since it is no longer what the bank sent', () => {
+    let s = chatReducer(initialState, { type: 'confirmExtraction', fields: READ });
+    s = chatReducer(s, { type: 'editMortgageField', key: 'tea', value: '9.10' });
+    expect(s.mortgage.tea!.provenance).toBe('user');
+  });
+
+  it('is a no-op for a mortgage key that was never pinned', () => {
+    const s = chatReducer(initialState, { type: 'editMortgageField', key: 'tea', value: '9.10' });
+    expect(s.mortgage).toEqual({});
+  });
+
+  it('leaves the property fields untouched', () => {
+    let s = initialState;
+    s = { ...s, fields: { ...s.fields, precio: {
+      key: 'precio', label: 'Precio', value: '300,000', prefix: 'S/', provenance: 'user', note: '' } } };
+    s = chatReducer(s, { type: 'confirmExtraction', fields: READ });
+    s = chatReducer(s, { type: 'editMortgageField', key: 'tea', value: '9.10' });
+    expect(s.fields.precio!.value).toBe('300,000');
+  });
+});

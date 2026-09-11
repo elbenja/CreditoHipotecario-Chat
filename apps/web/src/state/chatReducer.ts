@@ -73,6 +73,7 @@ export type Action =
   | { type: 'queue'; content: string }
   | { type: 'dequeue' }
   | { type: 'editField'; key: string; value: string }
+  | { type: 'editMortgageField'; key: string; value: string }
   | { type: 'revertChange'; key: string }
   | { type: 'acceptProposal'; key: string }
   | { type: 'rejectProposal'; key: string }
@@ -287,6 +288,19 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         userEdited: state.userEdited.includes(action.key)
           ? state.userEdited
           : [...state.userEdited, action.key],
+      };
+    }
+
+    case 'editMortgageField': {
+      const existing = state.mortgage[action.key];
+      if (!existing) return state;
+      return {
+        ...state,
+        mortgage: {
+          ...state.mortgage,
+          // Retyped, so it is no longer what the bank's schedule said.
+          [action.key]: { ...existing, value: action.value, provenance: 'user' },
+        },
       };
     }
 
