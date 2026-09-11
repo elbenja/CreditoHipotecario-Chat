@@ -78,26 +78,29 @@ export function DropZone({
     setRejected(null);
   };
 
+  // Read the transfer, not `drag`: state set by dragenter may not have
+  // rendered yet when the next event lands, and a drop must never be
+  // decided on a stale closure.
   const onDragOver = (e: React.DragEvent) => {
-    if (!drag) return;
+    const kind = classify(e.dataTransfer);
+    if (!kind) return;
     e.preventDefault();
-    e.dataTransfer.dropEffect = drag.kind === 'ok' && !disabled ? 'copy' : 'none';
+    e.dataTransfer.dropEffect = kind.kind === 'ok' && !disabled ? 'copy' : 'none';
   };
 
-  const onDragLeave = () => {
-    if (!drag) return;
+  const onDragLeave = (e: React.DragEvent) => {
+    if (!classify(e.dataTransfer)) return;
     depth.current = Math.max(0, depth.current - 1);
     if (depth.current === 0) setDrag(null);
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    if (!drag) return;
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
     e.preventDefault();
     depth.current = 0;
     setDrag(null);
     if (disabled) return;
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
     if (!isPdf(file.type, file.name)) {
       setRejected(extOf(file.name) ?? EXT_BY_MIME[file.type] ?? '');
       return;

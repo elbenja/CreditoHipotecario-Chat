@@ -32,6 +32,15 @@ describe('PinnedPanel', () => {
     expect(screen.getByLabelText('TEA')).toBeInTheDocument();
   });
 
+  it('counts the credit rows in the header too', () => {
+    render(<PinnedPanel
+      fields={[{ key: 'precio', label: 'Precio', value: '300000', provenance: 'user', note: '' }]}
+      mortgage={[{ key: 'tea', label: 'TEA', value: '8.99', provenance: 'documento', note: '' }]}
+      onEdit={vi.fn()}
+    />);
+    expect(screen.getByText('2 fijados')).toBeInTheDocument();
+  });
+
   it('omits a group that has nothing in it', () => {
     render(<PinnedPanel fields={[]} mortgage={[{ key: 'tea', label: 'TEA', value: '8.99', provenance: 'documento', note: '' }]} onEdit={vi.fn()} />);
     expect(screen.queryByRole('button', { name: /^propiedad/i })).not.toBeInTheDocument();

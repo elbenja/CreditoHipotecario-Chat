@@ -62,7 +62,11 @@ export function PinnedPanel({
           >
             Datos de la operación
           </span>
-          <span className="text-[11px] font-medium text-slate-400">{fields.length} fijados</span>
+          {/* Both groups count: a panel showing four credit rows under "0 fijados"
+              contradicts itself. */}
+          <span className="text-[11px] font-medium text-slate-400">
+            {fields.length + mortgage.length} fijados
+          </span>
         </div>
         <div className={`${mobile ? 'mt-[11px]' : 'mt-3'} flex items-center gap-[14px]`}>
           <span className="flex items-center gap-[6px] text-[11px] font-medium text-slate-400">
