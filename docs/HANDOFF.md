@@ -1,7 +1,8 @@
-# Handoff — Fase B built, PR #4 open, one manual check left
+# Handoff — Fase B merged, cronograma UX pass open as PR #5
 
 Written 2026-09-07 after deployment, updated 2026-09-08 after the Phase 4
-merge, and updated 2026-09-11 after Fase B. Start here in a new chat.
+merge, 2026-09-11 after Fase B, and again 2026-09-11 after the UX pass on
+the cronograma flow. Start here in a new chat.
 
 ## Where things stand
 
@@ -9,25 +10,49 @@ Phases 1–4 are built and merged to `main`. The pre-Phase 4 POC was **deployed
 and verified live**; Phase 4's live mobile deployment still needs a recorded
 verification pass.
 
-**Fase B — attaching the bank's payment schedule — is built and open as
-[PR #4](https://github.com/elbenja/CreditoHipotecario-Chat/pull/4)**, branch
-`fase-b-cronograma`. 351 tests (baseline 244), typecheck and build clean.
+**Fase B — attaching the bank's payment schedule — is merged** (PR #4,
+rebase-merged 2026-09-11, `main` at `e8f10ae`). The one blocker it had — the
+five real bank PDFs through the file picker with a live model call — was run
+by the project owner and passed: the app reads a real cronograma end to end.
+The `response_format: json_object` suspicion in `apps/api/src/kimi.ts` did
+not materialise.
 
-One thing blocks the merge, and it needs a human: **run the five real bank PDFs
-through the file picker end to end**, with a live model call. It could not be
-automated — vite returns 403 for paths outside the workspace and that guard was
-deliberately not weakened, and driving the OS file picker would have put client
-PII through five live model calls. What *was* verified in a real browser, with
-synthetic PDFs: the pdf.js worker resolves, text extraction and canvas render
-work, all four error codes surface correctly, and the text-vs-scan threshold
-routes right.
+**The UX pass on that flow is built and open as PR #5**, branch
+`ux-composer-cronograma`, from the Claude Design page
+`Micro-interacciones chat.dc.html` (cards 03, 09, 10, 11). 381 tests
+(baseline 351), typecheck and build clean, verified in the in-app browser on
+desktop and the 375px mobile preset. What it changes:
 
-If that run fails, the first suspect is `response_format: { type: 'json_object' }`
-in `apps/api/src/kimi.ts` on image turns — it was kept on a deliberate ruling
-with no evidence either way, and the fix is one line.
+- **The bug: "Fijar estos datos" looked like a no-op.** Confirming pinned into
+  `state.mortgage` fine, but the empty screen rendered `EmptyPanel`, a static
+  placeholder that never reads state — and a schedule is usually uploaded
+  before the first message. `EmptyState` now renders the real `PinnedPanel`
+  (desktop) and `MobileBottomSheet` (mobile) the moment anything is pinned.
+- **The panel has two collapsible groups, Propiedad and Hipoteca.**
+  `MortgageGroup` became the generic `FieldGroup`; Hipoteca still starts shut
+  past four rows. The header counts both groups.
+- **Cards 09/03 — a progress row for the attachment.** New reducer field
+  `attachment: { name, size } | null` (never persisted), set by `attachStart`
+  and cleared on extraction, error or cancel. `UploadingRow` shows the file,
+  size and a bar while page 1 is read in the browser, then a green "Primera
+  página leída" plus the server's "Extrayendo las condiciones" step spinning.
+  The bar runs to 90% and lands on 100% when the server answers — there is no
+  real progress to report, so none is invented. Shown in the transcript and
+  under the empty screen's composer.
+- **Cards 10/11 — drag and drop.** `DropZone` wraps the whole chat column on
+  both screens. A dragged PDF blurs the chat behind a dashed slate-500 overlay
+  ("PDF del banco · hasta 20 MB" — the app's real limits, not the card's
+  "PDF o Excel · 10 MB"); a non-PDF gets the amber variant, `no-drop`, and is
+  never handed up. During a drag only MIME types are known, so the extension
+  in "No puedo leer .docx" comes from a MIME map; after a bad drop it comes
+  from the file name and the overlay lingers 3 s.
+- **One "+" control at the left of the composer**, both variants, replacing
+  the link icon and the paperclip. Empty screen copy: "Sube un documento o
+  pega el link de un anuncio" — pasting a listing link is planned, not built.
 
-The one spec item not built is **drag and drop**. It and eleven other known
-follow-ups are in `docs/superpowers/plans/2026-09-10-fase-b-follow-ups.md`.
+**Not done:** the five real PDFs have not been dropped (as opposed to picked)
+onto the deployed build. The drop goes through the same `attachSchedule`, so
+this is a smoke check, not a re-verification.
 
 ## Running it locally
 
@@ -42,16 +67,17 @@ pnpm --filter @chat/web dev   # port 5173
 out-of-scope guardrail before any model call, so it is a free way to check the
 whole path is wired.
 
-The attach control lives in the composer, on both the empty screen and the
-conversation. It is disabled while a read is in flight.
+The attach control is the "+" at the left of the composer, on both the empty
+screen and the conversation; the whole chat column also takes a dropped PDF.
+Both are disabled while a read is in flight.
 
 | | URL |
 | --- | --- |
 | Web (Vercel) | https://credito-hipotecario-chat.vercel.app |
 | API (Railway, project `Credito-Chat-API`) | https://credito-chat-api-production.up.railway.app |
 
-`main` is at `9c8a016`. The Phase 4 verification baseline is 232 tests passing,
-typecheck clean, web build clean, and `design-qa.md` marked `passed`.
+`main` is at `e8f10ae`. The Fase B baseline is 351 tests passing, typecheck
+clean, web build clean.
 
 ## What changed during the deploy
 
@@ -114,11 +140,10 @@ the shipped Phase 4 behavior, then repeat the affected mobile and desktop QA.
 
 ## Open items
 
-- **Fase B manual verification — blocks PR #4.** The five real schedules
-  through the file picker, scored field by field. See above.
-- **Drag and drop — a decision, not a bug.** The spec asks for it; it was kept
-  out of the final fix wave on purpose, because that wave carried four
-  correctness fixes and the process allows only one.
+- **PR #5 review and merge.** The cronograma UX pass, see above.
+- **"1 datos fijados".** The mobile summary and the panel header do not
+  singularise. Pre-existing; newly easy to hit now that a schedule alone can
+  populate the panel.
 - **Phase 4 UX review — active.** Record concrete findings, prioritize them,
   and execute only the approved improvements in a follow-up plan.
 - **Phase 4 live verification — not yet recorded.** Confirm M1–M3 on the
