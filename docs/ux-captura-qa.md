@@ -2,7 +2,8 @@
 
 Actualizado el 11 de septiembre de 2026. Este documento registra las decisiones
 de producto y la arquitectura del pase de UX realizado en
-`codex/ux-captura-propiedad`.
+`codex/ux-captura-propiedad`, después rebasado sobre el `main` que ya contenía
+el pase de UX del cronograma.
 
 ## Decisiones de producto
 
@@ -47,6 +48,9 @@ de producto y la arquitectura del pase de UX realizado en
   valor guardado se presenta agrupado.
 - Un dato manual del panel sigue siendo propiedad del usuario. Una cifra distinta
   propuesta por el modelo se muestra como propuesta y no lo sobreescribe.
+- La integración conserva el flujo completo del cronograma: adjuntar o soltar
+  PDF, progreso, confirmación, grupos Propiedad/Hipoteca y paneles móvil/escritorio.
+  La pantalla inicial combina esas funciones con la nueva captura guiada.
 
 ## Consumo y manejo de errores
 
@@ -65,8 +69,9 @@ de producto y la arquitectura del pase de UX realizado en
 
 ## Verificación y límites conocidos
 
-- Antes de integrar: 335 pruebas pasan (shared 53, API 166, web 116), typecheck
-  limpio, build de web correcto y `git diff --check` limpio.
+- Después de rebasar sobre el `main` vigente: 433 pruebas pasan (shared 53,
+  API 166, web 214), typecheck limpio, build de web correcto y
+  `git diff --check` limpio.
 - Se verificó en navegador el flujo de captura y el badge de escenarios con
   datos ficticios. La acción produjo tres tarjetas existentes con «Guardar».
 - Una reproducción posterior con el ejemplo `866 000 soles` no se envió al
@@ -78,8 +83,8 @@ de producto y la arquitectura del pase de UX realizado en
 
 ## Commits del pase de UX
 
-- `8d6fefb` — captura guiada antes del análisis solicitado.
-- `9c1c38e` — historial compacto, límites de respuesta y errores diferenciados.
-- `76ba16f` — deja de ofrecer preguntas para datos ya capturados y estima alquiler.
-- `07a2a3c` — badge que abre los escenarios existentes.
-- `0fb3b2c` — evita preguntas repetidas y reconoce formatos numéricos adicionales.
+- `9d270d5` — captura guiada antes del análisis solicitado.
+- `485c244` — historial compacto, límites de respuesta y errores diferenciados.
+- `d7ac4d8` — deja de ofrecer preguntas para datos ya capturados y estima alquiler.
+- `54e5028` — badge que abre los escenarios existentes.
+- `b694a23` — evita preguntas repetidas y reconoce formatos numéricos adicionales.

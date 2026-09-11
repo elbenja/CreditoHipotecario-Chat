@@ -17,6 +17,15 @@ by the project owner and passed: the app reads a real cronograma end to end.
 The `response_format: json_object` suspicion in `apps/api/src/kimi.ts` did
 not materialise.
 
+**The progressive property-capture UX pass is integrated as well.** It replaces
+the premature analysis prompts with guided property and mortgage inputs, keeps
+data-only turns brief, reduces the conversational Kimi budget, separates request
+errors from connection failures, and adds the existing scenario cards as an
+explicit action after the mortgage basics are present. The rebase preserved the
+cronograma upload, drag-and-drop, progress, confirmation and grouped-panel UX.
+The full product decisions, response contracts, safeguards and known limits are
+recorded in [`docs/ux-captura-qa.md`](ux-captura-qa.md).
+
 **The UX pass on that flow is merged** (PR #5, rebase-merged 2026-09-11,
 branch `ux-composer-cronograma`), from the Claude Design page
 `Micro-interacciones chat.dc.html` (cards 03, 09, 10, 11, 12, 13). 390 tests
@@ -89,8 +98,8 @@ Both are disabled while a read is in flight.
 | Web (Vercel) | https://credito-hipotecario-chat.vercel.app |
 | API (Railway, project `Credito-Chat-API`) | https://credito-chat-api-production.up.railway.app |
 
-`main` is at `e8f10ae`. The Fase B baseline is 351 tests passing, typecheck
-clean, web build clean.
+The integrated baseline is 433 tests passing (shared 53, API 166, web 214),
+typecheck clean and web build clean.
 
 ## What changed during the deploy
 
