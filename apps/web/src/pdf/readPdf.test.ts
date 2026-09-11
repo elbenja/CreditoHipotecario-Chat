@@ -87,9 +87,6 @@ describe('readFirstPage guards', () => {
   });
 
   it('wraps a failure to even read the file (e.g. NotReadableError) as unreadable, without touching a loading task', async () => {
-    const error = new Error('The requested file could not be read.');
-    error.name = 'NotReadableError';
-
     await expect(
       readFirstPage(fakeUnreadableFile('movido.pdf', 'application/pdf', 1000)),
     ).rejects.toMatchObject({ code: 'unreadable' });

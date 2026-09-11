@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Composer } from '../components/Composer';
+import { ConfirmExtraction } from '../components/ConfirmExtraction';
 import { EmptyPanel } from '../components/EmptyPanel';
 import { Icon } from '../components/Icon';
 import { Pill } from '../components/Pill';
+import { attachSchedule } from '../pdf/attachSchedule';
+import type { Action, ChatState } from '../state/chatReducer';
 
 const SUGGESTIONS = [
   '¿A cuánto puedo alquilarlo?',
@@ -11,8 +14,25 @@ const SUGGESTIONS = [
   '¿Me conviene amortizar?',
 ];
 
-export function EmptyState({ onSubmit }: { onSubmit: (text: string) => void }) {
+export function EmptyState({
+  onSubmit,
+  state,
+  dispatch,
+}: {
+  onSubmit: (text: string) => void;
+  /** Owns the attach-a-cronograma flow, same as Conversation's: opening the
+   *  app holding the schedule is the most natural entry point, so the
+   *  control cannot wait for a first message. Optional so a caller that
+   *  never attaches — a test, say — need not wire it, and the attach
+   *  control simply stays off. */
+  state: ChatState;
+  dispatch?: (action: Action) => void;
+}) {
   const [value, setValue] = useState('');
+  const busy = state.status !== 'idle' && state.status !== 'error';
+
+  const attach = (file: File) =>
+    dispatch ? attachSchedule(file, dispatch, Object.values(state.fields)) : undefined;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col md:flex-row">
@@ -53,7 +73,12 @@ export function EmptyState({ onSubmit }: { onSubmit: (text: string) => void }) {
           onChange={setValue}
           onSubmit={() => onSubmit(value)}
           placeholder="Describe tu depa…"
+          disabled={busy}
+          onAttach={dispatch ? attach : undefined}
         />
+        {state.status === 'error' && state.error && (
+          <p className="mt-2 text-[12px] font-medium text-[#f59e0b]">{state.error.message}</p>
+        )}
       </div>
 
       <div className="mobile-safe-bottom mt-3 flex min-h-[62px] flex-none items-center gap-3 border-t border-ch-border px-5 text-[12.5px] font-medium text-slate-400 md:hidden">
@@ -78,7 +103,12 @@ export function EmptyState({ onSubmit }: { onSubmit: (text: string) => void }) {
               onChange={setValue}
               onSubmit={() => onSubmit(value)}
               placeholder="Depa de 250 mil en Pueblo Libre, 40 m², tasa 8%…"
+              disabled={busy}
+              onAttach={dispatch ? attach : undefined}
             />
+            {state.status === 'error' && state.error && (
+              <p className="mt-2 text-[12px] font-medium text-[#f59e0b]">{state.error.message}</p>
+            )}
           </div>
 
           <div className="mb-[14px] mt-[30px] text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">
@@ -95,6 +125,14 @@ export function EmptyState({ onSubmit }: { onSubmit: (text: string) => void }) {
       </div>
 
       <EmptyPanel />
+
+      {dispatch && state.pendingExtraction && (
+        <ConfirmExtraction
+          fields={state.pendingExtraction}
+          onConfirm={(fields) => dispatch({ type: 'confirmExtraction', fields })}
+          onCancel={() => dispatch({ type: 'cancelExtraction' })}
+        />
+      )}
     </div>
   );
 }

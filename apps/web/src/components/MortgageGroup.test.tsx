@@ -38,4 +38,24 @@ describe('MortgageGroup', () => {
     render(<MortgageGroup fields={make(5)} onEdit={vi.fn()} />);
     expect(screen.getByRole('button', { name: /tu hipoteca/i })).toHaveTextContent('5');
   });
+
+  // PinnedPanel mounts this group unconditionally, before an upload's fields
+  // arrive — so the initializer alone (`useState(fields.length <= 4)`) sees
+  // zero fields, opens, and then never re-evaluates once nine land. Only a
+  // reload (a fresh mount with the fields already present) got this right.
+  it('collapses once fields arrive after mounting with none, not only after a reload', () => {
+    const { rerender } = render(<MortgageGroup fields={[]} onEdit={vi.fn()} />);
+    rerender(<MortgageGroup fields={make(9)} onEdit={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /tu hipoteca/i })).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps the user’s own choice even as more fields arrive afterward', async () => {
+    const { rerender } = render(<MortgageGroup fields={make(5)} onEdit={vi.fn()} />);
+    const toggle = screen.getByRole('button', { name: /tu hipoteca/i });
+    await userEvent.click(toggle); // opens it by hand, against the collapsed-above-4 rule
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+    rerender(<MortgageGroup fields={make(9)} onEdit={vi.fn()} />);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  });
 });

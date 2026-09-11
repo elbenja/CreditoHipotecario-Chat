@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { streamChat } from '../api/streamChat';
 import { AnalyzeSteps } from '../components/AnalyzeSteps';
 import { AssistantAnswer } from '../components/AssistantAnswer';
 import { Composer } from '../components/Composer';
@@ -12,22 +11,12 @@ import { OfflineBanner } from '../components/OfflineBanner';
 import { OutOfScopeAnswer } from '../components/OutOfScopeAnswer';
 import { Pill } from '../components/Pill';
 import { PinnedPanel } from '../components/PinnedPanel';
-import { PdfReadError, readFirstPage, type PdfErrorCode } from '../pdf/readPdf';
+import { attachSchedule } from '../pdf/attachSchedule';
 import { Thinking } from '../components/Thinking';
 import { TruncatedNotice } from '../components/TruncatedNotice';
 import { UndoBar } from '../components/UndoBar';
 import { UserBubble } from '../components/UserBubble';
 import { selectDirtyKeys, type Action, type ChatState } from '../state/chatReducer';
-
-// Every failure the reader can throw, in the copy the user actually sees.
-// A password-protected schedule is not "unreadable" — it needs its own line,
-// or the person has no idea what to do next.
-const PDF_ERRORS: Record<PdfErrorCode, string> = {
-  notPdf: 'Eso no es un PDF. Sube el cronograma que te dio el banco.',
-  tooLarge: 'Ese archivo pasa los 20 MB. Sube solo el cronograma.',
-  encrypted: 'Ese PDF tiene contraseña y no puedo abrirlo.',
-  unreadable: 'No pude leer ese PDF.',
-};
 
 export function Conversation({
   state,
@@ -107,38 +96,8 @@ export function Conversation({
     onSend(text);
   };
 
-  // Reading the PDF happens in the browser and never touches the network;
-  // only the extracted text (or a page-1 render) is sent on. `document`
-  // shadows the global of the same name, so it is bound as `doc` below.
-  const attach = async (file: File) => {
-    if (!dispatch) return;
-    dispatch({ type: 'status', phase: 'thinking' });
-
-    let doc;
-    try {
-      doc = await readFirstPage(file);
-    } catch (err) {
-      const code = err instanceof PdfReadError ? err.code : 'unreadable';
-      dispatch({ type: 'error', kind: 'api', message: PDF_ERRORS[code], retry: null });
-      return;
-    }
-
-    await streamChat(
-      {
-        messages: [{ role: 'user', content: 'Adjunto el cronograma de pagos.' }],
-        fields: Object.values(state.fields),
-        document: doc,
-      },
-      (e) => {
-        const data = e.data as Record<string, any>;
-        if (e.event === 'status') dispatch({ type: 'status', phase: data.phase });
-        else if (e.event === 'analyzeStep') dispatch({ type: 'analyzeStep', label: data.label });
-        else if (e.event === 'extraction') dispatch({ type: 'extractionReady', fields: data.fields });
-        else if (e.event === 'error')
-          dispatch({ type: 'error', kind: 'api', message: data.message, retry: null });
-      },
-    );
-  };
+  const attach = (file: File) =>
+    dispatch ? attachSchedule(file, dispatch, Object.values(state.fields)) : undefined;
 
   let suggestions: string[] = [];
   let latestAssistantIsOutOfScope = false;

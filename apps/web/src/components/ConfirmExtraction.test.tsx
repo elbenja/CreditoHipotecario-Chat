@@ -31,6 +31,33 @@ describe('ConfirmExtraction', () => {
     expect(onConfirm.mock.calls[0]![0][0].value).toBe('9.10');
   });
 
+  it('pins a corrected digit as user-stated, leaving an untouched field as read from the document', async () => {
+    const bothRead: MortgageField[] = [
+      { key: 'tea', label: 'TEA', value: '8.99', suffix: '%', provenance: 'documento', note: '' },
+      {
+        key: 'montoFinanciado', label: 'Monto financiado', value: '280,000', prefix: 'S/',
+        provenance: 'documento', note: '',
+      },
+    ];
+    const onConfirm = vi.fn();
+    render(<ConfirmExtraction fields={bothRead} onConfirm={onConfirm} onCancel={vi.fn()} />);
+    const tea = screen.getByLabelText('TEA');
+    await userEvent.clear(tea);
+    await userEvent.type(tea, '9.10');
+    await userEvent.click(screen.getByRole('button', { name: /fijar/i }));
+    const confirmed: MortgageField[] = onConfirm.mock.calls[0]![0];
+    // Corrected: no longer what the bank's document said.
+    expect(confirmed.find((f) => f.key === 'tea')).toMatchObject({
+      value: '9.10',
+      provenance: 'user',
+    });
+    // Left alone: still exactly what was read.
+    expect(confirmed.find((f) => f.key === 'montoFinanciado')).toMatchObject({
+      value: '280,000',
+      provenance: 'documento',
+    });
+  });
+
   it('cancels without confirming', async () => {
     const onConfirm = vi.fn();
     const onCancel = vi.fn();

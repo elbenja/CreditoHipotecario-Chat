@@ -104,3 +104,28 @@ describe('attaching a cronograma', () => {
     expect(screen.queryByLabelText(/adjuntar cronograma/i)).not.toBeInTheDocument();
   });
 });
+
+// The empty screen's Composer (variant="empty") is a different branch of the
+// component with its own JSX, so the attach control needs its own coverage —
+// it is otherwise unreachable before the first message is sent.
+describe('attaching a cronograma — empty variant', () => {
+  it('offers an attach control in the empty variant too', () => {
+    render(<Composer value="" onChange={vi.fn()} onSubmit={vi.fn()} placeholder="x"
+      variant="empty" onAttach={vi.fn()} />);
+    expect(screen.getByLabelText(/adjuntar cronograma/i)).toBeInTheDocument();
+  });
+
+  it('hands the chosen file up from the empty variant', async () => {
+    const onAttach = vi.fn();
+    render(<Composer value="" onChange={vi.fn()} onSubmit={vi.fn()} placeholder="x"
+      variant="empty" onAttach={onAttach} />);
+    const file = new File([new Uint8Array(1)], 'cronograma.pdf', { type: 'application/pdf' });
+    await userEvent.upload(screen.getByTestId('attach-input'), file);
+    expect(onAttach).toHaveBeenCalledWith(file);
+  });
+
+  it('has no attach control in the empty variant when the screen does not pass one', () => {
+    render(<Composer value="" onChange={vi.fn()} onSubmit={vi.fn()} placeholder="x" variant="empty" />);
+    expect(screen.queryByLabelText(/adjuntar cronograma/i)).not.toBeInTheDocument();
+  });
+});

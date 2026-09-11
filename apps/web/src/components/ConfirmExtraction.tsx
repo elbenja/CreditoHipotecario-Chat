@@ -75,8 +75,13 @@ export function ConfirmExtraction({
     };
   }, []);
 
+  // A digit changed here is no longer what the bank's document said — it is
+  // what the person typed, so it must pin as 'user', matching
+  // editMortgageField's convention. The note stays: today it only ever
+  // describes the field's nature (a variable rate, an appraised value), not
+  // the specific digit read, so it is still accurate after the correction.
   const edit = (key: string, value: string) =>
-    setDraft((d) => d.map((f) => (f.key === key ? { ...f, value } : f)));
+    setDraft((d) => d.map((f) => (f.key === key ? { ...f, value, provenance: 'user' } : f)));
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-5">

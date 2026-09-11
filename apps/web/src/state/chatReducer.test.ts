@@ -495,6 +495,23 @@ describe('cronograma extraction', () => {
     expect(s.mortgage.tea!.value).toBe('9.10');
   });
 
+  // A second upload is a different credit, not an update to the first one:
+  // a key the first schedule had that the second omits must not survive,
+  // still labelled 'documento' as if the second schedule had said it.
+  it('replaces the mortgage group on a second upload instead of blending it with the first', () => {
+    let s = chatReducer(initialState, { type: 'confirmExtraction', fields: READ });
+    expect(s.mortgage.montoFinanciado).toBeDefined();
+
+    const secondBank: MortgageField[] = [
+      { key: 'tea', label: 'TEA', value: '11.20', suffix: '%', provenance: 'documento', note: '' },
+    ];
+    s = chatReducer(s, { type: 'confirmExtraction', fields: secondBank });
+
+    expect(s.mortgage.tea!.value).toBe('11.20');
+    expect(s.mortgage.montoFinanciado).toBeUndefined();
+    expect(Object.keys(s.mortgage)).toEqual(['tea']);
+  });
+
   it('pins nothing on cancel', () => {
     let s = chatReducer(initialState, { type: 'extractionReady', fields: READ });
     s = chatReducer(s, { type: 'cancelExtraction' });
