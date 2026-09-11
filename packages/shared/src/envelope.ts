@@ -10,7 +10,9 @@ export const FIELD_KEYS = [
   'alquiler',
 ] as const;
 
-export const ProvenanceSchema = z.enum(['user', 'assumed', 'market', 'documento']);
+// 'anuncio': read from a third party's listing page — firm, but neither the
+// user's word nor the bank's document, and the developer can change it tomorrow.
+export const ProvenanceSchema = z.enum(['user', 'assumed', 'market', 'documento', 'anuncio']);
 
 export const PinnedFieldSchema = z.object({
   key: z.enum(FIELD_KEYS),
