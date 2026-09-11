@@ -1,13 +1,15 @@
-import type { PinnedField, Scenario } from '@chat/shared';
+import type { MortgageField, PinnedField, Scenario } from '@chat/shared';
 import type { FieldChange } from '../state/chatReducer';
 import { ChangesStrip } from './ChangesStrip';
 import { DirtyBand } from './DirtyBand';
+import { MortgageGroup } from './MortgageGroup';
 import { PinnedFieldRow } from './PinnedField';
 import { SavedScenarios } from './SavedScenarios';
 import { Icon } from './Icon';
 
 export function PinnedPanel({
   fields,
+  mortgage = [],
   proposals = {},
   savedScenarios = [],
   dirtyKeys = [],
@@ -23,6 +25,7 @@ export function PinnedPanel({
   mode = 'desktop',
 }: {
   fields: PinnedField[];
+  mortgage?: MortgageField[];
   proposals?: Record<string, PinnedField>;
   savedScenarios?: Scenario[];
   dirtyKeys?: string[];
@@ -68,6 +71,12 @@ export function PinnedPanel({
             <span className="h-[7px] w-[7px] rounded-full bg-ch-accent" />
             Lo asumí yo
           </span>
+          {mortgage.some((f) => f.provenance === 'documento') && (
+            <span className="flex items-center gap-[6px] text-[11px] font-medium text-emerald-400">
+              <span className="h-[7px] w-[7px] rounded-full bg-emerald-400" />
+              Lo leí del banco
+            </span>
+          )}
         </div>
       </div>
 
@@ -87,6 +96,7 @@ export function PinnedPanel({
             onRejectProposal={onRejectProposal}
           />
         ))}
+        <MortgageGroup fields={mortgage} onEdit={onEdit} />
         <SavedScenarios scenarios={savedScenarios} onDelete={(id) => onDeleteScenario?.(id)} />
       </div>
 

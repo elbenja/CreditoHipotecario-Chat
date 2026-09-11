@@ -1,4 +1,4 @@
-import type { PinnedField } from '@chat/shared';
+import type { MortgageField, PinnedField } from '@chat/shared';
 import { Icon } from './Icon';
 
 export function PinnedFieldRow({
@@ -8,17 +8,24 @@ export function PinnedFieldRow({
   onAcceptProposal,
   onRejectProposal,
 }: {
-  field: PinnedField;
+  field: PinnedField | MortgageField;
   proposal?: PinnedField;
   onChange: (key: string, value: string) => void;
   onAcceptProposal?: (key: string) => void;
   onRejectProposal?: (key: string) => void;
 }) {
+  // A value read off the bank's own schedule is firmer than anything the user
+  // recalled, so it gets its own mark rather than being folded into either
+  // existing state.
+  const fromDocument = field.provenance === 'documento';
   // Provenance is the whole point: a value the user did not state must never
-  // read as fact. Anything that is not 'user' gets the accent dot — the live
-  // model also returns 'market', and testing `=== 'assumed'` would render a
-  // market estimate as "Lo dijiste tú".
-  const notFromUser = field.provenance !== 'user';
+  // read as fact. Anything that is not 'user' (and not already covered above)
+  // gets the accent dot — the live model also returns 'market', and testing
+  // `=== 'assumed'` would render a market estimate as "Lo dijiste tú".
+  const notFromUser = field.provenance !== 'user' && !fromDocument;
+
+  const dotClass = fromDocument ? 'bg-emerald-400' : notFromUser ? 'bg-ch-accent' : 'bg-slate-400';
+  const dotTitle = fromDocument ? 'Lo leí del banco' : notFromUser ? 'Lo asumí yo' : 'Lo dijiste tú';
 
   return (
     <div className="rounded-[10px] border border-transparent px-3 py-[11px] transition-colors duration-180 ease-ch hover:border-ch-border">
@@ -27,8 +34,8 @@ export function PinnedFieldRow({
           {field.label}
         </span>
         <span
-          className={`h-[6px] w-[6px] rounded-full ${notFromUser ? 'bg-ch-accent' : 'bg-slate-400'}`}
-          title={notFromUser ? 'Lo asumí yo' : 'Lo dijiste tú'}
+          className={`h-[6px] w-[6px] rounded-full ${dotClass}`}
+          title={dotTitle}
         />
         <div className="flex-1" />
         <Icon name="edit-01" size={13} className="text-slate-500" />

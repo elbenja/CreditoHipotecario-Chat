@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import type { PinnedField, Scenario } from '@chat/shared';
+import type { MortgageField, PinnedField, Scenario } from '@chat/shared';
 import type { FieldChange } from '../state/chatReducer';
 import { Icon } from './Icon';
 import { PinnedPanel } from './PinnedPanel';
 
 type MobileBottomSheetProps = {
   fields: PinnedField[];
+  mortgage?: MortgageField[];
   proposals?: Record<string, PinnedField>;
   savedScenarios?: Scenario[];
   dirtyKeys?: string[];
@@ -22,6 +23,7 @@ type MobileBottomSheetProps = {
 
 export function MobileBottomSheet({
   fields,
+  mortgage = [],
   proposals = {},
   savedScenarios = [],
   dirtyKeys = [],
@@ -158,7 +160,7 @@ export function MobileBottomSheet({
           >
             <span className="mx-auto mb-1 h-1 w-9 rounded-full bg-slate-500" aria-hidden="true" />
             <span className="text-[13px] font-semibold text-white">
-              {fields.length} datos fijados
+              {fields.length + mortgage.length} datos fijados
             </span>
             {' '}
             <span className="text-[11.5px] font-medium text-slate-400">
@@ -217,6 +219,7 @@ export function MobileBottomSheet({
             <PinnedPanel
               mode="mobile"
               fields={fields}
+              mortgage={mortgage}
               proposals={proposals}
               savedScenarios={savedScenarios}
               dirtyKeys={dirtyKeys}
