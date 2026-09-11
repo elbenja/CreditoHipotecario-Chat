@@ -1,9 +1,24 @@
+import { useReducer } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { AnalysisEnvelope, PinnedField } from '@chat/shared';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import type { AnalysisEnvelope, MortgageField, PinnedField } from '@chat/shared';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Conversation } from './Conversation';
-import { initialState, type ChatState } from '../state/chatReducer';
+import { chatReducer, initialState, type ChatState } from '../state/chatReducer';
+import { PdfReadError, readFirstPage } from '../pdf/readPdf';
+import { streamChat } from '../api/streamChat';
+
+// The attach flow reads the file and calls the model; neither may run for
+// real in a unit test — no live model calls, no touching an actual PDF.
+vi.mock('../pdf/readPdf', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../pdf/readPdf')>();
+  return { ...actual, readFirstPage: vi.fn() };
+});
+
+vi.mock('../api/streamChat', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../api/streamChat')>();
+  return { ...actual, streamChat: vi.fn() };
+});
 
 const scrollIntoView = HTMLElement.prototype.scrollIntoView;
 
@@ -152,5 +167,167 @@ describe('Conversation mobile integration', () => {
   it('states once that the figures are model-produced', () => {
     renderConversation();
     expect(screen.getByText('números indicativos · POC')).toBeTruthy();
+  });
+});
+
+describe('Conversation attach flow', () => {
+  const scrollIntoView2 = HTMLElement.prototype.scrollIntoView;
+
+  beforeAll(() => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+  });
+
+  afterAll(() => {
+    HTMLElement.prototype.scrollIntoView = scrollIntoView2;
+  });
+
+  beforeEach(() => {
+    vi.mocked(readFirstPage).mockReset();
+    vi.mocked(streamChat).mockReset();
+  });
+
+  // Wires a real dispatch (chatReducer, same as App.tsx) so the attach flow's
+  // several actions (status/error/extractionReady/confirmExtraction) actually
+  // land in state and re-render, instead of a fixed fixture state.
+  function Harness() {
+    const [convState, dispatch] = useReducer(chatReducer, initialState);
+    return (
+      <Conversation
+        state={convState}
+        dispatch={dispatch}
+        onSend={vi.fn()}
+        onEdit={vi.fn()}
+        onAcceptProposal={vi.fn()}
+        onRejectProposal={vi.fn()}
+        onPinCandidate={vi.fn()}
+        savedIds={[]}
+        onSaveScenario={vi.fn()}
+        onDeleteScenario={vi.fn()}
+        onUndoDelete={vi.fn()}
+        onRecalculate={vi.fn()}
+        onRevertChange={vi.fn()}
+        onDismissChanges={vi.fn()}
+        onRetry={vi.fn()}
+        onEditQuestion={vi.fn()}
+        onContinue={vi.fn()}
+        onShorten={vi.fn()}
+        composerSeed={null}
+      />
+    );
+  }
+
+  const pdf = (name = 'cronograma.pdf') => new File([new Uint8Array(1)], name, { type: 'application/pdf' });
+
+  const mortgageFields: MortgageField[] = [
+    { key: 'tea', label: 'TEA', value: '6.30%', prefix: undefined, suffix: undefined, provenance: 'documento', note: '' },
+    {
+      key: 'montoFinanciado',
+      label: 'Monto financiado',
+      value: 'S/ 250,000',
+      prefix: 'S/',
+      suffix: undefined,
+      provenance: 'documento',
+      note: '',
+    },
+  ];
+
+  it('tells the user their PDF is not a PDF', async () => {
+    vi.mocked(readFirstPage).mockRejectedValue(new PdfReadError('notPdf'));
+    render(<Harness />);
+
+    await userEvent.upload(screen.getByTestId('attach-input'), pdf());
+
+    expect(await screen.findByText('Eso no es un PDF. Sube el cronograma que te dio el banco.')).toBeInTheDocument();
+  });
+
+  it('tells the user their PDF is too large', async () => {
+    vi.mocked(readFirstPage).mockRejectedValue(new PdfReadError('tooLarge'));
+    render(<Harness />);
+
+    await userEvent.upload(screen.getByTestId('attach-input'), pdf());
+
+    expect(await screen.findByText('Ese archivo pasa los 20 MB. Sube solo el cronograma.')).toBeInTheDocument();
+  });
+
+  // The one the brief calls out by name: a password-protected file must say
+  // so, not fall into the generic "no pude leer" bucket.
+  it('tells the user their PDF has a password, not the generic unreadable message', async () => {
+    vi.mocked(readFirstPage).mockRejectedValue(new PdfReadError('encrypted'));
+    render(<Harness />);
+
+    await userEvent.upload(screen.getByTestId('attach-input'), pdf());
+
+    expect(await screen.findByText('Ese PDF tiene contraseña y no puedo abrirlo.')).toBeInTheDocument();
+    expect(screen.queryByText('No pude leer ese PDF.')).not.toBeInTheDocument();
+  });
+
+  it('falls back to the generic message for any other read failure', async () => {
+    vi.mocked(readFirstPage).mockRejectedValue(new PdfReadError('unreadable'));
+    render(<Harness />);
+
+    await userEvent.upload(screen.getByTestId('attach-input'), pdf());
+
+    expect(await screen.findByText('No pude leer ese PDF.')).toBeInTheDocument();
+  });
+
+  it('opens the confirmation modal instead of pinning the extraction directly', async () => {
+    vi.mocked(readFirstPage).mockResolvedValue({ kind: 'text', text: 'TEA 6.30' });
+    vi.mocked(streamChat).mockImplementation(async (_body, onEvent) => {
+      onEvent({ event: 'extraction', data: { fields: mortgageFields } });
+    });
+    render(<Harness />);
+
+    await userEvent.upload(screen.getByTestId('attach-input'), pdf());
+
+    expect(await screen.findByRole('dialog', { name: /revisar lo que leí/i })).toBeInTheDocument();
+    expect(screen.queryByText('Tu hipoteca')).not.toBeInTheDocument();
+  });
+
+  it('pins the confirmed fields into the panel', async () => {
+    vi.mocked(readFirstPage).mockResolvedValue({ kind: 'text', text: 'TEA 6.30' });
+    vi.mocked(streamChat).mockImplementation(async (_body, onEvent) => {
+      onEvent({ event: 'extraction', data: { fields: mortgageFields } });
+    });
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    await user.upload(screen.getByTestId('attach-input'), pdf());
+    await screen.findByRole('dialog', { name: /revisar lo que leí/i });
+
+    await user.click(screen.getByRole('button', { name: 'Fijar estos datos' }));
+
+    expect(screen.queryByRole('dialog', { name: /revisar lo que leí/i })).not.toBeInTheDocument();
+    expect(screen.getAllByText('Tu hipoteca').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('6.30%').length).toBeGreaterThan(0);
+  });
+
+  it('pins nothing when the confirmation is cancelled', async () => {
+    vi.mocked(readFirstPage).mockResolvedValue({ kind: 'text', text: 'TEA 6.30' });
+    vi.mocked(streamChat).mockImplementation(async (_body, onEvent) => {
+      onEvent({ event: 'extraction', data: { fields: mortgageFields } });
+    });
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    await user.upload(screen.getByTestId('attach-input'), pdf());
+    await screen.findByRole('dialog', { name: /revisar lo que leí/i });
+
+    await user.click(screen.getByRole('button', { name: 'Descartar' }));
+
+    expect(screen.queryByRole('dialog', { name: /revisar lo que leí/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Tu hipoteca')).not.toBeInTheDocument();
+  });
+
+  // Pins Finding 1: a second attach must not be possible while a read is in
+  // flight — two overlapping attach() calls would both write to the same
+  // dispatch, the later extractionReady silently overwriting the earlier.
+  it('disables the attach control while a read is in flight', async () => {
+    vi.mocked(readFirstPage).mockReturnValue(new Promise(() => {})); // never settles: still "in flight"
+    render(<Harness />);
+
+    await userEvent.upload(screen.getByTestId('attach-input'), pdf());
+
+    expect(await screen.findByLabelText('Adjuntar cronograma')).toBeDisabled();
+    expect(screen.getByTestId('attach-input')).toBeDisabled();
   });
 });
