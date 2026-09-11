@@ -52,7 +52,9 @@ export async function* runTurn(body: ChatBody, callModel: CallModel): AsyncGener
   // accompanying message text is incidental or odd (or literally off-topic),
   // and the document itself is the payload — the guardrail must not eat it.
   if (body.document) {
-    yield { event: 'analyzeStep', data: { label: 'Leyendo el cronograma' } };
+    // The browser already read page 1 by the time this arrives; the model's
+    // job is the extraction, and the progress row says so.
+    yield { event: 'analyzeStep', data: { label: 'Extrayendo las condiciones' } };
     yield { event: 'status', data: { phase: 'analyzing' } };
     try {
       const { content } = await callModel(buildDocumentMessages(body.document));

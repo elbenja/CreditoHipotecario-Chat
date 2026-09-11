@@ -64,6 +64,11 @@ describe('persistence', () => {
     expect(back.error).toBeNull();
   });
 
+  it('never persists an attachment in flight', () => {
+    saveState({ ...populated, attachment: { name: 'c.pdf', size: 10 } });
+    expect(loadState().attachment).toBeNull();
+  });
+
   it('falls back to the initial state on corrupt JSON', () => {
     localStorage.setItem(STORAGE_KEY, '{not json');
     expect(loadState()).toEqual(initialState);

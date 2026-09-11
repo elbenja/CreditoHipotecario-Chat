@@ -553,6 +553,40 @@ describe('cronograma extraction', () => {
   });
 });
 
+describe('attachment in flight', () => {
+  const FILE = { name: 'cronograma-bcp.pdf', size: 248_000 };
+  const READ: MortgageField[] = [
+    { key: 'tea', label: 'TEA', value: '8.99', suffix: '%', provenance: 'documento', note: '' },
+  ];
+
+  it('records the file and moves to thinking when a read starts', () => {
+    const s = chatReducer(initialState, { type: 'attachStart', ...FILE });
+    expect(s.attachment).toEqual(FILE);
+    expect(s.status).toBe('thinking');
+    expect(s.error).toBeNull();
+  });
+
+  it('clears the file once the read is ready to review', () => {
+    let s = chatReducer(initialState, { type: 'attachStart', ...FILE });
+    s = chatReducer(s, { type: 'extractionReady', fields: READ });
+    expect(s.attachment).toBeNull();
+  });
+
+  it('clears the file when the read fails', () => {
+    let s = chatReducer(initialState, { type: 'attachStart', ...FILE });
+    s = chatReducer(s, { type: 'error', kind: 'document', message: 'x', retry: null });
+    expect(s.attachment).toBeNull();
+    expect(s.status).toBe('error');
+  });
+
+  // A prior read's error must not linger under the new file's progress row.
+  it('drops a previous error when a new read starts', () => {
+    let s = chatReducer(initialState, { type: 'error', kind: 'api', message: 'x', retry: null });
+    s = chatReducer(s, { type: 'attachStart', ...FILE });
+    expect(s.error).toBeNull();
+  });
+});
+
 describe('editMortgageField', () => {
   const READ: MortgageField[] = [
     { key: 'tea', label: 'TEA', value: '8.99', suffix: '%', provenance: 'documento', note: '' },

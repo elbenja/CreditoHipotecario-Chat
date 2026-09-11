@@ -1,5 +1,5 @@
 import { useReducer } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { MortgageField } from '@chat/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -95,6 +95,55 @@ describe('EmptyState attach flow', () => {
     await userEvent.upload(mobileInput!, pdf());
 
     expect(await screen.findByRole('dialog', { name: /revisar lo que leí/i })).toBeInTheDocument();
+  });
+
+  // The bug: confirming pinned into state, but the empty screen kept
+  // rendering its static placeholder panel, so "Fijar estos datos" looked
+  // like it did nothing.
+  it('shows the pinned panel with a Hipoteca group once the read is confirmed', async () => {
+    vi.mocked(readFirstPage).mockResolvedValue({ kind: 'text', text: 'TEA 6.30' });
+    vi.mocked(streamChat).mockImplementation(async (_body, onEvent) => {
+      onEvent({ event: 'extraction', data: { fields: mortgageFields } });
+    });
+    render(<Harness />);
+
+    const [mobileInput] = screen.getAllByTestId('attach-input');
+    await userEvent.upload(mobileInput!, pdf());
+    await userEvent.click(await screen.findByRole('button', { name: /fijar estos datos/i }));
+
+    // Desktop panel and mobile sheet both render: the group header appears in
+    // the panel, the count in the mobile summary.
+    expect(screen.getByRole('button', { name: /^hipoteca/i })).toBeInTheDocument();
+    expect(screen.getByLabelText('TEA')).toHaveValue('6.30%');
+    expect(screen.getByText('1 datos fijados')).toBeInTheDocument();
+    expect(screen.queryByText('Ningún dato fijado todavía')).not.toBeInTheDocument();
+    expect(screen.queryByText('Se van fijando solos mientras conversas.')).not.toBeInTheDocument();
+  });
+
+  it('shows the file being read under the composer', async () => {
+    vi.mocked(readFirstPage).mockReturnValue(new Promise(() => {}));
+    render(<Harness />);
+
+    const [mobileInput] = screen.getAllByTestId('attach-input');
+    await userEvent.upload(mobileInput!, pdf('bcp-2026.pdf'));
+
+    expect((await screen.findAllByText('bcp-2026.pdf')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Leyendo tu cronograma…').length).toBeGreaterThan(0);
+  });
+
+  it('reads a PDF dropped on the empty screen', async () => {
+    vi.mocked(readFirstPage).mockReturnValue(new Promise(() => {}));
+    render(<Harness />);
+
+    const file = pdf('soltado.pdf');
+    const dt = { items: [{ kind: 'file', type: 'application/pdf' }], files: [file], types: ['Files'] };
+    const heading = screen.getAllByText('¿Qué depa estás evaluando?')[0]!;
+    fireEvent.dragEnter(heading, { dataTransfer: dt });
+    expect(screen.getByText('Suelta tu cronograma aquí')).toBeInTheDocument();
+    fireEvent.drop(heading, { dataTransfer: dt });
+
+    expect((await screen.findAllByText('soltado.pdf')).length).toBeGreaterThan(0);
+    expect(readFirstPage).toHaveBeenCalledWith(file);
   });
 
   it('surfaces a read failure without leaving the empty state', async () => {

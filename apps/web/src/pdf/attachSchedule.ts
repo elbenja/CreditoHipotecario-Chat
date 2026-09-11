@@ -27,7 +27,7 @@ export async function attachSchedule(
   dispatch: (action: Action) => void,
   fields: PinnedField[],
 ): Promise<void> {
-  dispatch({ type: 'status', phase: 'thinking' });
+  dispatch({ type: 'attachStart', name: file.name, size: file.size });
 
   let doc;
   try {

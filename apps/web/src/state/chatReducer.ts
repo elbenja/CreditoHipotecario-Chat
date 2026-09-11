@@ -52,6 +52,10 @@ export interface ChatState {
   mortgage: Record<string, MortgageField>;
   /** Read but not yet confirmed. Nothing pins until the user says so. */
   pendingExtraction: MortgageField[] | null;
+  /** The schedule being read right now, so the screen can show its progress
+   *  row. Set when the read starts, cleared when it is ready to review or
+   *  fails. Never persisted: a reload mid-read has no read to show. */
+  attachment: { name: string; size: number } | null;
 }
 
 export interface ChatError {
@@ -87,6 +91,7 @@ export type Action =
   | { type: 'recalculate' }
   | { type: 'reset' }
   | { type: 'restore'; state: ChatState }
+  | { type: 'attachStart'; name: string; size: number }
   | { type: 'extractionReady'; fields: MortgageField[] }
   | { type: 'confirmExtraction'; fields: MortgageField[] }
   | { type: 'cancelExtraction' };
@@ -107,6 +112,7 @@ export const initialState: ChatState = {
   queued: null,
   mortgage: {},
   pendingExtraction: null,
+  attachment: null,
 };
 
 const deriveBaseline = (fields: Record<string, PinnedField>): Record<string, string> =>
@@ -258,11 +264,13 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
 
     case 'error':
       // Never touch fields, savedScenarios or messages: an error must not
-      // erase what the user already had.
+      // erase what the user already had. The attachment goes: whatever was
+      // being read is no longer in flight.
       return {
         ...state,
         status: 'error',
         error: { kind: action.kind, message: action.message, retry: action.retry },
+        attachment: null,
       };
 
     case 'clearError':
@@ -367,8 +375,17 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         error: null,
       };
 
+    case 'attachStart':
+      return {
+        ...state,
+        attachment: { name: action.name, size: action.size },
+        status: 'thinking',
+        analyzeSteps: [],
+        error: null,
+      };
+
     case 'extractionReady':
-      return { ...state, pendingExtraction: action.fields, status: 'idle' };
+      return { ...state, pendingExtraction: action.fields, status: 'idle', attachment: null };
 
     case 'cancelExtraction':
       return { ...state, pendingExtraction: null };

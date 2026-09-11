@@ -3,6 +3,7 @@ import { AnalyzeSteps } from '../components/AnalyzeSteps';
 import { AssistantAnswer } from '../components/AssistantAnswer';
 import { Composer } from '../components/Composer';
 import { ConfirmExtraction } from '../components/ConfirmExtraction';
+import { DropZone } from '../components/DropZone';
 import { ErrorNotice } from '../components/ErrorNotice';
 import { Icon } from '../components/Icon';
 import { MetricSkeleton } from '../components/MetricSkeleton';
@@ -14,6 +15,7 @@ import { PinnedPanel } from '../components/PinnedPanel';
 import { attachSchedule } from '../pdf/attachSchedule';
 import { Thinking } from '../components/Thinking';
 import { TruncatedNotice } from '../components/TruncatedNotice';
+import { UploadingRow } from '../components/UploadingRow';
 import { UndoBar } from '../components/UndoBar';
 import { UserBubble } from '../components/UserBubble';
 import { selectDirtyKeys, type Action, type ChatState } from '../state/chatReducer';
@@ -112,7 +114,9 @@ export function Conversation({
 
   return (
     <div className="relative flex min-h-0 flex-1">
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* The whole chat column takes a dropped schedule (card 10); the panel
+          on the right does not. Only wired when attaching is. */}
+      <DropZone onDrop={attach} disabled={busy || !dispatch} className="flex min-w-0 flex-1 flex-col">
         {state.offline && <OfflineBanner />}
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-2 md:px-14 md:pt-8">
           <div className="mx-auto flex w-full max-w-transcript flex-col gap-[18px] md:gap-[26px]">
@@ -170,9 +174,18 @@ export function Conversation({
               );
             })}
 
-            {state.status === 'thinking' && <Thinking />}
-            {state.status === 'analyzing' && <AnalyzeSteps steps={state.analyzeSteps} />}
-            {state.status === 'streaming' && <MetricSkeleton />}
+            {/* A schedule being read gets its own row (cards 09 and 03): the
+                generic dots, steps and metric skeleton describe a question,
+                not a file. */}
+            {state.attachment ? (
+              <UploadingRow attachment={state.attachment} status={state.status} steps={state.analyzeSteps} />
+            ) : (
+              <>
+                {state.status === 'thinking' && <Thinking />}
+                {state.status === 'analyzing' && <AnalyzeSteps steps={state.analyzeSteps} />}
+                {state.status === 'streaming' && <MetricSkeleton />}
+              </>
+            )}
             {state.status === 'error' && state.error && (
               <ErrorNotice error={state.error} onRetry={onRetry} onEdit={onEditQuestion} />
             )}
@@ -252,7 +265,7 @@ export function Conversation({
           onRevertChange={onRevertChange}
           onDismissChanges={onDismissChanges}
         />
-      </div>
+      </DropZone>
 
       <PinnedPanel
         fields={Object.values(state.fields)}
