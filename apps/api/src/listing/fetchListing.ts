@@ -6,9 +6,11 @@ export const LISTING_MAX_BYTES = 2 * 1024 * 1024;
 export type ListingFetchCode = 'host' | 'network' | 'redirect' | 'status' | 'notHtml' | 'tooLarge';
 
 export class ListingFetchError extends Error {
-  constructor(public readonly code: ListingFetchCode, message = code) {
+  readonly code: ListingFetchCode;
+  constructor(code: ListingFetchCode, message = code) {
     super(message);
     this.name = 'ListingFetchError';
+    this.code = code;
   }
 }
 
