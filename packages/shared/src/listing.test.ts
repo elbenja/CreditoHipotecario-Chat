@@ -39,6 +39,11 @@ describe('findListingUrl', () => {
   it('ignores a scheme-less domain — only http(s) URLs count', () => {
     expect(findListingUrl('nexoinmobiliario.pe/algo')).toBeNull();
   });
+
+  it('strips trailing punctuation swallowed into the match', () => {
+    const r = findListingUrl('mira https://nexoinmobiliario.pe/departamentos/barranco/aspiria-1631. ¿qué opinas?');
+    expect(r?.url.endsWith('aspiria-1631')).toBe(true);
+  });
 });
 
 describe('isListingHost', () => {

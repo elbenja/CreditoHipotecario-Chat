@@ -76,8 +76,11 @@ export type Listing = z.infer<typeof ListingSchema>;
 export function findListingUrl(text: string): { url: string; host: string } | null {
   const m = /https?:\/\/[^\s<>"']+/i.exec(text);
   if (!m) return null;
+  // The greedy match swallows trailing sentence punctuation ("...aspiria-1631.
+  // ¿qué opinas?" matches through the period) since it isn't whitespace.
+  const url = m[0].replace(/[.,;:!?)\]»"']+$/, '');
   try {
-    return { url: m[0], host: new URL(m[0]).hostname.toLowerCase() };
+    return { url, host: new URL(url).hostname.toLowerCase() };
   } catch {
     return null;
   }
