@@ -1,8 +1,8 @@
-# Handoff — Fase B and its UX pass merged
+# Handoff — Fase A built, Fase B and its UX pass merged
 
 Written 2026-09-07 after deployment, updated 2026-09-08 after the Phase 4
-merge, 2026-09-11 after Fase B, and again 2026-09-11 after the UX pass on
-the cronograma flow. Start here in a new chat.
+merge, 2026-09-11 after Fase B, 2026-09-11 after the UX pass on the
+cronograma flow, and 2026-09-12 after Fase A. Start here in a new chat.
 
 ## Where things stand
 
@@ -25,6 +25,45 @@ explicit action after the mortgage basics are present. The rebase preserved the
 cronograma upload, drag-and-drop, progress, confirmation and grouped-panel UX.
 The full product decisions, response contracts, safeguards and known limits are
 recorded in [`docs/ux-captura-qa.md`](ux-captura-qa.md).
+
+**Fase A — pegar el link de un anuncio — is built on branch `fase-a-links`,
+awaiting merge** (2026-09-12). Spec:
+`docs/superpowers/specs/2026-09-11-chat-ia-fase-a-links-design.md`; plan:
+`docs/superpowers/plans/2026-09-11-chat-ia-fase-a-links.md`; research:
+`docs/HANDOFF-fase-a-links.md`. What it does:
+
+- A pasted `nexoinmobiliario.pe` link is fetched **server-side** behind an
+  exact-match allowlist (checked in the body schema and again before the
+  socket), canonicalised to `https://nexoinmobiliario.pe`, no redirects, 10 s
+  timeout, 2 MB cap, reduced to text (JSON-LD kept first) and capped at 60k
+  chars before the document model extracts a `Listing` (project, developer,
+  address, district, delivery, models). Any other host gets a local refusal
+  naming the host and pointing at the saved-PDF route.
+- A Nexo listing is a **project with several models**, so a modal ("Leí el
+  anuncio") asks which model the user is looking at; choosing fills Precio and
+  Área, "Fijar estos datos" pins `ubicacion`/`precio`/`area` with the new
+  provenance `anuncio` — emerald dot, legend **"Lo leí de la página"**. A
+  second link replaces the three keys as one entity; a hand-typed key keeps
+  its value and the listing's becomes a proposal; an estimated `alquiler` is
+  dropped; `inicial` is re-derived. `enforceProvenance` now demotes any
+  `documento`/`anuncio` the chat model claims — only the pipelines mint them.
+- The PDF route's prompt classifies `cronograma | anuncio | otro`, so a
+  listing page saved as PDF (Urbania's fallback) reaches the same modal.
+- Verified live from Railway (Nexo answers 200 from a datacenter IP) and in
+  the in-app browser, desktop and 375px, with the real model: Urbania refusal
+  without a network call; Aspiria (5 models) → choose → pin; second link
+  replaces; typed price kept as proposal; provenance survives an analysis
+  turn; `www.` link with trailing punctuation works.
+- Baseline: 537 tests (shared 71, api 216, web 250), typecheck and build
+  clean. `apps/api` and `packages/shared` tsconfigs now carry
+  `erasableSyntaxOnly: true` — a TS parameter property broke the strip-types
+  boot once during this phase and vitest cannot see that class of failure.
+
+**Fase A — still to do by the owner** (plan Task 11 step 4): on the deployed
+app, three real Nexo links (one single-model), one Urbania page saved via
+"Imprimir → Guardar como PDF" through both the "+" control and the drop zone,
+and one bank cronograma to confirm the `tipo` change did not regress the
+read. Record field-by-field results here.
 
 **The UX pass on that flow is merged** (PR #5, rebase-merged 2026-09-11,
 branch `ux-composer-cronograma`), from the Claude Design page
@@ -161,6 +200,19 @@ Capture approved UX improvements in a focused follow-up plan before changing
 the shipped Phase 4 behavior, then repeat the affected mobile and desktop QA.
 
 ## Open items
+
+- **Fase A merge.** Branch `fase-a-links` is reviewed (per-task + whole-branch
+  + one fix wave) and ready; merging `main` deploys the web app on Vercel, the
+  API needs `railway up` from `main` afterwards.
+- **Fase A follow-ups (deferred, none blocking):** `canonicalListingUrl` in
+  `turn.ts` sits outside the listing branch's try/catch (unreachable today —
+  the body schema already refines host and scheme); `stripFences` is
+  duplicated across three pipeline files; no fake-timer test for the 10 s
+  fetch timeout; a dollar-only "desde" pins as `S/ US$ …` (row is already
+  highlighted as dudoso); editing Ubicación before choosing a model in the
+  modal is discarded when a model is chosen; consider a per-IP rate limit on
+  `/api/chat` before this leaves POC — the link route adds a 2 MB download
+  plus a model call per unauthenticated request.
 
 - **Fase A — pegar el link de un anuncio. Researched, never designed.** The
   composer already promises it ("Sube un documento o pega el link de un
