@@ -71,25 +71,43 @@ async function readCapped(res: Response): Promise<string> {
 }
 
 /**
+ * The allowed host, reachable by several equivalent URL spellings (`www.`,
+ * `http://`, embedded userinfo, an explicit default port). Canonicalises to
+ * the one form the allowlist and the fetch below both expect — this also
+ * checks the host, so callers get `ListingFetchError('host')` for a
+ * disallowed one without a separate check.
+ */
+export function canonicalListingUrl(url: string): string {
+  let target: URL;
+  try {
+    target = new URL(url);
+  } catch {
+    throw new ListingFetchError('host');
+  }
+  if (!isListingHost(target.hostname)) throw new ListingFetchError('host');
+
+  target.protocol = 'https:';
+  target.hostname = 'nexoinmobiliario.pe';
+  target.username = '';
+  target.password = '';
+  target.port = '';
+  return target.toString();
+}
+
+/**
  * Fetches one listing page. This endpoint is public, so the allowlist is
  * checked HERE, not only in the browser; a redirect is refused rather than
  * followed off the allowlist; and the body is capped so a bad page cannot
  * pin the process.
  */
 export async function fetchListingText(url: string, fetchImpl: typeof fetch = fetch): Promise<string> {
-  let host: string;
-  try {
-    host = new URL(url).hostname.toLowerCase();
-  } catch {
-    throw new ListingFetchError('host');
-  }
-  if (!isListingHost(host)) throw new ListingFetchError('host');
+  const target = canonicalListingUrl(url);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), LISTING_TIMEOUT_MS);
   let res: Response;
   try {
-    res = await fetchImpl(url, {
+    res = await fetchImpl(target, {
       redirect: 'manual',
       signal: controller.signal,
       headers: {

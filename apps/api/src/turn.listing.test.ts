@@ -33,6 +33,10 @@ describe('listing body', () => {
     expect(parseChatBody(body('https://urbania.pe/x'))).toBeNull();
     expect(parseChatBody(body('https://nexoinmobiliario.pe.evil.com/x'))).toBeNull();
   });
+
+  it('rejects a non-http(s) scheme even on the allowed host', () => {
+    expect(parseChatBody(body('ftp://nexoinmobiliario.pe/x'))).toBeNull();
+  });
 });
 
 describe('listing turns', () => {
@@ -45,6 +49,18 @@ describe('listing turns', () => {
     expect(modes).toEqual(['document']);
     expect(events.find((e) => e.event === 'analyzeStep')?.data).toEqual({ label: 'Leyendo el anuncio' });
     const listing = events.find((e) => e.event === 'listing')!;
+    expect((listing.data as { listing: { fuente: unknown } }).listing.fuente).toEqual({ host: 'nexoinmobiliario.pe', url: URL_OK });
+  });
+
+  it('stamps fuente from the canonical URL even when the request used www.', async () => {
+    const wwwUrl = 'https://www.nexoinmobiliario.pe/departamentos/barranco/aspiria-1631';
+    const fetchListing = vi.fn(async () => 'Proyecto ASPIRIA');
+    const callModel = vi.fn(async () => ({ content: REPLY, truncated: false }));
+    const parsed = parseChatBody({ messages: [{ role: 'user', content: wwwUrl }], fields: [], listing: { url: wwwUrl } })!;
+    const out = [];
+    for await (const e of runTurn(parsed, callModel, fetchListing)) out.push(e);
+    expect(fetchListing).toHaveBeenCalledWith(URL_OK);
+    const listing = out.find((e) => e.event === 'listing')!;
     expect((listing.data as { listing: { fuente: unknown } }).listing.fuente).toEqual({ host: 'nexoinmobiliario.pe', url: URL_OK });
   });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ListingFetchError, fetchListingText, htmlToText } from './fetchListing.ts';
+import { ListingFetchError, canonicalListingUrl, fetchListingText, htmlToText } from './fetchListing.ts';
 
 const NEXO = 'https://nexoinmobiliario.pe/departamentos/barranco/aspiria-1631';
 
@@ -93,5 +93,33 @@ describe('fetchListingText', () => {
       { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } }
     ));
     expect(await codeOf(fetchListingText(NEXO, fetchImpl))).toBe('network');
+  });
+
+  it('canonicalises www., http:// and userinfo/port before fetching', async () => {
+    const fetchImpl = vi.fn(async () => htmlResponse('<p>hola</p>'));
+    const firstArg = () => (fetchImpl.mock.calls as unknown[][])[0]![0];
+
+    await fetchListingText('https://www.nexoinmobiliario.pe/x', fetchImpl);
+    expect(firstArg()).toBe('https://nexoinmobiliario.pe/x');
+
+    fetchImpl.mockClear();
+    await fetchListingText('http://nexoinmobiliario.pe/x', fetchImpl);
+    expect(firstArg()).toBe('https://nexoinmobiliario.pe/x');
+
+    fetchImpl.mockClear();
+    await fetchListingText('https://user:pw@nexoinmobiliario.pe:8443/x', fetchImpl);
+    expect(firstArg()).toBe('https://nexoinmobiliario.pe/x');
+  });
+});
+
+describe('canonicalListingUrl', () => {
+  it('produces the canonical https form with no www, userinfo or port', () => {
+    expect(canonicalListingUrl('https://www.nexoinmobiliario.pe/x')).toBe('https://nexoinmobiliario.pe/x');
+    expect(canonicalListingUrl('http://nexoinmobiliario.pe/x')).toBe('https://nexoinmobiliario.pe/x');
+    expect(canonicalListingUrl('https://user:pw@nexoinmobiliario.pe:8443/x')).toBe('https://nexoinmobiliario.pe/x');
+  });
+
+  it('throws a host ListingFetchError for a disallowed host', async () => {
+    expect(await codeOf(Promise.resolve().then(() => canonicalListingUrl('https://urbania.pe/x')))).toBe('host');
   });
 });

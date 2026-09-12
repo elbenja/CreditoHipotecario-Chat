@@ -259,6 +259,10 @@ Deliberately not done: following redirects off the allowlist, retries, caching
 listings, fetching images or sub-resources, storing the URL anywhere but
 `fuente.url` in local state, reading more than the first URL in a message.
 
+The server canonicalises the URL to `https://nexoinmobiliario.pe` (drops
+`www.`, forces https, strips userinfo and port) before fetching; a redirect
+from there is still an error.
+
 Privacy: a listing is a public page, so the link adds no notice. A listing PDF
 is covered by the attach control's existing tooltip.
 

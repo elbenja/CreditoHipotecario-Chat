@@ -1,6 +1,6 @@
 import { PinnedFieldSchema, isListingHost } from '@chat/shared';
 import { z } from 'zod';
-import { fetchListingText, type FetchListing } from './listing/fetchListing.ts';
+import { canonicalListingUrl, fetchListingText, type FetchListing } from './listing/fetchListing.ts';
 import { runDocumentPipeline } from './pipeline/document.ts';
 import { runPipeline } from './pipeline/index.ts';
 import { runListingPipeline } from './pipeline/listing.ts';
@@ -30,7 +30,14 @@ const ListingRequestSchema = z.object({
       } catch {
         return false;
       }
-    }, 'host not allowed'),
+    }, 'host not allowed')
+    .refine((u) => {
+      try {
+        return new URL(u).protocol === 'http:' || new URL(u).protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }, 'scheme not allowed'),
 });
 
 const BodySchema = z.object({
@@ -82,12 +89,16 @@ export async function* runTurn(
   // message is the URL and the page is the payload.
   if (body.listing) {
     const { url } = body.listing;
+    // Stamp fuente from the canonical form, not whatever spelling the request
+    // used (www., http://, userinfo, port): the host the user reads is always
+    // 'nexoinmobiliario.pe'.
+    const canonicalUrl = canonicalListingUrl(url);
     yield { event: 'analyzeStep', data: { label: 'Leyendo el anuncio' } };
     yield { event: 'status', data: { phase: 'analyzing' } };
 
     let text: string;
     try {
-      text = await fetchListing(url);
+      text = await fetchListing(canonicalUrl);
     } catch (err) {
       console.error('[chat] listing fetch failed:', err);
       yield { event: 'status', data: { phase: 'streaming' } };
@@ -100,7 +111,7 @@ export async function* runTurn(
 
     try {
       const { content } = await callModel(buildListingMessages(text), 'document');
-      const result = runListingPipeline(content, { host: new URL(url).hostname.toLowerCase(), url });
+      const result = runListingPipeline(content, { host: 'nexoinmobiliario.pe', url: canonicalUrl });
       yield { event: 'status', data: { phase: 'streaming' } };
       if (result.ok) {
         yield { event: 'listing', data: { listing: result.listing } };
