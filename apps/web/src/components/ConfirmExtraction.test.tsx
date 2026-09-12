@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { MortgageField } from '@chat/shared';
+import type { MortgageField, Listing } from '@chat/shared';
 import { ConfirmExtraction } from './ConfirmExtraction';
 
 const FIELDS: MortgageField[] = [
@@ -124,5 +124,67 @@ describe('ConfirmExtraction', () => {
 
     unmount();
     expect(document.body).not.toHaveStyle({ overflow: 'hidden' });
+  });
+});
+
+const ASPIRIA: Listing = {
+  proyecto: 'ASPIRIA', constructora: 'GRUPO T&C', direccion: 'Av. El Sol Este 530', distrito: 'Barranco',
+  entrega: 'febrero 2027', etapa: undefined,
+  modelos: [
+    { nombre: 'TIPO 3', area: '82.96', precioDesde: '664,806', dormitorios: '3' },
+    { nombre: 'TIPO 7', area: '41.75', precioDesde: '363,906', dormitorios: '1' },
+  ],
+  fuente: { host: 'nexoinmobiliario.pe' }, dudosos: [],
+};
+
+describe('ConfirmExtraction — anuncio', () => {
+  it('names the project, district and developer', () => {
+    render(<ConfirmExtraction variant="anuncio" listing={ASPIRIA} onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByRole('dialog')).toHaveTextContent('ASPIRIA · Barranco · GRUPO T&C · entrega febrero 2027');
+  });
+
+  it('lists the models and keeps the CTA disabled until one is chosen', async () => {
+    render(<ConfirmExtraction variant="anuncio" listing={ASPIRIA} onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    const radios = screen.getAllByRole('radio');
+    expect(radios).toHaveLength(2);
+    expect(radios[0]).toHaveAccessibleName('TIPO 3 · 82.96 m² · desde S/ 664,806');
+    expect(screen.getByRole('button', { name: /fijar/i })).toBeDisabled();
+    expect(screen.getByLabelText('Precio')).toHaveValue('');
+  });
+
+  it('choosing a model fills price and area; editing after choosing sticks', async () => {
+    const onConfirm = vi.fn();
+    render(<ConfirmExtraction variant="anuncio" listing={ASPIRIA} onConfirm={onConfirm} onCancel={vi.fn()} />);
+    await userEvent.click(screen.getAllByRole('radio')[1]!);
+    expect(screen.getByLabelText('Precio')).toHaveValue('363,906');
+    expect(screen.getByLabelText('Área')).toHaveValue('41.75');
+    const precio = screen.getByLabelText('Precio');
+    await userEvent.clear(precio);
+    await userEvent.type(precio, '370,000');
+    await userEvent.click(screen.getByRole('button', { name: /fijar/i }));
+    const fields = onConfirm.mock.calls[0]![0] as { key: string; value: string; provenance: string }[];
+    expect(fields.find((f) => f.key === 'precio')).toMatchObject({ value: '370,000', provenance: 'user' });
+    expect(fields.find((f) => f.key === 'area')).toMatchObject({ value: '41.75', provenance: 'anuncio' });
+    expect(fields.find((f) => f.key === 'ubicacion')).toMatchObject({ value: 'Av. El Sol Este 530, Barranco' });
+  });
+
+  it('with one model shows no list and starts filled', () => {
+    const one: Listing = { ...ASPIRIA, modelos: [ASPIRIA.modelos[1]!] };
+    render(<ConfirmExtraction variant="anuncio" listing={one} onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    expect(screen.getByLabelText('Precio')).toHaveValue('363,906');
+    expect(screen.getByRole('button', { name: /fijar/i })).toBeEnabled();
+  });
+
+  it('warns that a "desde" is the model floor', () => {
+    render(<ConfirmExtraction variant="anuncio" listing={ASPIRIA} onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByRole('dialog')).toHaveTextContent(/desde.*precio más bajo/i);
+  });
+
+  it('highlights a dudoso field first', () => {
+    const one: Listing = { ...ASPIRIA, modelos: [ASPIRIA.modelos[1]!], dudosos: ['precioDesde'] };
+    render(<ConfirmExtraction variant="anuncio" listing={one} onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getByLabelText('Precio')).toHaveAttribute('data-dudoso', 'true');
+    expect(screen.getByLabelText('Área')).toHaveAttribute('data-dudoso', 'false');
   });
 });
