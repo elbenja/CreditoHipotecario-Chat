@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { AnalysisEnvelope, MortgageField, PinnedField } from '@chat/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Conversation } from './Conversation';
-import { chatReducer, initialState, type ChatState } from '../state/chatReducer';
+import { chatReducer, initialState, type Action, type ChatState } from '../state/chatReducer';
 import { PdfReadError, readFirstPage } from '../pdf/readPdf';
 import { streamChat } from '../api/streamChat';
 
@@ -51,10 +51,11 @@ const state: ChatState = {
   fields: { [field.key]: field },
 };
 
-function renderConversation(conversationState: ChatState = state) {
+function renderConversation(conversationState: ChatState = state, opts: { dispatch?: (a: Action) => void } = {}) {
   return render(
     <Conversation
       state={conversationState}
+      dispatch={opts.dispatch}
       onSend={vi.fn()}
       onEdit={vi.fn()}
       onAcceptProposal={vi.fn()}
@@ -447,5 +448,40 @@ describe('Conversation attach flow', () => {
 
     expect(await screen.findByRole('dialog', { name: /revisar lo que leí/i })).toBeInTheDocument();
     expect(screen.queryByText('bcp-2026.pdf')).not.toBeInTheDocument();
+  });
+});
+
+describe('listing on the conversation screen', () => {
+  const scrollIntoView3 = HTMLElement.prototype.scrollIntoView;
+
+  beforeAll(() => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+  });
+
+  afterAll(() => {
+    HTMLElement.prototype.scrollIntoView = scrollIntoView3;
+  });
+
+  it('renders an assistant-note as plain text', () => {
+    renderConversation({ ...state, messages: [{ id: 'n', role: 'assistant-note', content: 'Fijé ubicación del anuncio.' }] });
+    expect(screen.getByText('Fijé ubicación del anuncio.')).toBeInTheDocument();
+  });
+
+  it('mounts the anuncio modal while a listing is pending, and cancelling dispatches cancelListing', async () => {
+    const dispatch = vi.fn();
+    renderConversation(
+      { ...state, pendingListing: { proyecto: 'A', distrito: 'Lince', modelos: [{ area: '55', precioDesde: '300,000' }], fuente: { host: 'pdf' }, dudosos: [] } },
+      { dispatch },
+    );
+    expect(screen.getByRole('dialog', { name: /anuncio/i })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /descartar/i }));
+    expect(dispatch).toHaveBeenCalledWith({ type: 'cancelListing' });
+  });
+
+  it('titles a listing error as such', () => {
+    renderConversation({ ...state, status: 'error', error: { kind: 'listing', message: 'No pude abrir ese anuncio.', retry: 'https://nexoinmobiliario.pe/x' } });
+    expect(screen.getByText('No pude leer el anuncio')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /reintentar/i })).toBeNull();
+    expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument();
   });
 });

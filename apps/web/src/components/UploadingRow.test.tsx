@@ -38,3 +38,20 @@ describe('UploadingRow', () => {
     expect(screen.getByText('Primera página leída')).toBeInTheDocument();
   });
 });
+
+describe('link mode (size 0)', () => {
+  it('shows the host and the server step, with no size, bar or page-read line', () => {
+    render(
+      <UploadingRow
+        attachment={{ name: 'nexoinmobiliario.pe', size: 0 }}
+        status="analyzing"
+        steps={[{ label: 'Leyendo el anuncio', done: false }]}
+      />,
+    );
+    expect(screen.getByText('nexoinmobiliario.pe')).toBeInTheDocument();
+    expect(screen.getByText(/Leyendo el anuncio/)).toBeInTheDocument();
+    expect(screen.queryByText(/KB|MB/)).toBeNull();
+    expect(screen.queryByText(/Primera página leída/)).toBeNull();
+    expect(screen.queryByText(/Leyendo tu cronograma/)).toBeNull();
+  });
+});

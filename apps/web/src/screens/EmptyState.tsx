@@ -145,6 +145,15 @@ export function EmptyState({
           onCancel={() => dispatch({ type: 'cancelExtraction' })}
         />
       )}
+
+      {dispatch && state.pendingListing && (
+        <ConfirmExtraction
+          variant="anuncio"
+          listing={state.pendingListing}
+          onConfirm={(fields) => dispatch({ type: 'confirmListing', fields })}
+          onCancel={() => dispatch({ type: 'cancelListing' })}
+        />
+      )}
     </div>
   );
 }

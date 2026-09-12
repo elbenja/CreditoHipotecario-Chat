@@ -22,14 +22,17 @@ export function PinnedFieldRow({
   // recalled, so it gets its own mark rather than being folded into either
   // existing state.
   const fromDocument = field.provenance === 'documento';
+  // A value read from a listing page is likewise firmer than a recollection,
+  // and likewise not the user's own word.
+  const fromPage = field.provenance === 'anuncio';
   // Provenance is the whole point: a value the user did not state must never
   // read as fact. Anything that is not 'user' (and not already covered above)
   // gets the accent dot — the live model also returns 'market', and testing
   // `=== 'assumed'` would render a market estimate as "Lo dijiste tú".
-  const notFromUser = field.provenance !== 'user' && !fromDocument;
+  const notFromUser = field.provenance !== 'user' && !fromDocument && !fromPage;
 
-  const dotClass = fromDocument ? 'bg-emerald-400' : notFromUser ? 'bg-ch-accent' : 'bg-slate-400';
-  const dotTitle = fromDocument ? 'Lo leí del banco' : notFromUser ? 'Lo asumí yo' : 'Lo dijiste tú';
+  const dotClass = fromDocument || fromPage ? 'bg-emerald-400' : notFromUser ? 'bg-ch-accent' : 'bg-slate-400';
+  const dotTitle = fromDocument ? 'Lo leí del banco' : fromPage ? 'Lo leí de la página' : notFromUser ? 'Lo asumí yo' : 'Lo dijiste tú';
 
   return (
     <div

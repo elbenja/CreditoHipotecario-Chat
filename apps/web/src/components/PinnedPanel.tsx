@@ -88,6 +88,12 @@ export function PinnedPanel({
               Lo leí del banco
             </span>
           )}
+          {fields.some((f) => f.provenance === 'anuncio') && (
+            <span className="flex items-center gap-[6px] text-[11px] font-medium text-emerald-400">
+              <span className="h-[7px] w-[7px] rounded-full bg-emerald-400" />
+              Lo leí de la página
+            </span>
+          )}
         </div>
       </div>
 

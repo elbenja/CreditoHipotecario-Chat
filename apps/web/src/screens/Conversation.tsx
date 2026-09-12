@@ -348,6 +348,15 @@ export function Conversation({
           onCancel={() => dispatch?.({ type: 'cancelExtraction' })}
         />
       )}
+
+      {state.pendingListing && (
+        <ConfirmExtraction
+          variant="anuncio"
+          listing={state.pendingListing}
+          onConfirm={(fields) => dispatch?.({ type: 'confirmListing', fields })}
+          onCancel={() => dispatch?.({ type: 'cancelListing' })}
+        />
+      )}
     </div>
   );
 }

@@ -14,7 +14,9 @@ export function ErrorNotice({
     ? 'Kimi rechazó la solicitud'
     : error.kind === 'limit'
       ? 'Kimi no alcanzó a responder'
-      : 'No pude completar el análisis';
+      : error.kind === 'listing'
+        ? 'No pude leer el anuncio'
+        : 'No pude completar el análisis';
   const canRetry = error.kind === 'api' || error.kind === 'offline';
 
   return (

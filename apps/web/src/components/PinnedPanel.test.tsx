@@ -118,3 +118,20 @@ describe('typing into a pinned row (regression: mortgage rows must not share onE
     expect(latest.mortgage.tea!.value).toBe('8.99');
   });
 });
+
+describe('anuncio provenance', () => {
+  const precio = { key: 'precio' as const, label: 'Precio', value: '363,906', prefix: 'S/', suffix: undefined, provenance: 'anuncio' as const, note: '' };
+
+  it('shows the page legend only while a field carries anuncio', () => {
+    const { rerender } = render(<PinnedPanel fields={[precio]} onEdit={vi.fn()} />);
+    expect(screen.getByText('Lo leí de la página')).toBeInTheDocument();
+    rerender(<PinnedPanel fields={[{ ...precio, provenance: 'user' }]} onEdit={vi.fn()} />);
+    expect(screen.queryByText('Lo leí de la página')).toBeNull();
+  });
+
+  it('marks the row as read from the page, not assumed', () => {
+    render(<PinnedPanel fields={[precio]} onEdit={vi.fn()} />);
+    expect(screen.getByTitle('Lo leí de la página')).toBeInTheDocument();
+    expect(screen.queryByTitle('Lo asumí yo')).toBeNull();
+  });
+});

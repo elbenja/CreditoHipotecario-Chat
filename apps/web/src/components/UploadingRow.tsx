@@ -24,6 +24,9 @@ export function UploadingRow({
 }) {
   const reading = status === 'thinking';
   const current = steps.find((s) => !s.done)?.label;
+  // size 0 is readListing's cue: nothing was read in the browser, so there is
+  // no size, no local bar and no "page read" line — only the server's step.
+  const link = attachment.size === 0;
 
   return (
     <div
@@ -43,25 +46,31 @@ export function UploadingRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-[10px]">
           <span className="truncate text-[12.5px] font-medium text-slate-100">{attachment.name}</span>
-          <span className="tnum flex-none text-[11px] font-medium text-slate-400">
-            {formatSize(attachment.size)}
-          </span>
+          {!link && (
+            <span className="tnum flex-none text-[11px] font-medium text-slate-400">
+              {formatSize(attachment.size)}
+            </span>
+          )}
         </div>
-        <div className="mt-[9px] h-1 overflow-hidden rounded-full bg-ch-card">
-          <div
-            className={`h-full rounded-full bg-ch-accent transition-[width] duration-240 ease-ch ${
-              reading ? 'ch-bar' : 'w-full'
-            }`}
-          />
-        </div>
-        {reading ? (
+        {!link && (
+          <div className="mt-[9px] h-1 overflow-hidden rounded-full bg-ch-card">
+            <div
+              className={`h-full rounded-full bg-ch-accent transition-[width] duration-240 ease-ch ${
+                reading ? 'ch-bar' : 'w-full'
+              }`}
+            />
+          </div>
+        )}
+        {reading && !link ? (
           <div className="mt-[7px] text-[11px] font-medium text-slate-400">Leyendo tu cronograma…</div>
         ) : (
           <div className="mt-[9px] flex flex-col gap-2">
-            <div className="ch-enter flex items-center gap-[9px] text-[12px] text-slate-400">
-              <Icon name="tick-double-01" size={15} className="text-ch-pos" />
-              Primera página leída
-            </div>
+            {!link && (
+              <div className="ch-enter flex items-center gap-[9px] text-[12px] text-slate-400">
+                <Icon name="tick-double-01" size={15} className="text-ch-pos" />
+                Primera página leída
+              </div>
+            )}
             {current && (
               <div
                 className="ch-enter flex items-center gap-[9px] text-[12px] text-slate-100"
