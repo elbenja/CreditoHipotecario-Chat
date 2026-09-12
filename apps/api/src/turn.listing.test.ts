@@ -101,6 +101,16 @@ describe('listing turns', () => {
     expect(err.message).toBe('No pude leer los datos del anuncio.');
   });
 
+  it('caps the reduced text sent to the model', async () => {
+    const big = 'x'.repeat(70_000);
+    const callModel = vi.fn(async () => ({ content: REPLY, truncated: false }));
+    const out = [];
+    for await (const e of runTurn(parseChatBody(body())!, callModel, async () => big)) out.push(e);
+    const messages = (callModel.mock.calls as unknown[][])[0]![0] as { content: string }[];
+    const sent = messages[0]!.content;
+    expect(sent.length).toBeLessThan(62_000);
+  });
+
   it('reports a model failure with the usual api kind', async () => {
     const callModel = vi.fn(async () => { throw new Error('upstream down'); });
     const { events } = await collect(REPLY, async () => 'x', callModel);

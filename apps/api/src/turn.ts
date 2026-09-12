@@ -98,7 +98,10 @@ export async function* runTurn(
 
     let text: string;
     try {
-      text = await fetchListing(canonicalUrl);
+      // A non-listing Nexo page (search results, a project index) can be far
+      // larger than the ~11k chars a listing reduces to, and this is a public
+      // endpoint — cap what actually reaches the model.
+      text = (await fetchListing(canonicalUrl)).slice(0, 60_000);
     } catch (err) {
       console.error('[chat] listing fetch failed:', err);
       yield { event: 'status', data: { phase: 'streaming' } };
