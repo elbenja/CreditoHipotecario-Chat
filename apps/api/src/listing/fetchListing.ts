@@ -29,8 +29,9 @@ function decodeEntities(s: string): string {
 
 /**
  * A listing page to the ~11k characters the model needs. JSON-LD blocks are
- * kept verbatim and put first: Nexo's `Product` block is the most reliable
- * source for name, district, developer and lowest price.
+ * kept verbatim modulo whitespace (runs collapsed to one space so each block
+ * sits on one line) and put first: Nexo's `Product` block is the most
+ * reliable source for name, district, developer and lowest price.
  */
 export function htmlToText(html: string): string {
   const kept: string[] = [];
