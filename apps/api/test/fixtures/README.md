@@ -14,7 +14,7 @@ is a regex; it is not a guarantee.
 
 ## Listing fixtures (Fase A)
 
-- `nexo-aspiria.txt` — `https://nexoinmobiliario.pe/departamentos/barranco/aspiria-1631`, a project with three models.
+- `nexo-aspiria.txt` — `https://nexoinmobiliario.pe/departamentos/barranco/aspiria-1631`, a project with several models.
 - `nexo-single.txt` — `https://nexoinmobiliario.pe/departamentos/san-miguel/allegro-loft-1418`, a project with one model.
 
 Both are the server's reduced text (`htmlToText`), regenerated with

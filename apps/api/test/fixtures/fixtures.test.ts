@@ -128,7 +128,7 @@ const aspiria = readFileSync(path.join(fixturesDir, 'nexo-aspiria.txt'), 'utf8')
 const single = readFileSync(path.join(fixturesDir, 'nexo-single.txt'), 'utf8');
 
 describe('listing fixtures', () => {
-  it('nexo-aspiria.txt opens with a JSON-LD Product block and carries the three models', () => {
+  it('nexo-aspiria.txt opens with a JSON-LD Product block and carries several models', () => {
     expect(aspiria.split('\n')[0]).toMatch(/"@type"\s*:\s*"Product"/);
     expect(aspiria).toContain('TIPO 3');
     expect(aspiria).toContain('82.96');
