@@ -64,4 +64,12 @@ describe('runListingPipeline', () => {
     });
     expect(listingOf(raw).modelos.map((m) => m.nombre)).toEqual(['TIPO 7']);
   });
+
+  it('drops a model whose price and area are empty once the currency/unit marker is stripped (D1)', () => {
+    const raw = JSON.stringify({
+      ...JSON.parse(FULL),
+      modelos: [{ nombre: 'X', precioDesde: 'S/', area: 'm²' }, { nombre: 'TIPO 7', area: '41.75', precioDesde: '363,906' }],
+    });
+    expect(listingOf(raw).modelos.map((m) => m.nombre)).toEqual(['TIPO 7']);
+  });
 });

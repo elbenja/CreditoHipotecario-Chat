@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { MortgageField, Listing } from '@chat/shared';
+import { ListingSchema, type MortgageField, type Listing } from '@chat/shared';
 import { ConfirmExtraction } from './ConfirmExtraction';
 
 const FIELDS: MortgageField[] = [
@@ -186,6 +186,18 @@ describe('ConfirmExtraction — anuncio', () => {
     render(<ConfirmExtraction variant="anuncio" listing={one} onConfirm={vi.fn()} onCancel={vi.fn()} />);
     expect(screen.getByLabelText('Precio')).toHaveAttribute('data-dudoso', 'true');
     expect(screen.getByLabelText('Área')).toHaveAttribute('data-dudoso', 'false');
+  });
+
+  it('does not double the S/ currency marker in a radio label (D1)', () => {
+    const listing = ListingSchema.parse({
+      ...ASPIRIA,
+      modelos: [
+        { nombre: 'TIPO 3', area: '82.96', precioDesde: 'S/ 664,806', dormitorios: '3' },
+        ASPIRIA.modelos[1],
+      ],
+    });
+    render(<ConfirmExtraction variant="anuncio" listing={listing} onConfirm={vi.fn()} onCancel={vi.fn()} />);
+    expect(screen.getAllByRole('radio')[0]).toHaveAccessibleName('TIPO 3 · 82.96 m² · desde S/ 664,806');
   });
 
   it('drops the model-specific note when the precio is edited, but keeps area\'s', async () => {

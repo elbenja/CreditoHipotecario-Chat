@@ -82,7 +82,36 @@ describe('ListingSchema', () => {
       modelos: [{ nombre: 'TIPO 3', area: 82.96, precioDesde: 664806, dormitorios: 3 }],
       fuente: { host: 'pdf' },
     });
-    expect(parsed.modelos[0]).toEqual({ nombre: 'TIPO 3', area: '82.96', precioDesde: '664806', dormitorios: '3' });
+    expect(parsed.modelos[0]).toEqual({ nombre: 'TIPO 3', area: '82.96', precioDesde: '664,806', dormitorios: '3' });
+  });
+
+  it('normalises a currency/unit marker the model folded into the value (D1)', () => {
+    const parsed = ListingSchema.parse({
+      proyecto: 'ASPIRIA', distrito: 'Barranco',
+      modelos: [{ nombre: 'TIPO 3', precioDesde: 'desde S/ 664,806', area: '82.96 m²' }],
+      fuente: { host: 'pdf' },
+    });
+    expect(parsed.modelos[0]!.precioDesde).toBe('664,806');
+    expect(parsed.modelos[0]!.area).toBe('82.96');
+  });
+
+  it('strips S/ from a bare price and groups it', () => {
+    const parsed = ListingSchema.parse({
+      proyecto: 'X', distrito: 'Lince',
+      modelos: [{ precioDesde: 'S/ 300000' }],
+      fuente: { host: 'pdf' },
+    });
+    expect(parsed.modelos[0]!.precioDesde).toBe('300,000');
+  });
+
+  it('normalises to undefined when nothing is left after stripping', () => {
+    const parsed = ListingSchema.parse({
+      proyecto: 'X', distrito: 'Lince',
+      modelos: [{ nombre: 'X', precioDesde: 'S/', area: 'm²' }],
+      fuente: { host: 'pdf' },
+    });
+    expect(parsed.modelos[0]!.precioDesde).toBeUndefined();
+    expect(parsed.modelos[0]!.area).toBeUndefined();
   });
 });
 
@@ -101,10 +130,12 @@ describe('listingToFields', () => {
   });
 
   it('strips a currency or unit the model folded into the value, and groups a bare integer', () => {
-    const listing: Listing = {
+    // A real Listing is always produced by ListingSchema.parse, which is
+    // where the stripping now happens — so this exercises the actual path.
+    const listing = ListingSchema.parse({
       ...ASPIRIA,
       modelos: [{ nombre: undefined, area: '55.00 m²', precioDesde: 'S/ 300000', dormitorios: undefined }],
-    };
+    });
     const f = Object.fromEntries(listingToFields(listing, listing.modelos[0]!).map((x) => [x.key, x]));
     expect(f.precio!.value).toBe('300,000');
     expect(f.precio!.note).toBe('Precio del anuncio');

@@ -15,23 +15,33 @@ const optionalText = z
 
 export const ListingModelSchema = z.object({
   nombre: optionalText,
-  // Models emit "82.96" and 82.96 interchangeably for area.
+  // Models emit "82.96" and 82.96 interchangeably for area, sometimes with a
+  // trailing unit despite the prompt. Stripped here so a Listing always
+  // carries a bare value — the UI adds the m² suffix itself.
   area: z
     .union([z.string(), z.number()])
     .nullish()
     .transform((v) => {
       if (v === null || v === undefined) return undefined;
-      const str = String(v).trim();
+      const str = String(v).trim().replace(/\s*m\s*(²|2)\s*$/i, '').trim();
       return str ? str : undefined;
     }),
-  // Models emit "664,806" and 664806 interchangeably for precioDesde.
+  // Models emit "664,806" and 664806 interchangeably for precioDesde,
+  // sometimes with a leading "desde" and/or "S/" despite the prompt.
+  // Stripped here (in either order) and grouped, so a Listing always
+  // carries a bare value — the UI adds "desde S/ " itself.
   precioDesde: z
     .union([z.string(), z.number()])
     .nullish()
     .transform((v) => {
       if (v === null || v === undefined) return undefined;
-      const str = String(v).trim();
-      return str ? str : undefined;
+      let str = String(v).trim();
+      let prev: string;
+      do {
+        prev = str;
+        str = str.replace(/^desde\s+/i, '').replace(/^S\/\.?\s*/i, '').trim();
+      } while (str !== prev);
+      return str ? groupFieldValue(str) : undefined;
     }),
   // Models emit "3" and 3 interchangeably.
   dormitorios: z
@@ -81,14 +91,6 @@ export function listingRefusal(host: string): string {
   return `De ${host} no puedo leer el anuncio. Pégame los datos o el link de Nexo — o guarda la página como PDF y súbela aquí.`;
 }
 
-/** Remove a unit the model folded into the value despite the prompt. */
-function bare(raw: string, kind: 'soles' | 'm2'): string {
-  let v = raw.trim();
-  if (kind === 'soles') v = v.replace(/^S\/\.?\s*/i, '').replace(/^desde\s+/i, '').replace(/^S\/\.?\s*/i, '');
-  else v = v.replace(/\s*m\s*(²|2)\s*$/i, '');
-  return groupFieldValue(v.trim());
-}
-
 /**
  * The property half of the panel, from a listing and the model the user
  * chose. `null` model — the user has not chosen yet — pins the location only.
@@ -124,33 +126,27 @@ export function listingToFields(listing: Listing, model: ListingModel | null): P
   if (!model) return out;
 
   if (model.precioDesde) {
-    const value = bare(model.precioDesde, 'soles');
-    if (value) {
-      out.push({
-        key: 'precio',
-        label: 'Precio',
-        value,
-        prefix: 'S/',
-        suffix: undefined,
-        provenance: dudosos.has('precioDesde') ? 'assumed' : 'anuncio',
-        note: model.nombre ? `Precio 'desde' del modelo ${model.nombre}` : 'Precio del anuncio',
-      });
-    }
+    out.push({
+      key: 'precio',
+      label: 'Precio',
+      value: model.precioDesde,
+      prefix: 'S/',
+      suffix: undefined,
+      provenance: dudosos.has('precioDesde') ? 'assumed' : 'anuncio',
+      note: model.nombre ? `Precio 'desde' del modelo ${model.nombre}` : 'Precio del anuncio',
+    });
   }
 
   if (model.area) {
-    const value = bare(model.area, 'm2');
-    if (value) {
-      out.push({
-        key: 'area',
-        label: 'Área',
-        value,
-        prefix: undefined,
-        suffix: 'm²',
-        provenance: dudosos.has('area') ? 'assumed' : 'anuncio',
-        note: '',
-      });
-    }
+    out.push({
+      key: 'area',
+      label: 'Área',
+      value: model.area,
+      prefix: undefined,
+      suffix: 'm²',
+      provenance: dudosos.has('area') ? 'assumed' : 'anuncio',
+      note: '',
+    });
   }
 
   return out;
