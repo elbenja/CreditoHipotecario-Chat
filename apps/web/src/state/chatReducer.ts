@@ -343,7 +343,11 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         ...state,
         fields: {
           ...state.fields,
-          [action.key]: { ...existing, value: action.value, provenance: 'user' },
+          // An anuncio note names a specific model's figure, so it is dropped
+          // the moment the value is no longer that model's. A cronograma note
+          // describes the field's nature (a variable rate, an appraised
+          // value) and survives the correction.
+          [action.key]: { ...existing, value: action.value, provenance: 'user', note: existing.provenance === 'anuncio' ? '' : existing.note },
         },
         // Typing into a field claims it: the model may propose, not overwrite.
         userEdited: state.userEdited.includes(action.key)

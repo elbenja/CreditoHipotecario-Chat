@@ -220,6 +220,25 @@ describe('user-typed provenance', () => {
     const s = chatReducer(initialState, { type: 'envelope', envelope: assumedTasa });
     expect(s.fields.tasa!.provenance).toBe('assumed');
   });
+
+  it('editField drops an anuncio note — it names a model the value no longer matches', () => {
+    const before = {
+      ...initialState,
+      fields: { precio: { key: 'precio' as const, label: 'Precio', value: '363,906', prefix: 'S/', suffix: undefined, provenance: 'anuncio' as const, note: "Precio 'desde' del modelo TIPO 7" } },
+    };
+    const s = chatReducer(before, { type: 'editField', key: 'precio', value: '370,000' });
+    expect(s.fields.precio!.note).toBe('');
+    expect(s.fields.precio!.provenance).toBe('user');
+  });
+
+  it('editField keeps a non-anuncio note — it describes the field, not a specific reading', () => {
+    const before = {
+      ...initialState,
+      fields: { tasa: { key: 'tasa' as const, label: 'Tasa', value: '8', suffix: '%', prefix: undefined, provenance: 'assumed' as const, note: 'Tasa variable' } },
+    };
+    const s = chatReducer(before, { type: 'editField', key: 'tasa', value: '9' });
+    expect(s.fields.tasa!.note).toBe('Tasa variable');
+  });
 });
 
 describe('pinCandidate', () => {

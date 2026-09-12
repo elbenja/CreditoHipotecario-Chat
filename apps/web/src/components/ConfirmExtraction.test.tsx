@@ -187,4 +187,18 @@ describe('ConfirmExtraction — anuncio', () => {
     expect(screen.getByLabelText('Precio')).toHaveAttribute('data-dudoso', 'true');
     expect(screen.getByLabelText('Área')).toHaveAttribute('data-dudoso', 'false');
   });
+
+  it('drops the model-specific note when the precio is edited, but keeps area\'s', async () => {
+    const onConfirm = vi.fn();
+    render(<ConfirmExtraction variant="anuncio" listing={ASPIRIA} onConfirm={onConfirm} onCancel={vi.fn()} />);
+    await userEvent.click(screen.getAllByRole('radio')[1]!);
+    const precio = screen.getByLabelText('Precio');
+    await userEvent.clear(precio);
+    await userEvent.type(precio, '370,000');
+    await userEvent.click(screen.getByRole('button', { name: /fijar/i }));
+    const fields = onConfirm.mock.calls[0]![0] as { key: string; value: string; provenance: string; note: string }[];
+    expect(fields.find((f) => f.key === 'precio')).toMatchObject({ value: '370,000', provenance: 'user', note: '' });
+    // Untouched: still exactly what the listing said.
+    expect(fields.find((f) => f.key === 'area')).toMatchObject({ value: '41.75', provenance: 'anuncio' });
+  });
 });

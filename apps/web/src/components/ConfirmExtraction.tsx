@@ -111,10 +111,13 @@ export function ConfirmExtraction(props: Props) {
 
   // A digit changed here is no longer what the page or the bank said — it is
   // what the person typed, so it must pin as 'user', matching the panel's
-  // edit convention. The note stays: it describes the field's nature, not
-  // the specific digit read, so it is still accurate after the correction.
+  // edit convention. Whether the note survives depends on what it describes:
+  // a cronograma note describes the field's nature (a variable rate, an
+  // appraised value) and is still accurate after the correction. An anuncio
+  // note names a specific model's figure ("Precio 'desde' del modelo TIPO
+  // 7"), so it is dropped the moment the value is no longer that model's.
   const edit = (key: string, value: string) =>
-    setDraft((d) => d.map((f) => (f.key === key ? { ...f, value, provenance: 'user' } : f)));
+    setDraft((d) => d.map((f) => (f.key === key ? { ...f, value, provenance: 'user', note: f.provenance === 'anuncio' ? '' : f.note } : f)));
 
   const choose = (i: number) => {
     if (!listing) return;
