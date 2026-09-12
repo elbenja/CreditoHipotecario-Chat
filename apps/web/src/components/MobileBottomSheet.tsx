@@ -49,7 +49,9 @@ export function MobileBottomSheet({
   const dialogRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number | null>(null);
   const wasOpen = useRef(false);
-  const assumedCount = fields.filter((field) => field.provenance !== 'user').length;
+  // 'anuncio' is read from a listing page, not assumed — same distinction
+  // the panel and ConfirmExtraction already draw.
+  const assumedCount = fields.filter((field) => field.provenance === 'assumed' || field.provenance === 'market').length;
   const savedCount = savedScenarios.length;
   const scenarioLabel = savedCount === 1 ? 'escenario guardado' : 'escenarios guardados';
 

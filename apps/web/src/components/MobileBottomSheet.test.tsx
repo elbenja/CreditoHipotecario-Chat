@@ -68,6 +68,27 @@ describe('MobileBottomSheet', () => {
     );
   });
 
+  it('does not count anuncio provenance as "los asumí yo" (D3)', () => {
+    const anuncioFields: PinnedField[] = [
+      { key: 'ubicacion', label: 'Ubicación', value: 'Barranco', prefix: undefined, suffix: undefined, provenance: 'anuncio', note: '' },
+      { key: 'precio', label: 'Precio', value: '363,906', prefix: 'S/', suffix: undefined, provenance: 'anuncio', note: '' },
+      { key: 'area', label: 'Área', value: '41.75', prefix: undefined, suffix: 'm²', provenance: 'anuncio', note: '' },
+    ];
+    renderSheet({ fields: anuncioFields, savedScenarios: [] });
+    const summary = screen.getByRole('button', { name: /Abrir datos de la operación/i });
+    expect(summary.textContent?.replace(/\s+/g, ' ').trim()).toContain('0 los asumí yo');
+  });
+
+  it('counts an assumed field alongside anuncio fields correctly (D3)', () => {
+    const mixed: PinnedField[] = [
+      { key: 'ubicacion', label: 'Ubicación', value: 'Barranco', prefix: undefined, suffix: undefined, provenance: 'anuncio', note: '' },
+      { key: 'tasa', label: 'Tasa', value: '8', prefix: undefined, suffix: '%', provenance: 'assumed', note: '' },
+    ];
+    renderSheet({ fields: mixed, savedScenarios: [] });
+    const summary = screen.getByRole('button', { name: /Abrir datos de la operación/i });
+    expect(summary.textContent?.replace(/\s+/g, ' ').trim()).toContain('1 lo asumí yo');
+  });
+
   it('opens from the summary, locks body scroll, and closes with Escape restoring focus', async () => {
     const user = userEvent.setup();
     renderSheet();
