@@ -56,6 +56,16 @@ describe('enforceProvenance', () => {
     expect(enforceProvenance([f], [])[0]!.provenance).toBe('market');
   });
 
+  it('downgrades a chat-model field claiming anuncio provenance — only the listing pipeline mints that', () => {
+    const f = field({ provenance: 'anuncio', value: '250,000' });
+    expect(enforceProvenance([f], ['Depa de 250,000'])[0]!.provenance).toBe('assumed');
+  });
+
+  it('downgrades a chat-model field claiming documento provenance — only the document pipeline mints that', () => {
+    const f = field({ provenance: 'documento', value: '250,000' });
+    expect(enforceProvenance([f], ['Depa de 250,000'])[0]!.provenance).toBe('assumed');
+  });
+
   it('matches a textual value case-insensitively', () => {
     const turns = ['queda en pueblo libre, lima'];
     const f = field({ key: 'ubicacion', value: 'Pueblo Libre, Lima' });

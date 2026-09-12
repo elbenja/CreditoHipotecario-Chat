@@ -143,6 +143,10 @@ export function enforceProvenance(fields: PinnedField[], userTurns: string[]): P
   const mentions = numberMentions(text);
 
   return fields.map((f) => {
+    // Only the document and listing pipelines ever mint 'documento' or
+    // 'anuncio' — the chat model never reads a page or a document, so a
+    // field claiming either here is the model forging where it came from.
+    if (f.provenance === 'documento' || f.provenance === 'anuncio') return { ...f, provenance: 'assumed' as const };
     if (f.provenance !== 'user') return f;
     return appearsIn(f.key, f.value, text, mentions) ? f : { ...f, provenance: 'assumed' as const };
   });
