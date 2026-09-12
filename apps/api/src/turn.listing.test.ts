@@ -112,8 +112,10 @@ describe('listing turns', () => {
   });
 
   it('reports a model failure with the usual api kind', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const callModel = vi.fn(async () => { throw new Error('upstream down'); });
     const { events } = await collect(REPLY, async () => 'x', callModel);
     expect((events.find((e) => e.event === 'error')!.data as { kind: string }).kind).toBe('api');
+    errorSpy.mockRestore();
   });
 });
