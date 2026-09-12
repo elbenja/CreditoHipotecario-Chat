@@ -8,8 +8,8 @@ const REPLY = JSON.stringify({
   modelos: [{ nombre: 'TIPO 7', area: '41.75', precioDesde: '363,906' }], dudosos: [],
 });
 
-const body = (url = URL_OK) => ({
-  messages: [{ role: 'user' as const, content: url }],
+const body = (url = URL_OK, content: string = url) => ({
+  messages: [{ role: 'user' as const, content }],
   fields: [],
   listing: { url },
 });
@@ -65,9 +65,17 @@ describe('listing turns', () => {
   });
 
   it('does not run the out-of-scope guardrail on a link turn', async () => {
-    const { events } = await collect(REPLY, async () => 'x');
-    expect(events.some((e) => e.event === 'envelope')).toBe(false);
-    expect(events.some((e) => e.event === 'listing')).toBe(true);
+    // The message text must actually trip isOutOfScope (see scope.test.ts) —
+    // otherwise this test passes whether or not the listing branch still runs
+    // before the guardrail. Note: it cannot be the pasted URL itself, since a
+    // real Nexo path always contains "departamentos", which itself contains
+    // the in-scope keyword "depa" and would suppress the trip.
+    const callModel = vi.fn(async () => ({ content: REPLY, truncated: false }));
+    const parsed = parseChatBody(body(URL_OK, '¿Me conviene invertir en bitcoin?'))!;
+    const out = [];
+    for await (const e of runTurn(parsed, callModel, async () => 'x')) out.push(e);
+    expect(out.some((e) => e.event === 'envelope')).toBe(false);
+    expect(out.some((e) => e.event === 'listing')).toBe(true);
   });
 
   it('reports a fetch failure as kind listing without calling the model', async () => {
