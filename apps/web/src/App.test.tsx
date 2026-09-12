@@ -119,4 +119,20 @@ describe('pasting a listing link', () => {
     expect(body.listing).toEqual({ url: 'https://nexoinmobiliario.pe/departamentos/barranco/aspiria-1631' });
     expect(body.document).toBeUndefined();
   });
+
+  it('"Reintentar" after a model failure on a link turn resends the URL as a listing, not a chat question', async () => {
+    const url = 'https://nexoinmobiliario.pe/departamentos/barranco/aspiria-1631';
+    fetchMock.mockResolvedValueOnce(new Response('event: error\ndata: {"kind":"api","message":"x"}\n\n'));
+    render(<App />);
+    await userEvent.type(screen.getAllByPlaceholderText(/cuéntame/i)[0]!, url);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(screen.getByRole('button', { name: /Reintentar/ })).toBeInTheDocument());
+
+    fetchMock.mockResolvedValueOnce(new Response('event: status\ndata: {"phase":"analyzing"}\n\n'));
+    await userEvent.click(screen.getByRole('button', { name: /Reintentar/ }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const secondBody = JSON.parse(fetchMock.mock.calls[1]![1].body as string);
+    expect(secondBody.listing).toEqual({ url });
+    expect(secondBody.document).toBeUndefined();
+  });
 });

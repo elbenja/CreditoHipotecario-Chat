@@ -105,8 +105,16 @@ export default function App() {
 
   const retry = useCallback(async () => {
     dispatch({ type: 'clearError' });
-    const turns = toTurns(state.messages);
     const failedRequest = state.error?.retry;
+    // A failed link turn's "retry" is the URL itself, not a chat question —
+    // resending it as a plain user turn would ask the model about the URL
+    // text instead of reading the page again.
+    const link = failedRequest ? findListingUrl(failedRequest) : null;
+    if (link && isListingHost(link.host)) {
+      await readListing(link.url, link.host, dispatch, Object.values(state.fields));
+      return;
+    }
+    const turns = toTurns(state.messages);
     if (failedRequest && turns.at(-1)?.content !== failedRequest) {
       turns.push({ role: 'user', content: failedRequest });
     }
