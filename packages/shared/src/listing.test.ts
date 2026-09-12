@@ -75,6 +75,15 @@ describe('ListingSchema', () => {
     expect(parsed.modelos[0]!.dormitorios).toBe('2');
     expect(parsed.dudosos).toEqual([]);
   });
+
+  it('accepts area and precioDesde as numbers, the way the live model emits them', () => {
+    const parsed = ListingSchema.parse({
+      proyecto: 'ASPIRIA', distrito: 'Barranco',
+      modelos: [{ nombre: 'TIPO 3', area: 82.96, precioDesde: 664806, dormitorios: 3 }],
+      fuente: { host: 'pdf' },
+    });
+    expect(parsed.modelos[0]).toEqual({ nombre: 'TIPO 3', area: '82.96', precioDesde: '664806', dormitorios: '3' });
+  });
 });
 
 describe('listingToFields', () => {
@@ -119,5 +128,14 @@ describe('listingToFields', () => {
     expect(f.precio!.provenance).toBe('assumed');
     expect(f.ubicacion!.provenance).toBe('assumed');
     expect(f.area!.provenance).toBe('anuncio');
+  });
+
+  it('groups a numeric price the model sent bare', () => {
+    const listing = ListingSchema.parse({
+      proyecto: 'A', distrito: 'Lince', modelos: [{ area: 55, precioDesde: 300000 }], fuente: { host: 'pdf' },
+    });
+    const f = Object.fromEntries(listingToFields(listing, listing.modelos[0]!).map((x) => [x.key, x]));
+    expect(f.precio!.value).toBe('300,000');
+    expect(f.area!.value).toBe('55');
   });
 });

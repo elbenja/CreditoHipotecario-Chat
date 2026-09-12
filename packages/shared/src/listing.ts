@@ -15,8 +15,24 @@ const optionalText = z
 
 export const ListingModelSchema = z.object({
   nombre: optionalText,
-  area: optionalText,
-  precioDesde: optionalText,
+  // Models emit "82.96" and 82.96 interchangeably for area.
+  area: z
+    .union([z.string(), z.number()])
+    .nullish()
+    .transform((v) => {
+      if (v === null || v === undefined) return undefined;
+      const str = String(v).trim();
+      return str ? str : undefined;
+    }),
+  // Models emit "664,806" and 664806 interchangeably for precioDesde.
+  precioDesde: z
+    .union([z.string(), z.number()])
+    .nullish()
+    .transform((v) => {
+      if (v === null || v === undefined) return undefined;
+      const str = String(v).trim();
+      return str ? str : undefined;
+    }),
   // Models emit "3" and 3 interchangeably.
   dormitorios: z
     .union([z.string(), z.number()])
