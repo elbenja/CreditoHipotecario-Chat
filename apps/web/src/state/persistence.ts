@@ -9,11 +9,12 @@ export const STORAGE_KEY = 'chat-ia-draft-v1';
  * a stale draft, or a reload while back online would wrongly show the banner.
  * `pendingExtraction` is excluded too: an unconfirmed read must not survive a
  * reload — the user never got to confirm it. Same for `attachment`: a read in
- * flight dies with the page.
+ * flight dies with the page. `pendingListing` likewise — an unconfirmed
+ * listing dies with the page.
  */
 type Persisted = Omit<
   ChatState,
-  'status' | 'analyzeSteps' | 'error' | 'offline' | 'pendingExtraction' | 'attachment'
+  'status' | 'analyzeSteps' | 'error' | 'offline' | 'pendingExtraction' | 'attachment' | 'pendingListing'
 >;
 
 function isPlausible(value: unknown): value is Persisted {
@@ -43,6 +44,7 @@ export function loadState(): ChatState {
       offline: false,
       pendingExtraction: null,
       attachment: null,
+      pendingListing: null,
     };
   } catch {
     // Corrupt data, or storage blocked entirely. Start clean rather than crash.
@@ -59,6 +61,7 @@ export function saveState(state: ChatState): void {
       offline: _o,
       pendingExtraction: _p,
       attachment: _at,
+      pendingListing: _pl,
       ...persisted
     } = state;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));

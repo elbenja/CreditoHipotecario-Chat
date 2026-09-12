@@ -150,6 +150,9 @@ export function Conversation({
               if (m.role === 'assistant-question') {
                 return <p key={m.id} className="ch-line text-[13.5px] leading-[1.6] text-slate-300 md:text-[14.5px]">{m.content}</p>;
               }
+              if (m.role === 'assistant-note') {
+                return <p key={m.id} className="ch-line text-[13.5px] leading-[1.6] text-slate-300 md:text-[14.5px]">{m.content}</p>;
+              }
               if (m.role === 'assistant') {
                 return (
                   <div key={m.id} className="ch-line">

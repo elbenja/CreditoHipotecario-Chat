@@ -58,6 +58,7 @@ export function toTurns(messages: Message[]): { role: 'user' | 'assistant'; cont
     };
     if (message.role === 'assistant-question') return { role: 'assistant', content: message.content };
     if (message.role === 'assistant-fallback') return { role: 'assistant', content: message.prose };
+    if (message.role === 'assistant-note') return { role: 'assistant', content: message.content };
     return { role: 'assistant', content: [message.envelope.verdict, ...message.envelope.prose].join('\n') };
   });
   return turns.filter((turn) => turn.content.trim().length > 0);

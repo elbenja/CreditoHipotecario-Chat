@@ -77,3 +77,8 @@ it('remembers which fact a model-generated clarification requested', () => {
   const answer = chatReducer(asking, { type: 'send', content: '80' });
   expect(toTurns(answer.messages).at(-1)?.content).toBe('Área: 80');
 });
+
+it('toTurns sends an assistant-note as an assistant turn', () => {
+  const turns = toTurns([{ id: '1', role: 'assistant-note', content: 'Fijé ubicación del anuncio.' }]);
+  expect(turns).toEqual([{ role: 'assistant', content: 'Fijé ubicación del anuncio.' }]);
+});

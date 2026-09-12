@@ -1,8 +1,10 @@
 import { getFieldQuestion } from './guidance';
 import {
   deriveInicial,
+  listingRefusal,
   type AnalysisEnvelope,
   type FieldKey,
+  type Listing,
   type MortgageField,
   type PinnedField,
   type Scenario,
@@ -24,7 +26,8 @@ export type Message =
       truncated?: boolean;
       outOfScope?: boolean;
     }
-  | { id: string; role: 'assistant-fallback'; prose: string; candidates: Candidate[]; truncated?: boolean };
+  | { id: string; role: 'assistant-fallback'; prose: string; candidates: Candidate[]; truncated?: boolean }
+  | { id: string; role: 'assistant-note'; content: string };
 
 export type Status = 'idle' | 'sending' | 'thinking' | 'analyzing' | 'streaming' | 'error';
 
@@ -62,6 +65,8 @@ export interface ChatState {
   mortgage: Record<string, MortgageField>;
   /** Read but not yet confirmed. Nothing pins until the user says so. */
   pendingExtraction: MortgageField[] | null;
+  /** A listing read but not yet confirmed. Never persisted. */
+  pendingListing: Listing | null;
   /** What the last confirmed schedule did to each mortgage key: the value it
    *  replaced, or null when the key was new. A key the user has since
    *  retyped is dropped. Drives the per-row "antes X" line. */
@@ -78,7 +83,7 @@ export interface ChatState {
 export interface ChatError {
   /** 'document' is the server's kind for a schedule that failed to extract —
    *  distinct from 'api' (the model call itself failing). */
-  kind: 'api' | 'offline' | 'document' | 'request' | 'limit';
+  kind: 'api' | 'offline' | 'document' | 'request' | 'limit' | 'listing';
   message: string;
   /** The question that failed, so "Reintentar" can resend exactly it. */
   retry: string | null;
@@ -112,7 +117,11 @@ export type Action =
   | { type: 'attachStart'; name: string; size: number }
   | { type: 'extractionReady'; fields: MortgageField[] }
   | { type: 'confirmExtraction'; fields: MortgageField[] }
-  | { type: 'cancelExtraction' };
+  | { type: 'cancelExtraction' }
+  | { type: 'refuseListing'; content: string; host: string }
+  | { type: 'listingReady'; listing: Listing }
+  | { type: 'confirmListing'; fields: PinnedField[] }
+  | { type: 'cancelListing' };
 
 export const initialState: ChatState = {
   pendingField: null,
@@ -131,6 +140,7 @@ export const initialState: ChatState = {
   queued: null,
   mortgage: {},
   pendingExtraction: null,
+  pendingListing: null,
   attachment: null,
   mortgageChanges: {},
   mortgageRevision: 0,
@@ -205,7 +215,9 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         if (prev.value === f.value) {
           // The user typed this value; panel edits never reach the server's
           // provenance check, so do not let the model's 'assumed' overwrite it.
-          fields[f.key] = state.userEdited.includes(f.key)
+          // Same for a value read from a listing: the model echoing it back
+          // as 'assumed' must not demote what the page actually said.
+          fields[f.key] = state.userEdited.includes(f.key) || prev.provenance === 'anuncio'
             ? { ...f, provenance: prev.provenance }
             : f;
           continue;
@@ -473,6 +485,84 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         pendingExtraction: null,
         mortgageChanges,
         mortgageRevision: state.mortgageRevision + 1,
+      };
+    }
+
+    case 'refuseListing':
+      // Local, no model call: the host is not one we can read. Both sides of
+      // the exchange land in the transcript so the conversation records it.
+      return {
+        ...state,
+        messages: [
+          ...state.messages,
+          { id: nextId(), role: 'user', content: action.content },
+          { id: nextId(), role: 'assistant-note', content: listingRefusal(action.host) },
+        ],
+        pendingField: null,
+      };
+
+    case 'listingReady':
+      return {
+        ...state,
+        pendingListing: action.listing,
+        status: 'idle',
+        attachment: null,
+        analyzeSteps: state.analyzeSteps.map((s) => ({ ...s, done: true })),
+      };
+
+    case 'cancelListing':
+      return { ...state, pendingListing: null };
+
+    case 'confirmListing': {
+      // A link describes a property; a new link is a new property. The three
+      // keys replace as one entity — a user-typed key keeps its value and the
+      // listing's becomes a proposal, the rule the envelope path applies.
+      const fields = { ...state.fields };
+      const proposals = { ...state.proposals };
+      const pinned: string[] = [];
+      for (const f of action.fields) {
+        const prev = fields[f.key];
+        if (prev && state.userEdited.includes(f.key) && prev.value !== f.value) {
+          proposals[f.key] = f;
+          continue;
+        }
+        fields[f.key] = f;
+        pinned.push(f.label.toLowerCase());
+      }
+
+      // An estimated rent was for the previous location and area. A typed one
+      // is the user's and stays.
+      if (fields.alquiler && (fields.alquiler.provenance === 'market' || fields.alquiler.provenance === 'assumed')) {
+        delete fields.alquiler;
+      }
+
+      // Same derivation confirmExtraction does, never over a user-owned value.
+      const financed = state.mortgage.montoFinanciado?.value;
+      const inicial = deriveInicial(fields.precio?.value, financed);
+      if (inicial && !state.userEdited.includes('inicial')) {
+        fields.inicial = {
+          key: 'inicial',
+          label: 'Inicial',
+          value: inicial,
+          prefix: 'S/',
+          provenance: 'assumed',
+          note: 'Calculada: precio menos el monto que financia el banco.',
+        };
+      }
+
+      const note =
+        pinned.length > 0
+          ? `Fijé ${pinned.join(', ').replace(/, ([^,]*)$/, ' y $1')} del anuncio.`
+          : 'Mantuve tus datos; lo que leí del anuncio quedó como propuesta.';
+
+      return {
+        ...state,
+        fields,
+        proposals,
+        pendingListing: null,
+        // Pinning data does not recalculate a previous analysis; keep its baseline.
+        baseline: { ...deriveBaseline(fields), ...state.baseline },
+        messages: [...state.messages, { id: nextId(), role: 'assistant-note', content: note }],
       };
     }
 

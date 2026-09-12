@@ -1,4 +1,4 @@
-import type { AnalysisEnvelope, MortgageField, Scenario } from '@chat/shared';
+import type { AnalysisEnvelope, Listing, MortgageField, PinnedField, Scenario } from '@chat/shared';
 import { describe, expect, it } from 'vitest';
 import { chatReducer, initialState, selectDirtyKeys } from './chatReducer';
 
@@ -684,5 +684,97 @@ describe('editMortgageField', () => {
     s = chatReducer(s, { type: 'confirmExtraction', fields: READ });
     s = chatReducer(s, { type: 'editMortgageField', key: 'tea', value: '9.10' });
     expect(s.fields.precio!.value).toBe('300,000');
+  });
+});
+
+const LISTING: Listing = {
+  proyecto: 'ASPIRIA', constructora: 'GRUPO T&C', direccion: 'Av. El Sol Este 530', distrito: 'Barranco',
+  entrega: undefined, etapa: undefined,
+  modelos: [{ nombre: 'TIPO 7', area: '41.75', precioDesde: '363,906', dormitorios: '1' }],
+  fuente: { host: 'nexoinmobiliario.pe' }, dudosos: [],
+};
+
+const pf = (key: PinnedField['key'], value: string, provenance: PinnedField['provenance'] = 'anuncio'): PinnedField => ({
+  key, label: key, value, prefix: undefined, suffix: undefined, provenance, note: '',
+});
+
+const LISTING_FIELDS = [pf('ubicacion', 'Av. El Sol Este 530, Barranco'), pf('precio', '363,906'), pf('area', '41.75')];
+
+describe('listing actions', () => {
+  it('refuseListing records the user message and the refusal locally, staying idle', () => {
+    const s = chatReducer(initialState, { type: 'refuseListing', content: 'https://urbania.pe/x', host: 'urbania.pe' });
+    expect(s.status).toBe('idle');
+    expect(s.messages.map((m) => m.role)).toEqual(['user', 'assistant-note']);
+    expect((s.messages[1] as { content: string }).content).toContain('De urbania.pe no puedo leer el anuncio');
+  });
+
+  it('listingReady parks the read and clears the progress row', () => {
+    const busy = { ...initialState, status: 'analyzing' as const, attachment: { name: 'nexoinmobiliario.pe', size: 0 } };
+    const s = chatReducer(busy, { type: 'listingReady', listing: LISTING });
+    expect(s.pendingListing).toBe(LISTING);
+    expect(s.status).toBe('idle');
+    expect(s.attachment).toBeNull();
+  });
+
+  it('cancelListing pins nothing', () => {
+    const s = chatReducer({ ...initialState, pendingListing: LISTING }, { type: 'cancelListing' });
+    expect(s.pendingListing).toBeNull();
+    expect(s.fields).toEqual({});
+  });
+
+  it('confirmListing replaces the property as one entity and records a note', () => {
+    const before = {
+      ...initialState,
+      pendingListing: LISTING,
+      fields: { ubicacion: pf('ubicacion', 'Lince', 'assumed'), precio: pf('precio', '300,000', 'assumed'), tasa: pf('tasa', '8', 'user') },
+    };
+    const s = chatReducer(before, { type: 'confirmListing', fields: LISTING_FIELDS });
+    expect(s.fields.ubicacion!.value).toBe('Av. El Sol Este 530, Barranco');
+    expect(s.fields.precio!.value).toBe('363,906');
+    expect(s.fields.area!.value).toBe('41.75');
+    expect(s.fields.tasa!.value).toBe('8');
+    expect(s.pendingListing).toBeNull();
+    expect(s.messages.at(-1)).toMatchObject({ role: 'assistant-note' });
+    expect((s.messages.at(-1) as { content: string }).content).toMatch(/del anuncio/);
+  });
+
+  it('confirmListing keeps a user-typed key and turns the listing value into a proposal', () => {
+    const before = { ...initialState, userEdited: ['precio'], fields: { precio: pf('precio', '400,000', 'user') } };
+    const s = chatReducer(before, { type: 'confirmListing', fields: LISTING_FIELDS });
+    expect(s.fields.precio!.value).toBe('400,000');
+    expect(s.proposals.precio!.value).toBe('363,906');
+  });
+
+  it('confirmListing drops an estimated alquiler and keeps a typed one', () => {
+    const est = { ...initialState, fields: { alquiler: pf('alquiler', '1,500', 'market') } };
+    expect(chatReducer(est, { type: 'confirmListing', fields: LISTING_FIELDS }).fields.alquiler).toBeUndefined();
+    const typed = { ...initialState, fields: { alquiler: pf('alquiler', '1,500', 'user') } };
+    expect(chatReducer(typed, { type: 'confirmListing', fields: LISTING_FIELDS }).fields.alquiler!.value).toBe('1,500');
+  });
+
+  it('confirmListing derives inicial from the new price and a financed amount', () => {
+    const before = {
+      ...initialState,
+      mortgage: { montoFinanciado: { key: 'montoFinanciado' as const, label: 'Monto financiado', value: '300,000', prefix: 'S/', suffix: undefined, provenance: 'documento' as const, note: '' } },
+    };
+    const s = chatReducer(before, { type: 'confirmListing', fields: LISTING_FIELDS });
+    expect(s.fields.inicial!.value).toBe('63,906');
+    expect(s.fields.inicial!.provenance).toBe('assumed');
+  });
+
+  it('a later envelope with the same value keeps anuncio provenance', () => {
+    const before = { ...initialState, fields: { precio: pf('precio', '363,906') } };
+    const s = chatReducer(before, {
+      type: 'envelope',
+      envelope: {
+        verdict: 'ok', fields: [pf('precio', '363,906', 'assumed')], metrics: [], scenarios: [], sources: [], prose: [], followUps: [],
+      },
+    });
+    expect(s.fields.precio!.provenance).toBe('anuncio');
+  });
+
+  it('an error of kind listing is stored as such', () => {
+    const s = chatReducer(initialState, { type: 'error', kind: 'listing', message: 'x', retry: null });
+    expect(s.error?.kind).toBe('listing');
   });
 });

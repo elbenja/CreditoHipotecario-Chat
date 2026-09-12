@@ -89,4 +89,10 @@ describe('persistence', () => {
     expect(loadState()).toEqual(initialState);
     expect(() => clearState()).not.toThrow();
   });
+
+  it('never persists pendingListing', () => {
+    saveState({ ...initialState, pendingListing: { proyecto: 'A', distrito: 'B', modelos: [], fuente: { host: 'pdf' }, dudosos: [] } });
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).not.toHaveProperty('pendingListing');
+    expect(loadState().pendingListing).toBeNull();
+  });
 });
