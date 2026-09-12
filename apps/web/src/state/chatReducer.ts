@@ -216,9 +216,10 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
           // The user typed this value; panel edits never reach the server's
           // provenance check, so do not let the model's 'assumed' overwrite it.
           // Same for a value read from a listing: the model echoing it back
-          // as 'assumed' must not demote what the page actually said.
+          // as 'assumed' must not demote what the page actually said, and its
+          // note (naming a specific model) must not overwrite the listing's.
           fields[f.key] = state.userEdited.includes(f.key) || prev.provenance === 'anuncio'
-            ? { ...f, provenance: prev.provenance }
+            ? { ...f, provenance: prev.provenance, note: prev.provenance === 'anuncio' ? prev.note : f.note }
             : f;
           continue;
         }

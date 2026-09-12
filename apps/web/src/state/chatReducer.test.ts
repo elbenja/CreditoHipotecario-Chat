@@ -781,15 +781,16 @@ describe('listing actions', () => {
     expect(s.fields.inicial!.provenance).toBe('assumed');
   });
 
-  it('a later envelope with the same value keeps anuncio provenance', () => {
-    const before = { ...initialState, fields: { precio: pf('precio', '363,906') } };
+  it('a later envelope with the same value keeps anuncio provenance and note', () => {
+    const before = { ...initialState, fields: { precio: { ...pf('precio', '363,906'), note: "Precio 'desde' del modelo TIPO 7" } } };
     const s = chatReducer(before, {
       type: 'envelope',
       envelope: {
-        verdict: 'ok', fields: [pf('precio', '363,906', 'assumed')], metrics: [], scenarios: [], sources: [], prose: [], followUps: [],
+        verdict: 'ok', fields: [{ ...pf('precio', '363,906', 'assumed'), note: 'nota del modelo' }], metrics: [], scenarios: [], sources: [], prose: [], followUps: [],
       },
     });
     expect(s.fields.precio!.provenance).toBe('anuncio');
+    expect(s.fields.precio!.note).toBe("Precio 'desde' del modelo TIPO 7");
   });
 
   it('an error of kind listing is stored as such', () => {
