@@ -99,3 +99,24 @@ it.each([true, false])('retries recalculation after analysis with metrics=%s', a
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
   expect(JSON.parse(fetchMock.mock.calls[1]![1].body).messages).toEqual(firstRequest.messages);
 });
+
+describe('pasting a listing link', () => {
+  it('refuses a foreign host locally without calling the API', async () => {
+    render(<App />);
+    await userEvent.type(screen.getAllByPlaceholderText(/cuéntame/i)[0]!, 'mira https://urbania.pe/inmueble/123');
+    await userEvent.keyboard('{Enter}');
+    expect(await screen.findByText(/De urbania.pe no puedo leer el anuncio/)).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('sends a Nexo link as a listing request', async () => {
+    fetchMock.mockResolvedValue(new Response('event: status\ndata: {"phase":"analyzing"}\n\n', { status: 200, headers: { 'content-type': 'text/event-stream' } }));
+    render(<App />);
+    await userEvent.type(screen.getAllByPlaceholderText(/cuéntame/i)[0]!, 'https://nexoinmobiliario.pe/departamentos/barranco/aspiria-1631');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const body = JSON.parse(fetchMock.mock.calls[0]![1].body as string);
+    expect(body.listing).toEqual({ url: 'https://nexoinmobiliario.pe/departamentos/barranco/aspiria-1631' });
+    expect(body.document).toBeUndefined();
+  });
+});

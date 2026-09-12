@@ -8,7 +8,8 @@ import { EmptyState } from './screens/EmptyState';
 import { chatReducer, type ChatState } from './state/chatReducer';
 import { loadState, saveState } from './state/persistence';
 import { toTurns } from './state/guidance';
-import type { FieldKey, PinnedField, Scenario } from '@chat/shared';
+import { findListingUrl, isListingHost, type FieldKey, type PinnedField, type Scenario } from '@chat/shared';
+import { readListing } from './listing/readListing';
 
 export default function App() {
   const [state, dispatch] = useReducer(chatReducer, undefined, loadState);
@@ -65,12 +66,23 @@ export default function App() {
 
   const send = useCallback(
     async (text: string) => {
+      // A pasted link is a read, not a question. The refusal is local; the
+      // read goes through its own request with the URL as the payload.
+      const link = findListingUrl(text);
+      if (link && !isListingHost(link.host)) {
+        dispatch({ type: 'refuseListing', content: text, host: link.host });
+        return;
+      }
       // Offline: the message is pending, not lost — hold it for reconnect.
       if (state.offline) {
         dispatch({ type: 'queue', content: text });
         return;
       }
       dispatch({ type: 'send', content: text });
+      if (link) {
+        await readListing(link.url, link.host, dispatch, Object.values(state.fields));
+        return;
+      }
       const turns = toTurns([...state.messages, { id: 'pending', role: 'user', content: text, respondingTo: state.pendingField ?? undefined }]);
       await request(turns, Object.values(state.fields));
     },

@@ -78,4 +78,14 @@ describe('streamChat', () => {
     await streamChat({ messages: [{ role: 'user', content: 'x' }], fields: [] }, (e) => seen.push(e), rejected);
     expect(seen[0]).toMatchObject({ event: 'error', data: { kind: 'request' } });
   });
+
+  it('treats a listing event as terminal', async () => {
+    const events: string[] = [];
+    await streamChat(
+      { messages: [], fields: [], listing: { url: 'https://nexoinmobiliario.pe/x' } },
+      (e) => events.push(e.event),
+      mockFetch('event: status\ndata: {"phase":"analyzing"}\n\nevent: listing\ndata: {"listing":{}}\n\n'),
+    );
+    expect(events).toEqual(['status', 'listing']);
+  });
 });

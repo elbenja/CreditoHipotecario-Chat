@@ -16,6 +16,7 @@ export interface ChatRequest {
   messages: { role: 'user' | 'assistant'; content: string }[];
   fields: PinnedField[];
   document?: DocumentInput;
+  listing?: { url: string };
 }
 
 /** Parse whole `event:`/`data:` blocks. An incomplete trailing block is skipped. */
@@ -78,7 +79,7 @@ export async function streamChat(
       const complete = buffer.slice(0, lastBreak + 2);
       buffer = buffer.slice(lastBreak + 2);
       for (const e of parseSSE(complete)) {
-        if (e.event === 'envelope' || e.event === 'fallback' || e.event === 'error' || e.event === 'extraction') {
+        if (e.event === 'envelope' || e.event === 'fallback' || e.event === 'error' || e.event === 'extraction' || e.event === 'listing') {
           sawTerminal = true;
         }
         onEvent(e);
