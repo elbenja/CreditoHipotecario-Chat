@@ -1,0 +1,6 @@
+/* ================================================================
+   CréditoHipotecar.io — Design System · root stylesheet
+   Single entry point: pulls in tokens, type, and the materialized
+   Figma-v2 kit CSS (tokens / typography / image-asset classes).
+   ================================================================ */
+@import './colors_and_type.css';

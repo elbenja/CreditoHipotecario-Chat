@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/disenos/support.js"></script>
+<script src="/disenos/nav.js" defer></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="/disenos/_ds/cr-ditohipotecar-io-design-system-8a4aa9ad-9e62-43c6-905f-d9393b27c056/components/fig-tokens.css">
+<link rel="stylesheet" href="/disenos/_ds/cr-ditohipotecar-io-design-system-8a4aa9ad-9e62-43c6-905f-d9393b27c056/components/fig-typography.css">
+<link rel="stylesheet" href="/disenos/_ds/cr-ditohipotecar-io-design-system-8a4aa9ad-9e62-43c6-905f-d9393b27c056/components/fig-assets.css">
+<link rel="stylesheet" href="/disenos/_ds/cr-ditohipotecar-io-design-system-8a4aa9ad-9e62-43c6-905f-d9393b27c056/colors_and_type.css">
+<link rel="stylesheet" href="/disenos/_ds/cr-ditohipotecar-io-design-system-8a4aa9ad-9e62-43c6-905f-d9393b27c056/styles.css">
+<link href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css" rel="stylesheet">
+<style>
+html,body{min-height:100%;background:#e9e7e2}
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.6}
+a{color:#0f172a}a:hover{color:#000}
+@keyframes k-spin{to{transform:rotate(360deg)}}
+@keyframes k-sheet{0%{transform:translateY(78%)}42%{transform:translateY(78%)}58%{transform:translateY(0)}92%{transform:translateY(0)}100%{transform:translateY(78%)}}
+@keyframes k-scrim{0%,42%{opacity:0}58%,92%{opacity:1}100%{opacity:0}}
+.sec{padding:44px 48px 12px;max-width:1000px}
+.sech{font-family:'Plus Jakarta Sans';font-weight:800;font-size:24px;line-height:1.2;letter-spacing:-.03em;color:#111}
+.secp{font-size:13.5px;line-height:1.65;color:rgba(0,0,0,.6);margin:10px 0 0}
+.secp b{color:rgba(0,0,0,.8);font-weight:600}
+.grid{display:flex;flex-wrap:wrap;gap:26px;padding:22px 48px 44px;max-width:1400px;align-items:flex-start}
+.card{flex:none;width:436px;display:flex;flex-direction:column;gap:9px}
+.clabel{display:flex;align-items:baseline;gap:9px}
+.cnum{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0f172a;color:#fff;border-radius:5px}
+.cname{font:600 13px 'Inter';color:#1a1a1a}
+.cbody{background:#0b0f1a;border:1px solid rgba(0,0,0,.14);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.14);padding:20px;box-sizing:border-box;overflow:hidden}
+.cspec{font:400 11.5px/1.55 'Inter';color:rgba(0,0,0,.5)}
+.cspec b{color:rgba(0,0,0,.75);font-weight:600}
+.mframe{flex:none;display:flex;flex-direction:column;gap:9px}
+</style>
+</helmet>
+
+<div class="sec">
+  <div class="sech">Estados de error</div>
+  <p class="secp">Cinco fallas, cinco tratamientos distintos. La regla que las ordena: <b>el error nunca borra lo que el usuario ya tenía</b>. El panel de datos y el historial siguen ahí, intactos, en los cinco casos — solo cambia el último turno. Y ninguno usa rojo salvo el que de verdad es un fallo del sistema: rojo en una app de plata se lee como "perdiste dinero", no como "reintenta".</p>
+</div>
+
+<div class="grid">
+
+<div class="card">
+  <div class="clabel"><span class="cnum">E1</span><span class="cname">La API falló</span></div>
+  <div class="cbody">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="align-self:flex-end;max-width:78%;background:#1e293b;border-radius:12px;padding:11px 14px;font-size:13px;line-height:1.5;color:#f1f5f9">¿Y si pongo 30% de inicial?</div>
+      <div style="display:flex;gap:11px;align-items:flex-start">
+        <img src="/disenos/assets/logo-mark.svg" alt="" style="width:16px;height:16px;display:block;margin-top:3px;opacity:.5">
+        <div style="flex:1;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:14px 16px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <i class="hgi hgi-stroke hgi-alert-02" style="font-size:16px;color:#f59e0b"></i>
+            <span style="font:600 13.5px 'Inter';color:#f1f5f9">No pude completar el análisis</span>
+          </div>
+          <div style="font-size:12.5px;line-height:1.55;color:#94a3b8;margin-top:8px">Se cayó la conexión con el modelo. Tus datos siguen guardados — no perdiste nada.</div>
+          <div style="display:flex;align-items:center;gap:9px;margin-top:14px">
+            <div style="display:flex;align-items:center;gap:7px;height:34px;padding:0 15px;border-radius:9999px;background:#f8fafc;font:600 12.5px 'Inter';color:#0b0f1a;cursor:pointer"><i class="hgi hgi-stroke hgi-refresh" style="font-size:14px"></i>Reintentar</div>
+            <div style="height:34px;padding:0 14px;display:flex;align-items:center;border-radius:9999px;border:1px solid #334155;font:500 12.5px 'Inter';color:#cbd5e1;cursor:pointer">Editar la pregunta</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cspec">Burbuja del asistente en <b>#0f172a con borde #334155</b> (un paso más claro que lo normal), ícono <b>alert-02 ámbar</b>, nunca rojo. La pregunta del usuario <b>se queda arriba</b>: "Reintentar" la reenvía tal cual, "Editar la pregunta" la devuelve al composer con el texto puesto.</div>
+</div>
+
+<div class="card">
+  <div class="clabel"><span class="cnum">E2</span><span class="cname">Sin conexión</span></div>
+  <div class="cbody">
+    <div style="display:flex;flex-direction:column;gap:0">
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;background:rgba(49,37,15,.5);border:1px solid rgba(245,158,11,.2);border-radius:10px">
+        <i class="hgi hgi-stroke hgi-wifi-disconnected-01" style="font-size:16px;color:#f59e0b"></i>
+        <span style="flex:1;font:500 12.5px 'Inter';color:#fcd34d">Sin conexión. Reintentando…</span>
+        <span style="width:14px;height:14px;border-radius:9999px;border:2px solid rgba(245,158,11,.25);border-top-color:#f59e0b;animation:k-spin .8s linear infinite"></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:11px;margin-top:18px;opacity:.45">
+        <div style="align-self:flex-end;max-width:76%;background:#1e293b;border-radius:12px;padding:10px 13px;font-size:12.5px;color:#f1f5f9">¿Cuánto sube si lo amueblo?</div>
+        <div style="align-self:flex-end;font:500 11px 'Inter';color:#94a3b8">Se enviará al reconectar</div>
+      </div>
+      <div style="margin-top:18px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:12px;opacity:.5">
+        <div style="flex:1;font-size:12.5px;color:#64748b">Sin conexión…</div>
+        <div style="flex:none;width:30px;height:30px;border-radius:9999px;background:#1e293b;display:flex;align-items:center;justify-content:center;color:#64748b"><i class="hgi hgi-stroke hgi-arrow-right-01" style="font-size:15px"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="cspec">Banner ámbar pegado bajo el nav (<b>rgba(49,37,15,.5)</b> + borde <b>rgba(245,158,11,.2)</b>, el tratamiento de alerta del sistema). El mensaje pendiente queda al <b>45% de opacidad</b> con "Se enviará al reconectar" — encolado, no perdido. Composer deshabilitado, no oculto.</div>
+</div>
+
+<div class="card">
+  <div class="clabel"><span class="cnum">E3</span><span class="cname">Límite de tokens · respuesta cortada</span></div>
+  <div class="cbody">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:13px;line-height:1.6;color:#cbd5e1">Con 30% de inicial tu cuota baja a <b style="color:#fff">S/ 1,434</b> y el flujo queda casi neutro. El punto de equilibrio se cruza cuando el alquiler pasa</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,#334155,transparent)"></div>
+      </div>
+      <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:13px 15px">
+        <div style="display:flex;align-items:center;gap:9px">
+          <i class="hgi hgi-stroke hgi-text-align-left" style="font-size:15px;color:#94a3b8"></i>
+          <span style="font:600 12.5px 'Inter';color:#f1f5f9">La respuesta se cortó</span>
+        </div>
+        <div style="font-size:12px;line-height:1.5;color:#94a3b8;margin-top:7px">Llegó al límite de largo. Lo de arriba es válido.</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:12px">
+          <div style="height:32px;padding:0 14px;display:flex;align-items:center;gap:6px;border-radius:9999px;background:#f8fafc;font:600 12px 'Inter';color:#0b0f1a;cursor:pointer">Continuar</div>
+          <div style="height:32px;padding:0 13px;display:flex;align-items:center;border-radius:9999px;border:1px solid #334155;font:500 12px 'Inter';color:#cbd5e1;cursor:pointer">Pídelo más corto</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cspec">Lo generado <b>se conserva y se marca como válido</b> — tirarlo sería el peor resultado. El corte se señala con una regla que se desvanece, no con puntos suspensivos. "Continuar" pide la continuación; "Pídelo más corto" reenvía con instrucción de brevedad.</div>
+</div>
+
+<div class="card">
+  <div class="clabel"><span class="cnum">E4</span><span class="cname">JSON malformado · el modelo se salió del molde</span></div>
+  <div class="cbody">
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div style="display:flex;gap:11px;align-items:flex-start">
+        <img src="/disenos/assets/logo-mark.svg" alt="" style="width:16px;height:16px;display:block;margin-top:3px">
+        <div style="flex:1;font-size:13px;line-height:1.6;color:#cbd5e1">Con 30% de inicial la cuota baja a <b style="color:#fff">S/ 1,434</b> y el flujo mensual queda cerca de cero. Necesitas <b style="color:#fff">S/ 75,000</b> en efectivo para llegar ahí.</div>
+      </div>
+      <div style="border:1px solid #1e293b;border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px">
+        <i class="hgi hgi-stroke hgi-information-circle" style="font-size:15px;color:#94a3b8;margin-top:1px"></i>
+        <div style="flex:1">
+          <div style="font:500 12px/1.5 'Inter';color:#94a3b8">No pude fijar estos datos automáticamente esta vez.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px">
+            <div style="display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:9999px;border:1px solid #334155;font:500 11.5px 'Inter';color:#cbd5e1;cursor:pointer"><i class="hgi hgi-stroke hgi-plus-sign" style="font-size:12px"></i>Inicial 30%</div>
+            <div style="display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:9999px;border:1px solid #334155;font:500 11.5px 'Inter';color:#cbd5e1;cursor:pointer"><i class="hgi hgi-stroke hgi-plus-sign" style="font-size:12px"></i>Cuota S/ 1,434</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cspec">Falla <b>silenciosa</b>: el usuario ve la prosa normal, sin stack trace ni "error de parseo". Lo único que cambia es que el panel no se actualiza solo — se ofrecen <b>chips para fijar a mano</b> los valores que sí se detectaron por regex. Degradación, no pantalla de error.</div>
+</div>
+
+<div class="card">
+  <div class="clabel"><span class="cnum">E5</span><span class="cname">Fuera de alcance</span></div>
+  <div class="cbody">
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div style="align-self:flex-end;max-width:74%;background:#1e293b;border-radius:12px;padding:11px 14px;font-size:13px;line-height:1.5;color:#f1f5f9">¿Me conviene invertir en bitcoin?</div>
+      <div style="display:flex;gap:11px;align-items:flex-start">
+        <img src="/disenos/assets/logo-mark.svg" alt="" style="width:16px;height:16px;display:block;margin-top:3px">
+        <div style="flex:1">
+          <div style="font-size:13px;line-height:1.6;color:#cbd5e1">De eso no sé — solo veo hipotecas y propiedades en Perú. Lo que sí puedo:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+            <div style="padding:7px 13px;border-radius:9999px;border:1px solid #334155;font:500 12px 'Inter';color:#cbd5e1;cursor:pointer">Comparar tu depa contra un depósito a plazo</div>
+            <div style="padding:7px 13px;border-radius:9999px;border:1px solid #334155;font:500 12px 'Inter';color:#cbd5e1;cursor:pointer">Ver si amortizar rinde más</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cspec">Sin ícono, sin caja, sin disculpa larga: <b>una línea y dos salidas</b> hacia lo que el producto sí hace. Rechazar bien es tan importante como responder bien — y el reencuadre ("depa vs depósito a plazo") mantiene la conversación viva.</div>
+</div>
+
+</div>
+
+<div class="sec">
+  <div class="sech">Responsive — mobile 390 × 844</div>
+  <p class="secp">El panel no cabe al lado, y esconderlo detrás de un ícono lo mata: es la mitad del producto. La solución es un <b>bottom sheet persistente</b> — siempre visible como barra resumen sobre el composer, arrastrable a pantalla completa. El usuario nunca deja de ver cuántos datos tiene fijados.</p>
+</div>
+
+<div class="grid">
+
+<div class="mframe">
+  <div class="clabel"><span class="cnum">M1</span><span class="cname">Empty state</span></div>
+  <x-import component-from-global-scope="IOSDevice" from="/disenos/ios-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+    <div style="height:100%;background:#0b0f1a;display:flex;flex-direction:column">
+      <div style="flex:none;height:100px;box-sizing:border-box;padding:54px 20px 0;display:flex;align-items:center;gap:9px">
+        <img src="/disenos/assets/logo-mark.svg" alt="" style="width:18px;height:18px;display:block">
+        <span style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:13px;letter-spacing:-.02em;color:#fff">créditohipotecar.io</span>
+        <div style="flex:1"></div>
+        <div style="width:28px;height:28px;border-radius:6px;background:#334155;display:flex;align-items:center;justify-content:center;font:700 11px 'Inter';color:#fff">JC</div>
+      </div>
+      <div style="flex:1;min-height:0;overflow:hidden;padding:12px 20px 0;display:flex;flex-direction:column;justify-content:center">
+        <div style="font-family:'Plus Jakarta Sans';font-weight:800;font-size:27px;line-height:1.18;letter-spacing:-.03em;color:#fff;text-wrap:pretty">¿Qué depa estás evaluando?</div>
+        <div style="font-size:13.5px;line-height:1.6;color:#94a3b8;margin-top:10px">Cuéntamelo en tus palabras. Voy fijando los datos abajo y los puedes corregir cuando quieras.</div>
+        <div style="font:600 10px/1 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#64748b;margin:28px 0 12px">O empieza por una pregunta</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="padding:12px 15px;border-radius:12px;border:1px solid #334155;font:500 13.5px 'Inter';color:#cbd5e1">¿A cuánto puedo alquilarlo?</div>
+          <div style="padding:12px 15px;border-radius:12px;border:1px solid #334155;font:500 13.5px 'Inter';color:#cbd5e1">¿Es un buen negocio?</div>
+          <div style="padding:12px 15px;border-radius:12px;border:1px solid #334155;font:500 13.5px 'Inter';color:#cbd5e1">¿Cuánto me presta el banco?</div>
+        </div>
+      </div>
+      <div style="flex:none;padding:14px 20px 0">
+        <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:14px 14px 14px 16px;display:flex;align-items:center;gap:12px">
+          <div style="flex:1;font-size:14px;color:#94a3b8">Describe tu depa…</div>
+          <div style="flex:none;width:36px;height:36px;border-radius:9999px;background:#f8fafc;display:flex;align-items:center;justify-content:center;color:#0b0f1a"><i class="hgi hgi-stroke hgi-arrow-right-01" style="font-size:17px"></i></div>
+        </div>
+      </div>
+      <div style="flex:none;margin-top:12px;border-top:1px solid #1e293b;padding:14px 20px 34px;display:flex;align-items:center;gap:12px">
+        <div style="flex:1;font:500 12.5px 'Inter';color:#94a3b8">Ningún dato fijado todavía</div>
+        <i class="hgi hgi-stroke hgi-arrow-up-01" style="font-size:16px;color:#334155"></i>
+      </div>
+    </div>
+  </x-import>
+  <div class="cspec" style="width:390px">Los chips se vuelven <b>filas de 12px de alto</b> (radius 12, no pill): a 390px una fila por pregunta se lee mejor que un wrap de pills cortadas. Toda la fila es el hit target — 45px, sobre el mínimo de 44.</div>
+</div>
+
+<div class="mframe">
+  <div class="clabel"><span class="cnum">M2</span><span class="cname">Conversación · sheet colapsado</span></div>
+  <x-import component-from-global-scope="IOSDevice" from="/disenos/ios-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+    <div style="height:100%;background:#0b0f1a;display:flex;flex-direction:column">
+      <div style="flex:none;height:100px;box-sizing:border-box;padding:54px 20px 0;display:flex;align-items:center;gap:9px">
+        <img src="/disenos/assets/logo-mark.svg" alt="" style="width:18px;height:18px;display:block">
+        <div style="flex:1;min-width:0">
+          <div style="font:600 13px 'Inter';color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Depa Pueblo Libre</div>
+          <div style="font:500 11px 'Inter';color:#94a3b8">sin guardar</div>
+        </div>
+        <div style="width:28px;height:28px;border-radius:6px;background:#334155;display:flex;align-items:center;justify-content:center;font:700 11px 'Inter';color:#fff">JC</div>
+      </div>
+      <div style="flex:1;min-height:0;overflow:hidden;padding:8px 20px 0;display:flex;flex-direction:column;gap:18px">
+        <div style="align-self:flex-end;max-width:84%;background:#1e293b;border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.55;color:#f1f5f9">Depa de 250 mil en Pueblo Libre, 40 m², tasa 8%. ¿A cuánto lo alquilo?</div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div style="display:flex;align-items:center;gap:8px"><img src="/disenos/assets/logo-mark.svg" alt="" style="width:14px;height:14px;display:block"><span style="font:600 11.5px 'Inter';color:#94a3b8">Análisis</span></div>
+          <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:17px;line-height:1.35;letter-spacing:-.02em;color:#fff;text-wrap:pretty">Regular como negocio — depende de cuánta inicial pongas.</div>
+          <div style="display:flex;gap:9px;overflow:hidden">
+            <div style="flex:none;box-sizing:border-box;width:150px;background:#1e293b;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 15px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)">
+              <div style="font:600 10px 'Inter';letter-spacing:.08em;text-transform:uppercase;color:#94a3b8">Alquiler</div>
+              <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:23px;line-height:1;letter-spacing:-.02em;color:#fff;margin-top:8px;font-variant-numeric:tabular-nums">S/ 1,750</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:7px">al mes</div>
+            </div>
+            <div style="flex:none;box-sizing:border-box;width:150px;background:#1e293b;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 15px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)">
+              <div style="font:600 10px 'Inter';letter-spacing:.08em;text-transform:uppercase;color:#94a3b8">Yield neto</div>
+              <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:23px;line-height:1;letter-spacing:-.02em;color:#fff;margin-top:8px;font-variant-numeric:tabular-nums">6.2%</div>
+              <div style="font-size:11px;font-weight:500;color:#4ade80;margin-top:7px">↑ 1.0 pt</div>
+            </div>
+            <div style="flex:none;box-sizing:border-box;width:150px;background:#1e293b;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 15px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)">
+              <div style="font:600 10px 'Inter';letter-spacing:.08em;text-transform:uppercase;color:#94a3b8">Ingreso neto</div>
+              <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:23px;line-height:1;letter-spacing:-.02em;color:#fff;margin-top:8px;font-variant-numeric:tabular-nums">S/ 1,400</div>
+              <div style="font-size:11px;font-weight:500;color:#f87171;margin-top:7px">↓ S/ 443</div>
+            </div>
+          </div>
+          <div style="font-size:13.5px;line-height:1.6;color:#cbd5e1">Con 90% financiado tu cuota sería <b style="color:#fff">S/ 1,843</b> contra un ingreso neto de <b style="color:#fff">S/ 1,400</b>: subsidias el depa de tu bolsillo.</div>
+        </div>
+      </div>
+      <div style="flex:none;padding:12px 20px 0">
+        <div style="display:flex;gap:8px;overflow:hidden;margin-bottom:12px">
+          <div style="flex:none;padding:8px 13px;border-radius:9999px;border:1px solid #334155;font:500 12.5px 'Inter';color:#cbd5e1;white-space:nowrap">¿Y con 30% de inicial?</div>
+          <div style="flex:none;padding:8px 13px;border-radius:9999px;border:1px solid #334155;font:500 12.5px 'Inter';color:#cbd5e1;white-space:nowrap">20 vs 25 años</div>
+        </div>
+        <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:13px 13px 13px 16px;display:flex;align-items:center;gap:11px">
+          <div style="flex:1;font-size:14px;color:#94a3b8">Pregunta lo que quieras…</div>
+          <div style="flex:none;width:34px;height:34px;border-radius:9999px;background:#f8fafc;display:flex;align-items:center;justify-content:center;color:#0b0f1a"><i class="hgi hgi-stroke hgi-arrow-right-01" style="font-size:16px"></i></div>
+        </div>
+      </div>
+      <div style="flex:none;margin-top:12px;background:#0f172a;border-top:1px solid #1e293b;border-radius:16px 16px 0 0;padding:10px 20px 30px">
+        <div style="width:36px;height:4px;border-radius:9999px;background:#334155;margin:0 auto 12px"></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="flex:1">
+            <div style="font:600 13px 'Inter';color:#fff">7 datos fijados</div>
+            <div style="font:500 11.5px 'Inter';color:#94a3b8;margin-top:2px">2 los asumí yo · 1 escenario guardado</div>
+          </div>
+          <div style="flex:none;display:flex;align-items:center;gap:6px;height:36px;padding:0 15px;border-radius:9999px;background:#f8fafc;font:600 12.5px 'Inter';color:#0b0f1a">Guardar</div>
+        </div>
+      </div>
+    </div>
+  </x-import>
+  <div class="cspec" style="width:390px">Sheet colapsado = <b>barra resumen de 96px</b> con grabber, conteo, cuántos asumió la IA y el CTA. Las métricas y los chips pasan a <b>scroll horizontal</b> con la tercera tarjeta asomada — el corte parcial es lo que invita a deslizar.</div>
+</div>
+
+<div class="mframe">
+  <div class="clabel"><span class="cnum">M3</span><span class="cname">Sheet expandido · panel completo</span></div>
+  <x-import component-from-global-scope="IOSDevice" from="/disenos/ios-frame.jsx" dark="{{ true }}" width="{{ 390 }}" height="{{ 844 }}" hint-size="390px,844px">
+    <div style="height:100%;background:#0b0f1a;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:54px 20px 0">
+        <div style="display:flex;align-items:center;gap:9px">
+          <img src="/disenos/assets/logo-mark.svg" alt="" style="width:18px;height:18px;display:block">
+          <div style="flex:1;font:600 13px 'Inter';color:#fff">Depa Pueblo Libre</div>
+          <div style="width:28px;height:28px;border-radius:6px;background:#334155;display:flex;align-items:center;justify-content:center;font:700 11px 'Inter';color:#fff">JC</div>
+        </div>
+      </div>
+      <div style="position:absolute;inset:0;background:rgba(2,6,23,.6);animation:k-scrim 6s cubic-bezier(.2,.7,.2,1) infinite"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:748px;background:#0f172a;border-top:1px solid #334155;border-radius:16px 16px 0 0;display:flex;flex-direction:column;animation:k-sheet 6s cubic-bezier(.2,.7,.2,1) infinite">
+        <div style="flex:none;padding:10px 20px 14px">
+          <div style="width:36px;height:4px;border-radius:9999px;background:#334155;margin:0 auto 14px"></div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between">
+            <div style="font:600 11px 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Datos de la operación</div>
+            <div style="font:500 11.5px 'Inter';color:#94a3b8">7 fijados</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;margin-top:11px">
+            <div style="display:flex;align-items:center;gap:6px;font:500 11px 'Inter';color:#94a3b8"><span style="width:7px;height:7px;border-radius:9999px;background:#94a3b8"></span>Lo dijiste tú</div>
+            <div style="display:flex;align-items:center;gap:6px;font:500 11px 'Inter';color:#F4BC44"><span style="width:7px;height:7px;border-radius:9999px;background:#F4BC44"></span>Lo asumí yo</div>
+          </div>
+        </div>
+        <div style="flex:1;min-height:0;overflow:hidden;padding:0 14px;display:flex;flex-direction:column;gap:2px">
+          <div style="padding:12px;border-radius:10px;border:1px solid transparent">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font:600 11px 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Precio de compra</span>
+              <span style="width:6px;height:6px;border-radius:9999px;background:#94a3b8"></span>
+              <div style="flex:1"></div>
+              <i class="hgi hgi-stroke hgi-edit-01" style="font-size:14px;color:#64748b"></i>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-top:7px">
+              <span style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;color:#94a3b8">S/</span>
+              <span style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:18px;letter-spacing:-.02em;color:#fff;font-variant-numeric:tabular-nums">250,000</span>
+            </div>
+            <div style="font:500 11.5px/1.45 'Inter';color:#94a3b8;margin-top:5px">S/ 6,250/m² · promedio Lima moderna S/ 6,776.</div>
+          </div>
+          <div style="padding:12px;border-radius:10px;border:1px solid transparent">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font:600 11px 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Tasa TEA</span>
+              <span style="width:6px;height:6px;border-radius:9999px;background:#94a3b8"></span>
+              <div style="flex:1"></div>
+              <i class="hgi hgi-stroke hgi-edit-01" style="font-size:14px;color:#64748b"></i>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-top:7px">
+              <span style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:18px;letter-spacing:-.02em;color:#fff;font-variant-numeric:tabular-nums">8.0</span>
+              <span style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;color:#94a3b8">%</span>
+            </div>
+            <div style="font:500 11.5px/1.45 'Inter';color:#94a3b8;margin-top:5px">Scotiabank desde 7.24% — es negociable.</div>
+          </div>
+          <div style="padding:12px;border-radius:10px;border:1px solid #1e293b;background:rgba(244,188,68,.04)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font:600 11px 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Cuota inicial</span>
+              <span style="width:6px;height:6px;border-radius:9999px;background:#F4BC44"></span>
+              <div style="flex:1"></div>
+              <i class="hgi hgi-stroke hgi-edit-01" style="font-size:14px;color:#64748b"></i>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-top:7px">
+              <span style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:18px;letter-spacing:-.02em;color:#fff;font-variant-numeric:tabular-nums">10</span>
+              <span style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;color:#94a3b8">%</span>
+            </div>
+            <div style="font:500 11.5px/1.45 'Inter';color:#94a3b8;margin-top:5px">Asumí el mínimo. Con 30% el flujo se vuelve neutro.</div>
+          </div>
+        </div>
+        <div style="flex:none;padding:14px 20px 32px;border-top:1px solid #1e293b">
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:9999px;background:#f8fafc;font:600 14.5px 'Inter';color:#0b0f1a"><i class="hgi hgi-stroke hgi-plus-sign" style="font-size:17px"></i>Guardar como propiedad</div>
+        </div>
+      </div>
+    </div>
+  </x-import>
+  <div class="cspec" style="width:390px">Expandido cubre <b>88% del alto</b> con scrim <b>rgba(2,6,23,.6)</b> — el chat asoma arriba, así se entiende que no cambiaste de pantalla. Los campos suben a <b>11px de label y 18px de valor</b> (contra 10/17 en desktop) por distancia de lectura. El CTA queda fijo abajo, 50px.</div>
+</div>
+
+</div>
+
+</x-dc>
+</body>
+</html>

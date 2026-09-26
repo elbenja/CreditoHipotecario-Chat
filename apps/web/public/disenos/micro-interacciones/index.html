@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/disenos/support.js"></script>
+<script src="/disenos/nav.js" defer></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="/disenos/_ds/cr-ditohipotecar-io-design-system-8a4aa9ad-9e62-43c6-905f-d9393b27c056/components/fig-tokens.css">
+<link rel="stylesheet" href="/disenos/_ds/cr-ditohipotecar-io-design-system-8a4aa9ad-9e62-43c6-905f-d9393b27c056/components/fig-typography.css">
+<link rel="stylesheet" href="/disenos/_ds/cr-ditohipotecar-io-design-system-8a4aa9ad-9e62-43c6-905f-d9393b27c056/components/fig-assets.css">
+<link rel="stylesheet" href="/disenos/_ds/cr-ditohipotecar-io-design-system-8a4aa9ad-9e62-43c6-905f-d9393b27c056/colors_and_type.css">
+<link rel="stylesheet" href="/disenos/_ds/cr-ditohipotecar-io-design-system-8a4aa9ad-9e62-43c6-905f-d9393b27c056/styles.css">
+<link href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css" rel="stylesheet">
+<style>
+html,body{min-height:100%;background:#e9e7e2}
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#1a1a1a;font-size:14px;line-height:1.6}
+a{color:#0f172a}a:hover{color:#000}
+@keyframes k-send{0%{opacity:0;transform:translateY(10px)}14%{opacity:1;transform:none}86%{opacity:1;transform:none}100%{opacity:0;transform:translateY(10px)}}
+@keyframes k-clear{0%{opacity:1}10%{opacity:0}84%{opacity:0}100%{opacity:1}}
+@keyframes k-dot{0%,72%,100%{opacity:.22;transform:translateY(0)}36%{opacity:1;transform:translateY(-3px)}}
+@keyframes k-step{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
+@keyframes k-spin{to{transform:rotate(360deg)}}
+@keyframes k-shimmer{0%{background-position:-220px 0}100%{background-position:320px 0}}
+@keyframes k-caret{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes k-line{0%{opacity:0;transform:translateY(4px)}100%{opacity:1;transform:none}}
+@keyframes k-ring{0%,10%{box-shadow:0 0 0 0 rgba(244,188,68,0);border-color:#1e293b}30%,70%{box-shadow:0 0 0 3px rgba(244,188,68,.35);border-color:#F4BC44}90%,100%{box-shadow:0 0 0 0 rgba(244,188,68,0);border-color:#1e293b}}
+@keyframes k-chip{0%,12%{opacity:0;transform:translateY(8px)}32%,72%{opacity:1;transform:none}92%,100%{opacity:0;transform:translateY(8px)}}
+@keyframes k-fly{0%,14%{opacity:1;transform:none}50%{opacity:1;transform:translate(150px,-3px) scale(.79)}64%,100%{opacity:0;transform:translate(198px,-4px) scale(.72)}}
+@keyframes k-land{0%,52%{opacity:0;transform:translateY(8px)}70%,88%{opacity:1;transform:none}100%{opacity:1;transform:none}}
+@keyframes k-flash{0%,54%{border-color:rgba(255,255,255,.06)}66%{border-color:#F4BC44}100%{border-color:rgba(255,255,255,.06)}}
+@keyframes k-collapse{0%,26%{opacity:1;max-height:74px;margin-bottom:8px;padding-top:11px;padding-bottom:11px;border-width:1px}62%,100%{opacity:0;max-height:0;margin-bottom:0;padding-top:0;padding-bottom:0;border-width:0}}
+@keyframes k-undo{0%,30%{opacity:0;transform:translateY(6px)}54%,88%{opacity:1;transform:none}100%{opacity:0;transform:translateY(6px)}}
+@keyframes k-bar{0%,6%{width:0}52%{width:100%}100%{width:100%}}
+@keyframes k-pct{0%,6%{content:"0%"}}
+@keyframes k-upl{0%,56%{opacity:1;transform:none}66%,100%{opacity:0;transform:translateY(-6px)}}
+@keyframes k-read{0%,62%{opacity:0;transform:translateY(6px)}74%,100%{opacity:1;transform:none}}
+@keyframes k-scan{0%,8%{opacity:0;transform:translateY(0)}16%{opacity:1}50%{opacity:1;transform:translateY(34px)}58%,100%{opacity:0;transform:translateY(34px)}}
+@keyframes k-rowin{0%{opacity:0;transform:translateY(5px)}100%{opacity:1;transform:none}}
+@keyframes k-veil{0%,8%{opacity:0}22%,82%{opacity:1}96%,100%{opacity:0}}
+@keyframes k-blur{0%,8%{filter:blur(0);opacity:.85}22%,82%{filter:blur(3px);opacity:.28}96%,100%{filter:blur(0);opacity:.85}}
+@keyframes k-ico{0%,10%{opacity:0;transform:translateY(8px) rotate(var(--r,0deg))}26%,80%{opacity:1;transform:translateY(0) rotate(var(--r,0deg))}94%,100%{opacity:0;transform:translateY(8px) rotate(var(--r,0deg))}}
+@keyframes k-icofloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes k-nope{0%,10%{opacity:0}24%,84%{opacity:1}96%,100%{opacity:0}}
+@keyframes k-cntold{0%,18%{opacity:1;transform:none}30%,100%{opacity:0;transform:translateY(-7px)}}
+@keyframes k-cntnew{0%,22%{opacity:0;transform:translateY(7px)}34%,100%{opacity:1;transform:none}}
+@keyframes k-badge{0%,20%{opacity:0;transform:translateX(-6px)}36%,86%{opacity:1;transform:none}98%,100%{opacity:0;transform:translateX(-6px)}}
+@keyframes k-pulse{0%,24%{box-shadow:0 0 0 0 rgba(244,188,68,.55)}48%{box-shadow:0 0 0 5px rgba(244,188,68,0)}100%{box-shadow:0 0 0 0 rgba(244,188,68,0)}}
+@keyframes k-hl{0%,28%{background:rgba(244,188,68,.12)}74%,100%{background:rgba(244,188,68,0)}}
+@keyframes k-old{0%,34%{opacity:0;transform:translateY(3px)}46%,80%{opacity:1;transform:none}94%,100%{opacity:0}}
+.grid{display:flex;flex-wrap:wrap;gap:26px;padding:44px 48px 56px;max-width:1400px}
+.mcard{flex:none;width:404px;display:flex;flex-direction:column;gap:9px}
+.mlabel{display:flex;align-items:baseline;gap:9px}
+.mnum{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:#0f172a;color:#fff;border-radius:5px}
+.mname{font:600 13px 'Inter';color:#1a1a1a}
+.mbody{background:#0b0f1a;border:1px solid rgba(0,0,0,.14);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.14);padding:20px;height:186px;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column;justify-content:center}
+.mspec{font:400 11.5px/1.5 'Inter';color:rgba(0,0,0,.5)}
+.mspec b{color:rgba(0,0,0,.75);font-weight:600}
+.intro{padding:44px 48px 0;max-width:760px}
+</style>
+</helmet>
+
+<div class="intro">
+  <div style="font-family:'Plus Jakarta Sans';font-weight:800;font-size:26px;line-height:1.2;letter-spacing:-.03em;color:#111">Micro-interacciones del chat</div>
+  <p style="font-size:13.5px;line-height:1.65;color:rgba(0,0,0,.6);margin:12px 0 0">Trece estados en loop, con su spec debajo para implementarlos directo. Todos usan la curva del sistema — <b>cubic-bezier(.2,.7,.2,1)</b> — y duraciones de 120/180/240ms. Nada de bounces ni spring: el producto habla de dinero, el movimiento tiene que sentirse mecánico y confiable.</p>
+</div>
+
+<div class="grid">
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">01</span><span class="mname">Enviando</span></div>
+  <div class="mbody">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="align-self:flex-end;max-width:76%;background:#1e293b;border-radius:12px;padding:11px 14px;font-size:13px;line-height:1.5;color:#f1f5f9;animation:k-send 3.2s cubic-bezier(.2,.7,.2,1) infinite">¿A cuánto puedo alquilarlo?</div>
+      <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+        <div style="flex:1;font-size:13px;color:#94a3b8;animation:k-clear 3.2s steps(1,end) infinite">¿A cuánto puedo alquilarlo?</div>
+        <div style="flex:none;width:28px;height:28px;border-radius:9999px;background:#f8fafc;display:flex;align-items:center;justify-content:center;color:#0b0f1a"><i class="hgi hgi-stroke hgi-arrow-right-01" style="font-size:15px"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="mspec"><b>240ms</b> · fade + 10px hacia arriba. El input se vacía en el mismo frame en que aparece la burbuja — nunca después, o se siente que se perdió el mensaje.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">02</span><span class="mname">Pensando</span></div>
+  <div class="mbody">
+    <div style="display:flex;align-items:center;gap:11px">
+      <img src="/disenos/assets/logo-mark.svg" alt="" style="width:16px;height:16px;display:block">
+      <div style="display:flex;align-items:center;gap:5px;padding:10px 14px;border-radius:12px;background:#0f172a;border:1px solid #1e293b">
+        <span style="width:6px;height:6px;border-radius:9999px;background:#94a3b8;animation:k-dot 1.3s cubic-bezier(.2,.7,.2,1) infinite"></span>
+        <span style="width:6px;height:6px;border-radius:9999px;background:#94a3b8;animation:k-dot 1.3s cubic-bezier(.2,.7,.2,1) .16s infinite"></span>
+        <span style="width:6px;height:6px;border-radius:9999px;background:#94a3b8;animation:k-dot 1.3s cubic-bezier(.2,.7,.2,1) .32s infinite"></span>
+      </div>
+    </div>
+  </div>
+  <div class="mspec"><b>1.3s en loop</b>, stagger de 160ms. Solo para la espera corta (&lt;2s). Si pasa de ahí, cambia a <b>03</b>: los puntos sin texto empiezan a sentirse colgados.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">03</span><span class="mname">Analizando</span></div>
+  <div class="mbody">
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div style="display:flex;align-items:center;gap:10px;animation:k-step 240ms cubic-bezier(.2,.7,.2,1) both">
+        <i class="hgi hgi-stroke hgi-tick-double-01" style="font-size:15px;color:#4ade80"></i>
+        <span style="font:500 12.5px 'Inter';color:#94a3b8">Alquileres de 40 m² en Pueblo Libre</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;animation:k-step 240ms cubic-bezier(.2,.7,.2,1) .4s both">
+        <i class="hgi hgi-stroke hgi-tick-double-01" style="font-size:15px;color:#4ade80"></i>
+        <span style="font:500 12.5px 'Inter';color:#94a3b8">Precio por m² contra el BCRP</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;animation:k-step 240ms cubic-bezier(.2,.7,.2,1) .8s both">
+        <span style="width:15px;height:15px;flex:none;border-radius:9999px;border:2px solid #1e293b;border-top-color:#F4BC44;animation:k-spin .8s linear infinite"></span>
+        <span style="font:500 12.5px 'Inter';color:#f1f5f9">Calculando tu cuota al 8%…</span>
+      </div>
+    </div>
+  </div>
+  <div class="mspec">Cada paso entra con <b>240ms</b> y ~400ms de stagger. Los pasos cumplidos se quedan en verde: el usuario aprende de dónde salen los números, que es la mitad de la confianza.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">04</span><span class="mname">Armando el resultado</span></div>
+  <div class="mbody">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      <div style="background:#1e293b;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px">
+        <div style="height:7px;width:70%;border-radius:4px;background:#334155"></div>
+        <div style="height:18px;margin-top:11px;border-radius:5px;background:linear-gradient(90deg,#334155 0%,#475569 40%,#334155 80%);background-size:320px 100%;animation:k-shimmer 1.4s linear infinite"></div>
+        <div style="height:6px;width:52%;margin-top:9px;border-radius:4px;background:#334155"></div>
+      </div>
+      <div style="background:#1e293b;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px">
+        <div style="height:7px;width:60%;border-radius:4px;background:#334155"></div>
+        <div style="height:18px;margin-top:11px;border-radius:5px;background:linear-gradient(90deg,#334155 0%,#475569 40%,#334155 80%);background-size:320px 100%;animation:k-shimmer 1.4s linear .12s infinite"></div>
+        <div style="height:6px;width:64%;margin-top:9px;border-radius:4px;background:#334155"></div>
+      </div>
+      <div style="background:#1e293b;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px">
+        <div style="height:7px;width:66%;border-radius:4px;background:#334155"></div>
+        <div style="height:18px;margin-top:11px;border-radius:5px;background:linear-gradient(90deg,#334155 0%,#475569 40%,#334155 80%);background-size:320px 100%;animation:k-shimmer 1.4s linear .24s infinite"></div>
+        <div style="height:6px;width:44%;margin-top:9px;border-radius:4px;background:#334155"></div>
+      </div>
+    </div>
+  </div>
+  <div class="mspec">Skeleton con la <b>forma exacta</b> de las tres métricas, shimmer de 1.4s y stagger de 120ms. Nunca un spinner genérico: el esqueleto ya promete qué va a llegar.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">05</span><span class="mname">Escribiendo la respuesta</span></div>
+  <div class="mbody">
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;line-height:1.35;letter-spacing:-.02em;color:#fff;animation:k-line 180ms cubic-bezier(.2,.7,.2,1) both">Regular como negocio.</div>
+      <div style="font-size:12.5px;line-height:1.6;color:#cbd5e1;animation:k-line 180ms cubic-bezier(.2,.7,.2,1) .3s both">Depende casi por completo de cuánta</div>
+      <div style="font-size:12.5px;line-height:1.6;color:#cbd5e1;animation:k-line 180ms cubic-bezier(.2,.7,.2,1) .6s both">inicial pongas<span style="display:inline-block;width:7px;height:14px;margin-left:3px;vertical-align:-2px;background:#F4BC44;animation:k-caret 1s steps(1,end) infinite"></span></div>
+    </div>
+  </div>
+  <div class="mspec">Por <b>línea</b>, no por caracter: 180ms de fade + 4px. Los números se revelan ya formateados (<b>S/ 1,750</b>), nunca contando — un número que cambia mientras lo lees no se puede confiar.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">06</span><span class="mname">Focus del composer</span></div>
+  <div class="mbody">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <div style="padding:6px 11px;border-radius:9999px;border:1px solid #334155;font:500 11.5px 'Inter';color:#cbd5e1;animation:k-chip 3.4s cubic-bezier(.2,.7,.2,1) infinite">¿Y con 30% de inicial?</div>
+        <div style="padding:6px 11px;border-radius:9999px;border:1px solid #334155;font:500 11.5px 'Inter';color:#cbd5e1;animation:k-chip 3.4s cubic-bezier(.2,.7,.2,1) .07s infinite">20 vs 25 años</div>
+      </div>
+      <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:12px;animation:k-ring 3.4s cubic-bezier(.2,.7,.2,1) infinite">
+        <div style="flex:1;font-size:13px;color:#94a3b8">Pregunta lo que quieras…</div>
+        <div style="flex:none;width:28px;height:28px;border-radius:9999px;background:#f8fafc;display:flex;align-items:center;justify-content:center;color:#0b0f1a"><i class="hgi hgi-stroke hgi-arrow-right-01" style="font-size:15px"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="mspec">Focus = el ring del sistema, <b>0 0 0 3px rgba(244,188,68,.35)</b> en 180ms. Al enfocar suben 2 sugerencias contextuales (no 4: el composer no es un menú).</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">07</span><span class="mname">Grabar un escenario</span></div>
+  <div class="mbody">
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      <div style="flex:none;width:168px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:13px;animation:k-fly 3.6s cubic-bezier(.2,.7,.2,1) infinite">
+        <div style="font:600 11px/1.3 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Si lo amueblas</div>
+        <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:17px;letter-spacing:-.02em;color:#4ade80;margin-top:7px">+S/ 250</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:5px;height:27px;margin-top:10px;border-radius:9999px;border:1px solid #334155;font:600 10.5px 'Inter';color:#cbd5e1"><i class="hgi hgi-stroke hgi-bookmark-add-02" style="font-size:12px"></i>Guardar</div>
+      </div>
+      <div style="flex:1;border-left:1px solid #1e293b;padding-left:16px;min-height:118px">
+        <div style="font:600 11px/1 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px">Guardados</div>
+        <div style="padding:11px 12px;border-radius:10px;background:#1e293b;border:1px solid rgba(255,255,255,.06);animation:k-land 3.6s cubic-bezier(.2,.7,.2,1) infinite,k-flash 3.6s linear infinite">
+          <div style="font:600 11px/1.3 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Si lo amueblas</div>
+          <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;letter-spacing:-.02em;color:#4ade80;margin-top:6px">+S/ 250</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mspec">La tarjeta <b>viaja</b> al panel (240ms, escala a .72) y el slot destino da un flash de borde amarillo. Sin el viaje, el usuario no aprende dónde quedó lo que guardó.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">08</span><span class="mname">Borrar</span></div>
+  <div class="mbody">
+    <div style="display:flex;flex-direction:column;gap:0">
+      <div style="overflow:hidden;box-sizing:border-box;padding:11px 12px;border-radius:10px;background:#1e293b;border:1px solid rgba(255,255,255,.06);display:flex;align-items:flex-start;gap:10px;animation:k-collapse 3.4s cubic-bezier(.2,.7,.2,1) infinite">
+        <div style="flex:1">
+          <div style="font:600 11px/1.3 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Si estiras a 25 años</div>
+          <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;letter-spacing:-.02em;color:#F4BC44;margin-top:6px">−S/ 148</div>
+        </div>
+        <i class="hgi hgi-stroke hgi-delete-02" style="font-size:14px;color:#f87171"></i>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid #1e293b;animation:k-undo 3.4s cubic-bezier(.2,.7,.2,1) infinite">
+        <span style="font:500 12px 'Inter';color:#94a3b8">Escenario borrado</span>
+        <span style="font:600 12px 'Inter';color:#f8fafc;text-decoration:underline">Deshacer</span>
+      </div>
+    </div>
+  </div>
+  <div class="mspec">Colapsa el alto en <b>180ms</b> (sin fade solo: el hueco tiene que cerrarse) y deja un <b>Deshacer</b> por 5s. Nunca un diálogo de confirmación para algo que se recalcula en un segundo.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">09</span><span class="mname">Cargando un cronograma</span></div>
+  <div class="mbody">
+    <div style="position:relative;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:12px;background:#0f172a;border:1px solid #1e293b;animation:k-upl 5.4s cubic-bezier(.2,.7,.2,1) infinite">
+        <div style="position:relative;flex:none;width:34px;height:42px;border-radius:6px;background:#1e293b;border:1px solid #334155;overflow:hidden;display:flex;align-items:center;justify-content:center">
+          <i class="hgi hgi-stroke hgi-file-02" style="font-size:16px;color:#94a3b8"></i>
+          <span style="position:absolute;left:0;right:0;top:2px;height:2px;background:#F4BC44;box-shadow:0 0 8px rgba(244,188,68,.7);animation:k-scan 5.4s cubic-bezier(.2,.7,.2,1) infinite"></span>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+            <span style="font:500 12.5px 'Inter';color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">cronograma-bcp-2026.pdf</span>
+            <span style="flex:none;font:500 11px 'Inter';font-variant-numeric:tabular-nums;color:#94a3b8">248 KB</span>
+          </div>
+          <div style="height:4px;margin-top:9px;border-radius:9999px;background:#1e293b;overflow:hidden">
+            <div style="height:100%;border-radius:9999px;background:#F4BC44;animation:k-bar 5.4s cubic-bezier(.2,.7,.2,1) infinite"></div>
+          </div>
+          <div style="margin-top:7px;font:500 11px 'Inter';color:#94a3b8">Leyendo tu cronograma…</div>
+        </div>
+      </div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;gap:9px;animation:k-read 5.4s cubic-bezier(.2,.7,.2,1) infinite">
+        <div style="display:flex;align-items:center;gap:9px">
+          <i class="hgi hgi-stroke hgi-tick-double-01" style="font-size:15px;color:#4ade80"></i>
+          <span style="font:500 12.5px 'Inter';color:#f1f5f9">240 cuotas leídas · BCP</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#1e293b;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 11px;animation:k-rowin 180ms cubic-bezier(.2,.7,.2,1) 3.6s both">
+            <div style="font:600 9.5px/1 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Saldo</div>
+            <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;letter-spacing:-.02em;color:#fff;margin-top:6px;font-variant-numeric:tabular-nums">S/ 318,420</div>
+          </div>
+          <div style="background:#1e293b;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 11px;animation:k-rowin 180ms cubic-bezier(.2,.7,.2,1) 3.72s both">
+            <div style="font:600 9.5px/1 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Tasa</div>
+            <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;letter-spacing:-.02em;color:#fff;margin-top:6px;font-variant-numeric:tabular-nums">8.35%</div>
+          </div>
+        </div>
+        <div style="font:400 11px/1.45 'Inter';color:#94a3b8">Revisa los 3 campos antes de fijarlos →</div>
+      </div>
+    </div>
+  </div>
+  <div class="mspec">Una sola fila: barra amarilla a <b>0→100%</b> con la línea de escaneo sobre el ícono, y al terminar la fila se reemplaza (<b>240ms</b>) por lo que el modelo extrajo, no por un "listo". Los campos entran con stagger de 120ms y quedan <b>marcados como asumidos</b> hasta que el usuario los confirme — un PDF mal leído no puede entrar como dato del usuario.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">10</span><span class="mname">Arrastrando sobre el chat</span></div>
+  <div class="mbody" style="padding:0;position:relative">
+    <div style="position:absolute;inset:0;padding:18px;display:flex;flex-direction:column;gap:10px;justify-content:center;animation:k-blur 5s cubic-bezier(.2,.7,.2,1) infinite">
+      <div style="align-self:flex-end;width:58%;height:30px;border-radius:12px;background:#1e293b"></div>
+      <div style="width:78%;height:12px;border-radius:6px;background:#0f172a"></div>
+      <div style="width:64%;height:12px;border-radius:6px;background:#0f172a"></div>
+      <div style="width:100%;height:38px;border-radius:12px;border:1px solid #1e293b"></div>
+    </div>
+    <div style="position:absolute;inset:8px;border-radius:12px;border:2px dashed rgba(244,188,68,.55);background:rgba(11,15,26,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;animation:k-veil 5s cubic-bezier(.2,.7,.2,1) infinite">
+      <div style="display:flex;align-items:flex-end;gap:16px;color:#F4BC44">
+        <i class="hgi hgi-stroke hgi-image-02" style="--r:-10deg;font-size:25px;animation:k-ico 5s cubic-bezier(.2,.7,.2,1) infinite"></i>
+        <i class="hgi hgi-stroke hgi-file-02" style="font-size:31px;animation:k-ico 5s cubic-bezier(.2,.7,.2,1) .06s infinite,k-icofloat 2.4s ease-in-out infinite"></i>
+        <i class="hgi hgi-stroke hgi-folder-02" style="--r:10deg;font-size:25px;animation:k-ico 5s cubic-bezier(.2,.7,.2,1) .12s infinite"></i>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;letter-spacing:-.02em;color:#f8fafc">Suelta tu cronograma aquí</div>
+        <div style="margin-top:5px;font:400 11.5px 'Inter';color:#94a3b8">PDF o Excel del banco · hasta 10 MB</div>
+      </div>
+    </div>
+  </div>
+  <div class="mspec">La zona es <b>todo el panel</b>, no un recuadro chico: el borde punteado <b>amarillo</b> aparece en <b>180ms</b> apenas el cursor entra con un archivo, y el chat de atrás se desenfoca 3px al 28% para que no haya duda de dónde soltar. El texto dice <b>qué</b> aceptamos antes de soltar, no después.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">11</span><span class="mname">Formato no soportado</span></div>
+  <div class="mbody" style="padding:0;position:relative">
+    <div style="position:absolute;inset:0;padding:18px;display:flex;flex-direction:column;gap:10px;justify-content:center;animation:k-blur 5s cubic-bezier(.2,.7,.2,1) infinite">
+      <div style="align-self:flex-end;width:58%;height:30px;border-radius:12px;background:#1e293b"></div>
+      <div style="width:78%;height:12px;border-radius:6px;background:#0f172a"></div>
+      <div style="width:64%;height:12px;border-radius:6px;background:#0f172a"></div>
+      <div style="width:100%;height:38px;border-radius:12px;border:1px solid #1e293b"></div>
+    </div>
+    <div style="position:absolute;inset:8px;border-radius:12px;border:2px dashed rgba(245,158,11,.5);background:rgba(11,15,26,.78);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;animation:k-nope 5s cubic-bezier(.2,.7,.2,1) infinite">
+      <i class="hgi hgi-stroke hgi-file-not-found" style="font-size:28px;color:#f59e0b"></i>
+      <div style="text-align:center">
+        <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:14px;letter-spacing:-.02em;color:#f8fafc">No puedo leer .docx todavía</div>
+        <div style="margin-top:5px;font:400 11.5px 'Inter';color:#94a3b8">Exporta el cronograma como PDF y suéltalo de nuevo</div>
+      </div>
+    </div>
+  </div>
+  <div class="mspec">Mismo overlay, <b>ámbar</b> en vez de amarillo y sin borde rojo: no es un error del usuario, es un límite nuestro. El cursor sigue en <code>no-drop</code>, el archivo nunca se sube, y el mensaje dice <b>la salida</b> — exportar a PDF — no solo el rechazo.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">12</span><span class="mname">El grupo avisa que cambió</span></div>
+  <div class="mbody">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font:600 11px/1 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Hipoteca</span>
+        <span style="position:relative;display:inline-block;width:16px;height:14px;font:600 12px/14px 'Inter';font-variant-numeric:tabular-nums;color:#cbd5e1">
+          <span style="position:absolute;inset:0;animation:k-cntold 4.4s cubic-bezier(.2,.7,.2,1) infinite">7</span>
+          <span style="position:absolute;inset:0;animation:k-cntnew 4.4s cubic-bezier(.2,.7,.2,1) infinite">11</span>
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:9999px;background:rgba(244,188,68,.15);font:600 10.5px 'Inter';color:#F4BC44;animation:k-badge 4.4s cubic-bezier(.2,.7,.2,1) infinite"><span style="width:5px;height:5px;border-radius:9999px;background:#F4BC44"></span>4 del PDF</span>
+        <i class="hgi hgi-stroke hgi-arrow-down-01" style="margin-left:auto;font-size:15px;color:#64748b"></i>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:11px;opacity:.55">
+        <div>
+          <div style="display:flex;align-items:center;gap:7px"><span style="font:600 9.5px/1 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Monto financiado</span><span style="width:5px;height:5px;border-radius:9999px;background:#4ade80"></span></div>
+          <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;letter-spacing:-.02em;color:#fff;margin-top:5px;font-variant-numeric:tabular-nums"><span style="color:#94a3b8">S/</span> 283,764.56</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:7px"><span style="font:600 9.5px/1 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">TEA</span><span style="width:5px;height:5px;border-radius:9999px;background:#4ade80"></span></div>
+          <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;letter-spacing:-.02em;color:#fff;margin-top:5px;font-variant-numeric:tabular-nums">6.800 <span style="font-size:11px;color:#94a3b8">%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mspec">El conteo <b>cambia de 7 a 11</b> con un crossfade de 180ms — nunca contando. Al lado entra el pill <b>"4 del PDF"</b> y se queda hasta que abras el grupo: es una tarea pendiente, no un toast. El grupo <b>no se auto-expande</b>; interrumpir el scroll del usuario para mostrarle algo que él pidió es peor que esperarlo.</div>
+</div>
+
+<div class="mcard">
+  <div class="mlabel"><span class="mnum">13</span><span class="mname">Al abrir: qué cambió</span></div>
+  <div class="mbody">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <div style="border-radius:8px;padding:6px 9px;margin:0 -9px;animation:k-hl 4.4s cubic-bezier(.2,.7,.2,1) infinite">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font:600 9.5px/1 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">TEA</span>
+          <span style="width:6px;height:6px;border-radius:9999px;background:#F4BC44;animation:k-pulse 4.4s cubic-bezier(.2,.7,.2,1) infinite"></span>
+          <i class="hgi hgi-stroke hgi-edit-01" style="margin-left:auto;font-size:13px;color:#64748b"></i>
+        </div>
+        <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:17px;letter-spacing:-.02em;color:#fff;margin-top:5px;font-variant-numeric:tabular-nums">6.800 <span style="font-size:11px;color:#94a3b8">%</span></div>
+        <div style="margin-top:4px;font:400 11px 'Inter';color:#94a3b8;animation:k-old 4.4s cubic-bezier(.2,.7,.2,1) infinite">antes <s style="color:#94a3b8">8.000 %</s> · leído del PDF</div>
+      </div>
+      <div style="padding:6px 9px;margin:0 -9px">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font:600 9.5px/1 'Inter';letter-spacing:.1em;text-transform:uppercase;color:#94a3b8">Plazo</span>
+          <span style="width:6px;height:6px;border-radius:9999px;background:#4ade80"></span>
+          <i class="hgi hgi-stroke hgi-edit-01" style="margin-left:auto;font-size:13px;color:#64748b"></i>
+        </div>
+        <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:17px;letter-spacing:-.02em;color:#fff;margin-top:5px;font-variant-numeric:tabular-nums">120 <span style="font-size:11px;color:#94a3b8">cuotas</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="mspec">Cada campo tocado abre con un wash amarillo al <b>12%</b> que decae en <b>900ms</b> — suficiente para ubicarlo, no tanto como para quedarse. Debajo, el <b>valor anterior tachado</b> y de dónde salió: ver el cambio vale más que saber que hubo uno. El punto queda <b>ámbar</b> (asumido) hasta que el usuario confirme o edite; recién ahí pasa a verde.</div>
+</div>
+
+</div>
+
+</x-dc>
+</body>
+</html>
