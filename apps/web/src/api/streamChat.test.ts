@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseSSE, streamChat } from './streamChat';
+import { getAccessToken, grantAccess } from './access';
 
 describe('parseSSE', () => {
   it('parses a single event', () => {
@@ -70,6 +71,17 @@ describe('streamChat', () => {
       mockFetch('event: status\ndata: {"phase":"analyzing"}\n\nevent: extraction\ndata: {"fields":[]}\n\n'),
     );
     expect(seen).toEqual(['status', 'extraction']);
+  });
+
+  it('sends the access token, and a 401 locks the app again', async () => {
+    grantAccess('tok');
+    const seen: { event: string }[] = [];
+    const locked = vi.fn(async () => ({ ok: false, status: 401 })) as unknown as typeof fetch;
+    await streamChat({ messages: [{ role: 'user', content: 'x' }], fields: [] }, (e) => seen.push(e), locked);
+    const init = (locked as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![1] as RequestInit;
+    expect(init.headers).toMatchObject({ Authorization: 'Bearer tok' });
+    expect(getAccessToken()).toBeNull();
+    expect(seen[0]!.event).toBe('error');
   });
 
   it('distinguishes an HTTP 400 rejection from a connection failure', async () => {

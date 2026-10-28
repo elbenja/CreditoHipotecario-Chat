@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
+import { accessToken, checkBearer, checkPassword } from '../access.ts';
 import type { ModelMode, ModelReply } from '../kimi.ts';
 import { fetchListingText, type FetchListing } from '../listing/fetchListing.ts';
 import { parseChatBody, runTurn } from '../turn.ts';
@@ -9,6 +10,8 @@ export interface ServerDeps {
   callModel: (messages: ChatMessage[], mode: ModelMode) => Promise<ModelReply>;
   /** Injectable so tests never touch the network. */
   fetchListing?: FetchListing;
+  /** The shared prototype password. When set, /api/chat needs the unlock token. */
+  accessPassword?: string;
 }
 
 // The default 1 MiB bodyLimit is sized for text turns, not the image route:
@@ -20,8 +23,8 @@ export interface ServerDeps {
 // sample banks are scans or photos — carry noise, blur and shadow that a
 // flatbed scan doesn't, so they compress worse; budgeting 3x that density
 // for a bad photo gives ~1.5 MB of raw JPEG. Base64 inflates by 4/3, putting
-// a realistic worst case around 2 MB. This endpoint is public and
-// unauthenticated, so the limit stays close to that instead of padding it
+// a realistic worst case around 2 MB. This endpoint is reachable
+// from the open internet, so the limit stays close to that instead of padding it
 // further — enough for a real page, not enough to invite abuse.
 const CHAT_BODY_LIMIT = 3 * 1024 * 1024;
 
@@ -34,7 +37,19 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
   const allowed = process.env.CORS_ORIGIN?.split(',').map((s) => s.trim()).filter(Boolean);
   app.register(cors, { origin: allowed && allowed.length > 0 ? allowed : true, methods: ['POST', 'OPTIONS'] });
 
+  const password = deps.accessPassword;
+  if (password) {
+    app.post('/api/unlock', async (request, reply) => {
+      const given = (request.body as { password?: unknown } | null)?.password;
+      if (!checkPassword(given, password)) return reply.code(401).send({ error: 'wrong password' });
+      return { token: accessToken(password) };
+    });
+  }
+
   app.post('/api/chat', async (request, reply) => {
+    if (password && !checkBearer(request.headers.authorization, password)) {
+      return reply.code(401).send({ error: 'locked' });
+    }
     const body = parseChatBody(request.body);
     if (!body) {
       return reply.code(400).send({ error: 'invalid request body' });

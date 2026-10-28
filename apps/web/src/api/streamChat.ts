@@ -1,5 +1,6 @@
 import type { PinnedField } from '@chat/shared';
 import type { DocumentInput } from '../pdf/readPdf';
+import { getAccessToken, lockAccess } from './access';
 
 /**
  * In production the API lives on another host. Locally this stays empty so the
@@ -44,11 +45,18 @@ export async function streamChat(
   try {
     res = await fetchImpl(`${API_BASE}/api/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAccessToken() ?? ''}` },
       body: JSON.stringify(body),
     });
   } catch {
     onEvent({ event: 'error', data: { kind: 'api', message: 'Se cayó la conexión con el modelo.' } });
+    return;
+  }
+
+  // The token no longer opens the API: back to the password gate.
+  if (res.status === 401) {
+    lockAccess();
+    onEvent({ event: 'error', data: { kind: 'api', message: 'Tu acceso venció. Vuelve a ingresar la contraseña.' } });
     return;
   }
 
