@@ -6,10 +6,12 @@ import { Icon } from '../components/Icon';
 // before the app opens, as in the design.
 const OPEN_DELAY_MS = 900;
 
+// Only what the prototype does today: one conversation per property, no
+// accounts, so nothing here promises saved history or the user's own data.
 const FEATURES = [
-  { icon: 'bubble-chat', text: 'Multiple conversations, saved and searchable' },
-  { icon: 'building-03', text: 'Answers grounded in your own property data' },
-  { icon: 'money-bag-02', text: 'Prepayments, refinancing and cash flow, simulated' },
+  { icon: 'bubble-chat', text: 'Describe the apartment in your own words, or paste a listing link' },
+  { icon: 'pin', text: 'Price, rate and down payment pinned as you talk, and editable' },
+  { icon: 'money-bag-02', text: 'Monthly payment, rent and yield, worked out for you' },
 ];
 
 export function AccessGate() {
@@ -125,8 +127,8 @@ export function AccessGate() {
               Ask anything about your <span className="text-ch-accent">mortgage</span>.
             </h2>
             <p className="m-0 text-base leading-[1.55] text-slate-400 [text-wrap:pretty]">
-              Dito is an AI assistant that knows your properties and loans. It answers in plain language, runs the
-              numbers for you and keeps every conversation organized.
+              An AI assistant for buying property in Peru. It answers in plain language and runs the numbers on the
+              apartment you're evaluating.
             </p>
           </div>
           <ul className="m-0 flex list-none flex-col gap-[14px] p-0 text-[15px] text-slate-300">
