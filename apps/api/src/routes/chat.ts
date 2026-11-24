@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import { accessToken, checkBearer, checkPassword } from '../access.ts';
+import { createDemo, type DemoConfig } from '../demo.ts';
 import type { ModelMode, ModelReply } from '../kimi.ts';
 import { fetchListingText, type FetchListing } from '../listing/fetchListing.ts';
 import { parseChatBody, runTurn } from '../turn.ts';
@@ -12,6 +13,8 @@ export interface ServerDeps {
   fetchListing?: FetchListing;
   /** The shared prototype password. When set, /api/chat needs the unlock token. */
   accessPassword?: string;
+  /** Capped public access without the password; needs accessPassword and turns > 0. */
+  demo?: DemoConfig;
 }
 
 // The default 1 MiB bodyLimit is sized for text turns, not the image route:
@@ -29,7 +32,9 @@ export interface ServerDeps {
 const CHAT_BODY_LIMIT = 3 * 1024 * 1024;
 
 export function buildServer(deps: ServerDeps): FastifyInstance {
-  const app = Fastify({ logger: false, bodyLimit: CHAT_BODY_LIMIT });
+  // trustProxy: the host's proxy (Railway) fronts every request, so the
+  // client's IP — which the demo quota counts by — is in X-Forwarded-For.
+  const app = Fastify({ logger: false, bodyLimit: CHAT_BODY_LIMIT, trustProxy: true });
 
   // The web app is served from a different origin than this API.
   // CORS_ORIGIN takes a comma-separated allowlist; default open, matching
@@ -46,13 +51,34 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     });
   }
 
+  const demo = password && deps.demo && deps.demo.turns > 0 ? createDemo(password, deps.demo) : undefined;
+  if (demo) {
+    app.post('/api/demo', async (request, reply) => {
+      const session = demo.mint(request.ip);
+      if (!session) return reply.code(429).send({ error: 'demo-unavailable' });
+      return session;
+    });
+  }
+
   app.post('/api/chat', async (request, reply) => {
+    // Without the full-access token, a signed demo token is the only way in.
+    let demoId: string | null = null;
     if (password && !checkBearer(request.headers.authorization, password)) {
-      return reply.code(401).send({ error: 'locked' });
+      demoId = demo?.verify(request.headers.authorization) ?? null;
+      if (!demoId) return reply.code(401).send({ error: 'locked' });
     }
     const body = parseChatBody(request.body);
     if (!body) {
       return reply.code(400).send({ error: 'invalid request body' });
+    }
+
+    let remaining: number | null = null;
+    if (demo && demoId) {
+      // Documents and listings are the expensive routes; the demo is text only.
+      if (body.document || body.listing) return reply.code(403).send({ error: 'demo-scope' });
+      // Counted before streaming, so a dropped connection still costs a turn.
+      remaining = demo.spend(demoId);
+      if (remaining === null) return reply.code(429).send({ error: 'demo-limit' });
     }
 
     reply.hijack();
@@ -69,6 +95,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     });
 
     try {
+      if (remaining !== null) reply.raw.write(`event: demo\ndata: ${JSON.stringify({ remaining })}\n\n`);
       for await (const { event, data } of runTurn(body, deps.callModel, deps.fetchListing ?? fetchListingText)) {
         reply.raw.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
       }

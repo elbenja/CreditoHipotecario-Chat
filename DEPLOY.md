@@ -22,6 +22,17 @@ Environment variables:
 - `CORS_ORIGIN` — set to the Vercel URL once it's known (comma-separated for
   more than one origin). Left unset, CORS is wide open, matching this
   deployment's deliberate choice to be public.
+- `DEMO_TURNS` (default 12), `DEMO_DAILY_TURNS` (default 150),
+  `DEMO_SESSIONS_PER_IP` (default 3) — see "Public demo" below.
+
+### Public demo
+
+`POST /api/demo` hands out a password-free demo token so a reviewer can try
+the chat. Each token gets `DEMO_TURNS` text turns (no documents or listings),
+all demo tokens together share `DEMO_DAILY_TURNS` per UTC day, and one client
+IP can mint `DEMO_SESSIONS_PER_IP` tokens per day. `DEMO_TURNS=0` turns the
+demo off. The counters live in memory: a restart resets them, and they
+assume a single instance — scaling out multiplies the caps.
 
 A `render.yaml` blueprint for one-click Render deploys lives at
 `apps/api/render.yaml`. For Railway, `railway.json` at the repo root sets the

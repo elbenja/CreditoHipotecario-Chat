@@ -12,6 +12,13 @@ const host = process.env.HOST ?? '0.0.0.0';
 const accessPassword = process.env.PASSWORD_DITO;
 if (!accessPassword) throw new Error('PASSWORD_DITO is not set');
 
-const app = buildServer({ callModel: callKimi, accessPassword });
+// Capped public demo; DEMO_TURNS=0 turns it off.
+const demo = {
+  turns: Number(process.env.DEMO_TURNS ?? 12),
+  dailyTurns: Number(process.env.DEMO_DAILY_TURNS ?? 150),
+  sessionsPerIp: Number(process.env.DEMO_SESSIONS_PER_IP ?? 3),
+};
+
+const app = buildServer({ callModel: callKimi, accessPassword, demo });
 await app.listen({ port, host });
 console.log(`api listening on http://${host}:${port}`);
