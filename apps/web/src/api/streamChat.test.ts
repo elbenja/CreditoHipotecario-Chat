@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseSSE, streamChat } from './streamChat';
-import { getAccessToken, grantAccess } from './access';
+import { getAccessToken, getDemoRemaining, grantAccess, lockAccess, setDemoRemaining } from './access';
+import { es } from '../i18n/es';
 
 describe('parseSSE', () => {
   it('parses a single event', () => {
@@ -99,5 +100,39 @@ describe('streamChat', () => {
       mockFetch('event: status\ndata: {"phase":"analyzing"}\n\nevent: listing\ndata: {"listing":{}}\n\n'),
     );
     expect(events).toEqual(['status', 'listing']);
+  });
+
+  it('reads the demo allowance from its event without passing it on', async () => {
+    grantAccess('demo.a.b');
+    const events: string[] = [];
+    await streamChat(
+      { messages: [{ role: 'user', content: 'x' }], fields: [] },
+      (e) => events.push(e.event),
+      mockFetch('event: demo\ndata: {"remaining":3}\n\nevent: envelope\ndata: {}\n\n'),
+    );
+    expect(events).toEqual(['envelope']);
+    expect(getDemoRemaining()).toBe(3);
+    lockAccess();
+  });
+
+  it('turns a demo 429 into a demo error and zeroes the allowance', async () => {
+    grantAccess('demo.a.b');
+    setDemoRemaining(2);
+    const seen: { event: string; data: unknown }[] = [];
+    const limited = vi.fn(async () => ({ ok: false, status: 429 })) as unknown as typeof fetch;
+    await streamChat({ messages: [{ role: 'user', content: 'x' }], fields: [] }, (e) => seen.push(e), limited);
+    expect(seen).toEqual([{ event: 'error', data: { kind: 'demo', message: es.demo.limitReached } }]);
+    expect(getDemoRemaining()).toBe(0);
+    expect(getAccessToken()).toBe('demo.a.b');
+    lockAccess();
+  });
+
+  it('turns a demo 403 into a not-in-the-demo error', async () => {
+    grantAccess('demo.a.b');
+    const seen: { event: string; data: unknown }[] = [];
+    const scoped = vi.fn(async () => ({ ok: false, status: 403 })) as unknown as typeof fetch;
+    await streamChat({ messages: [{ role: 'user', content: 'x' }], fields: [] }, (e) => seen.push(e), scoped);
+    expect(seen).toEqual([{ event: 'error', data: { kind: 'demo', message: es.demo.notInDemo } }]);
+    lockAccess();
   });
 });

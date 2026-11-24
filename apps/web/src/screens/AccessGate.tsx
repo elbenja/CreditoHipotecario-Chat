@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { grantAccess, requestUnlock } from '../api/access';
+import { grantAccess, requestDemo, requestUnlock, setDemoRemaining } from '../api/access';
 import { Icon } from '../components/Icon';
+import { useT } from '../i18n';
 
 // Claude Design: "Prototype Access.dc.html". The success line holds for 900ms
 // before the app opens, as in the design.
@@ -18,6 +19,20 @@ export function AccessGate() {
   const [pw, setPw] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [state, setState] = useState<'idle' | 'checking' | 'wrong' | 'network' | 'ok'>('idle');
+  const [demoState, setDemoState] = useState<'idle' | 'checking' | 'unavailable' | 'network'>('idle');
+  const d = useT().demo;
+
+  async function startDemo() {
+    if (demoState === 'checking') return;
+    setDemoState('checking');
+    const result = await requestDemo();
+    if (!result.ok) {
+      setDemoState(result.reason);
+      return;
+    }
+    setDemoRemaining(result.remaining);
+    grantAccess(result.token);
+  }
 
   async function unlock(e: FormEvent) {
     e.preventDefault();
@@ -111,6 +126,32 @@ export function AccessGate() {
               <Icon name="arrow-right-01" />
             </button>
           </form>
+
+          {/* For a reviewer without the password: a short guided path on a
+              capped public token. Secondary to the form, so outlined. */}
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={startDemo}
+              disabled={demoState === 'checking'}
+              className="flex h-[46px] items-center justify-center rounded-lg border border-ch-border-hover bg-transparent text-[15px] font-semibold text-slate-200 transition-colors duration-180 ease-ch hover:border-slate-500 active:translate-y-px disabled:opacity-60"
+            >
+              {d.try}
+            </button>
+            <p className="m-0 text-[13px] leading-normal text-slate-400">{d.tryHint}</p>
+            {demoState === 'unavailable' && (
+              <span role="alert" className="flex items-center gap-[6px] text-[13px] text-ch-warn">
+                <Icon name="alert-02" />
+                {d.unavailable}
+              </span>
+            )}
+            {demoState === 'network' && (
+              <span role="alert" className="flex items-center gap-[6px] text-[13px] text-ch-warn">
+                <Icon name="alert-02" />
+                Couldn't reach the server. Please try again.
+              </span>
+            )}
+          </div>
 
           <p className="m-0 border-t border-ch-border pt-5 text-[13px] leading-normal text-slate-400">
             Don't have a password? Ask the person who shared this link with you.

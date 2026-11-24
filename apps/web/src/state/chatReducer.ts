@@ -83,8 +83,10 @@ export interface ChatState {
 
 export interface ChatError {
   /** 'document' is the server's kind for a schedule that failed to extract —
-   *  distinct from 'api' (the model call itself failing). */
-  kind: 'api' | 'offline' | 'document' | 'request' | 'limit' | 'listing';
+   *  distinct from 'api' (the model call itself failing).
+   *  'demo' is the public demo saying no: its allowance is used up, or the
+   *  turn needs something the demo does not include. Never retried. */
+  kind: 'api' | 'offline' | 'document' | 'request' | 'limit' | 'listing' | 'demo';
   message: string;
   /** The question that failed, so "Reintentar" can resend exactly it. */
   retry: string | null;

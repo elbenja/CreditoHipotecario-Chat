@@ -7,6 +7,7 @@ import { AnalyzeSteps } from '../components/AnalyzeSteps';
 import { AssistantAnswer } from '../components/AssistantAnswer';
 import { Composer } from '../components/Composer';
 import { ConfirmExtraction } from '../components/ConfirmExtraction';
+import { DemoGuide } from '../components/DemoGuide';
 import { DropZone } from '../components/DropZone';
 import { ErrorNotice } from '../components/ErrorNotice';
 import { Icon } from '../components/Icon';
@@ -22,6 +23,7 @@ import { TruncatedNotice } from '../components/TruncatedNotice';
 import { UploadingRow } from '../components/UploadingRow';
 import { UndoBar } from '../components/UndoBar';
 import { UserBubble } from '../components/UserBubble';
+import { useIsDemo } from '../hooks/useDemo';
 import { selectDirtyKeys, type Action, type ChatState } from '../state/chatReducer';
 
 export function Conversation({
@@ -121,6 +123,9 @@ export function Conversation({
 
   const attach = (file: File) =>
     dispatch ? attachSchedule(file, dispatch, Object.values(state.fields)) : undefined;
+  // The demo does not read PDFs; dispatch still drives the panel's dialogs.
+  const demo = useIsDemo();
+  const canAttach = dispatch !== undefined && !demo;
 
   let suggestions: string[] = [];
   let latestAssistantIsOutOfScope = false;
@@ -139,7 +144,7 @@ export function Conversation({
     <div className="relative flex min-h-0 flex-1">
       {/* The whole chat column takes a dropped schedule (card 10); the panel
           on the right does not. Only wired when attaching is. */}
-      <DropZone onDrop={attach} disabled={busy || !dispatch} className="flex min-w-0 flex-1 flex-col">
+      <DropZone onDrop={attach} disabled={busy || !canAttach} className="flex min-w-0 flex-1 flex-col">
         {state.offline && <OfflineBanner />}
         <div className="min-h-0 flex-1 overflow-y-auto scroll-smooth px-5 pt-2 md:px-14 md:pt-8">
           <div className="mx-auto flex w-full max-w-transcript flex-col gap-[18px] md:gap-[26px]">
@@ -262,6 +267,7 @@ export function Conversation({
 
         <div className="flex-none px-5 pb-0 pt-3 md:px-14 md:pb-6 md:pt-5">
           <div className="mx-auto w-full max-w-transcript">
+            {demo && <DemoGuide state={state} onSend={send} disabled={busy || state.queued !== null} />}
             {!latestAssistantIsOutOfScope && suggestions.length > 0 && (
               <div className="ch-scrollbar-none -mr-5 mb-3 flex min-w-0 flex-nowrap gap-[9px] overflow-x-auto pr-10 md:mr-0 md:hidden md:pr-0">
                 {suggestions.slice(0, 2).map((suggestion) => (
@@ -289,7 +295,7 @@ export function Conversation({
               suggestions={suggestions}
               onSuggestion={send}
               suggestionClassName="hidden md:flex"
-              onAttach={dispatch ? attach : undefined}
+              onAttach={canAttach ? attach : undefined}
             />
             {/*
               Every figure on this screen is model-produced. Said once, under

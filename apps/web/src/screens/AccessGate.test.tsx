@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getAccessToken, lockAccess } from '../api/access';
+import { getAccessToken, getDemoRemaining, lockAccess } from '../api/access';
 import { AccessGate } from './AccessGate';
 
 function stubFetch(status: number, body: unknown = {}) {
@@ -56,5 +56,26 @@ describe('AccessGate', () => {
     render(<AccessGate />);
     await submit('dito');
     expect(screen.getByRole('alert')).toHaveTextContent("Couldn't reach the server");
+  });
+
+  it('opens the demo on its own token and remembers the questions left', async () => {
+    const fetch = stubFetch(200, { token: 'demo.abc.sig', remaining: 6 });
+    render(<AccessGate />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Probar la demo' }));
+    });
+    expect(fetch).toHaveBeenCalledWith('/api/demo', expect.objectContaining({ method: 'POST' }));
+    expect(getAccessToken()).toBe('demo.abc.sig');
+    expect(getDemoRemaining()).toBe(6);
+  });
+
+  it("says when the demo has run out for today", async () => {
+    stubFetch(429, { error: 'demo-unavailable' });
+    render(<AccessGate />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Probar la demo' }));
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('La demo llegó a su límite de hoy');
+    expect(getAccessToken()).toBeNull();
   });
 });

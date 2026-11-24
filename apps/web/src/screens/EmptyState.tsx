@@ -9,6 +9,7 @@ import { Icon } from '../components/Icon';
 import { MobileBottomSheet } from '../components/MobileBottomSheet';
 import { PinnedPanel } from '../components/PinnedPanel';
 import { UploadingRow } from '../components/UploadingRow';
+import { useIsDemo } from '../hooks/useDemo';
 import { attachSchedule } from '../pdf/attachSchedule';
 import type { Action, ChatState } from '../state/chatReducer';
 import { useT } from '../i18n';
@@ -29,7 +30,12 @@ export function EmptyState({
   state: ChatState;
   dispatch?: (action: Action) => void;
 }) {
-  const e = useT().empty;
+  const copy = useT();
+  const e = copy.empty;
+  // The demo does not read PDFs; dispatch still drives the panel's edits.
+  const demo = useIsDemo();
+  const canAttach = dispatch !== undefined && !demo;
+  const sample = copy.demo.steps[0]!.prompt!;
   const [value, setValue] = useState('');
   const busy = state.status !== 'idle' && state.status !== 'error';
 
@@ -55,7 +61,7 @@ export function EmptyState({
   return (
     <div className="flex min-h-0 flex-1 flex-col md:flex-row">
       {/* Everything but the panel takes a dropped schedule (card 10). */}
-      <DropZone onDrop={attach} disabled={busy || !dispatch} className="flex min-h-0 flex-1 flex-col">
+      <DropZone onDrop={attach} disabled={busy || !canAttach} className="flex min-h-0 flex-1 flex-col">
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-6 md:px-14">
             <div className="mx-auto my-auto w-full max-w-transcript">
@@ -68,8 +74,20 @@ export function EmptyState({
               <div className="my-6 border-l-2 border-ch-border-hover pl-4">
                 <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.1em] text-slate-400">{e.example}</p>
                 <p className="text-[13.5px] leading-[1.7] text-slate-300 md:text-[14.5px]">
-                  {e.exampleText}
+                  {demo ? `“${sample}”` : e.exampleText}
                 </p>
+                {/* Primary by the product rule (slate-50), not the accent. */}
+                {demo && (
+                  <button
+                    type="button"
+                    onClick={() => onSubmit(sample)}
+                    disabled={busy}
+                    className="group mt-4 flex h-[34px] items-center gap-[7px] rounded-full bg-slate-50 px-[15px] text-[12.5px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px disabled:opacity-40"
+                  >
+                    {copy.demo.start}
+                    <Icon name="arrow-right-01" size={14} className="transition-transform duration-180 ease-ch group-hover:translate-x-[2px]" />
+                  </button>
+                )}
               </div>
               <div className="mb-7 hidden md:block">
                 <Composer
@@ -79,7 +97,7 @@ export function EmptyState({
                   onSubmit={() => onSubmit(value)}
                   placeholder={e.placeholder}
                   disabled={busy}
-                  onAttach={dispatch ? attach : undefined}
+                  onAttach={canAttach ? attach : undefined}
                 />
                 {progress}
                 {state.status === 'error' && state.error && (
@@ -99,7 +117,7 @@ export function EmptyState({
               onSubmit={() => onSubmit(value)}
               placeholder={e.placeholder}
               disabled={busy}
-              onAttach={dispatch ? attach : undefined}
+              onAttach={canAttach ? attach : undefined}
             />
             {progress}
             {state.status === 'error' && state.error && (

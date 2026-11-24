@@ -1,7 +1,7 @@
 import type { PinnedField } from '@chat/shared';
 import type { DocumentInput } from '../pdf/readPdf';
 import { getLang, t } from '../i18n';
-import { getAccessToken, lockAccess } from './access';
+import { getAccessToken, isDemo, lockAccess, setDemoRemaining } from './access';
 
 /**
  * In production the API lives on another host. Locally this stays empty so the
@@ -62,6 +62,17 @@ export async function streamChat(
     return;
   }
 
+  // The demo answers before streaming when its allowance is used up (429) or
+  // the turn reads a PDF or a listing (403). Neither is worth retrying.
+  if (isDemo() && (res.status === 429 || res.status === 403)) {
+    if (res.status === 429) setDemoRemaining(0);
+    onEvent({
+      event: 'error',
+      data: { kind: 'demo', message: res.status === 429 ? t().demo.limitReached : t().demo.notInDemo },
+    });
+    return;
+  }
+
   if (!res.ok || !res.body) {
     onEvent({
       event: 'error',
@@ -89,6 +100,11 @@ export async function streamChat(
       const complete = buffer.slice(0, lastBreak + 2);
       buffer = buffer.slice(lastBreak + 2);
       for (const e of parseSSE(complete)) {
+        // Bookkeeping, not part of the answer: the screen reads the store.
+        if (e.event === 'demo') {
+          setDemoRemaining((e.data as { remaining: number }).remaining);
+          continue;
+        }
         if (e.event === 'envelope' || e.event === 'fallback' || e.event === 'error' || e.event === 'extraction' || e.event === 'listing') {
           sawTerminal = true;
         }

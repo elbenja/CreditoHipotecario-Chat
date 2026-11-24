@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { lockAccess } from '../api/access';
 import { Icon } from './Icon';
+import { useIsDemo } from '../hooks/useDemo';
 import { LANG_NAMES, LANGS, setLang, useLang, useT } from '../i18n';
 
 export function TopNav({
@@ -113,7 +114,9 @@ function PanelIcon({ closing }: { closing: boolean }) {
 }
 
 function AccountMenu() {
-  const n = useT().nav;
+  const copy = useT();
+  const n = copy.nav;
+  const demo = useIsDemo();
   const lang = useLang();
   const [open, setOpen] = useState(false);
 
@@ -197,10 +200,11 @@ function AccountMenu() {
               ))}
             </div>
             <div className="mx-1 my-[6px] h-px bg-ch-border-hover" />
-            {/* The only real session here is the prototype password: forget it. */}
+            {/* The only real session here is the prototype password: forget it.
+                In the demo the same step is the way back to the gate. */}
             <button type="button" role="menuitem" onClick={lockAccess} className={`${row} hover:bg-ch-card`}>
               <Icon name="logout-03" size={17} className="text-slate-400" />
-              {n.signOut}
+              {demo ? copy.demo.enterPassword : n.signOut}
             </button>
           </div>
         </>

@@ -11,7 +11,7 @@ import { loadState, saveState } from './state/persistence';
 import { toTurns } from './state/guidance';
 import { findListingUrl, isListingHost, type FieldKey, type PinnedField, type Scenario } from '@chat/shared';
 import { readListing } from './listing/readListing';
-import { useT } from './i18n';
+import { fieldLabel, unitLabel, useT } from './i18n';
 
 export default function App() {
   const [state, dispatch] = useReducer(chatReducer, undefined, loadState);
@@ -57,7 +57,7 @@ export default function App() {
         else if (e.event === 'error')
           dispatch({
             type: 'error',
-            kind: data.kind === 'offline' || data.kind === 'request' || data.kind === 'limit'
+            kind: data.kind === 'offline' || data.kind === 'request' || data.kind === 'limit' || data.kind === 'demo'
               ? data.kind
               : 'api',
             message: data.message,
@@ -104,7 +104,12 @@ export default function App() {
 
   const recalculate = useCallback(async () => {
     dispatch({ type: 'recalculate' });
-    await request([...toTurns(state.messages), { role: 'user', content: copy.app.recalculate }], Object.values(state.fields));
+    // Spell the values out: the panel is the truth, and without them the model
+    // has been seen recalculating with a figure from an earlier message.
+    const current = Object.values(state.fields)
+      .map((f) => `${fieldLabel(copy, f)}: ${[f.prefix?.trim(), f.value, unitLabel(copy, f.suffix)].filter(Boolean).join(' ')}`)
+      .join('; ');
+    await request([...toTurns(state.messages), { role: 'user', content: `${copy.app.recalculate} ${current}` }], Object.values(state.fields));
   }, [state.messages, state.fields, request, copy]);
 
   const retry = useCallback(async () => {
@@ -194,7 +199,7 @@ export default function App() {
         : undefined;
 
   return (
-    <div className="flex h-full">
+    <div className="ch-veil flex h-full">
       <SideNav expanded={navExpanded} onNew={context ? reset : undefined} />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <TopNav

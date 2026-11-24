@@ -29,7 +29,7 @@ export const es = {
     scheduleRead: 'Cronograma leído',
     unsaved: 'sin guardar',
     resetDone: 'Conversación reiniciada',
-    recalculate: 'Recalcula el último análisis solicitado con los datos actuales del panel.',
+    recalculate: 'Recalcula el último análisis solicitado con estos datos actuales del panel, que reemplazan lo dicho antes:',
     continue: 'Continúa desde donde te quedaste.',
     shorten: 'Resúmelo más corto, por favor.',
     attachMessage: 'Adjunto el cronograma de pagos.',
@@ -205,6 +205,29 @@ export const es = {
     chooseModel: 'elige un modelo',
     discard: 'Descartar',
     pin: 'Fijar estos datos',
+  },
+  demo: {
+    try: 'Probar la demo',
+    tryHint: 'Un ejemplo guiado de 3 minutos con datos de muestra. Limitado a unas pocas preguntas.',
+    unavailable: 'La demo llegó a su límite de hoy. Vuelve a intentarlo mañana.',
+    start: 'Empezar el ejemplo',
+    label: 'Demo',
+    step: (n: number, total: number) => `Demo · paso ${n} de ${total}`,
+    left: (n: number) => (n === 1 ? 'Queda 1 pregunta' : `Quedan ${n} preguntas`),
+    enterPassword: 'Usar contraseña',
+    steps: [
+      {
+        instruction: 'Empieza con un depa de ejemplo',
+        prompt: 'Estoy viendo un depa en Miraflores de S/ 250,000 y tengo S/ 50,000 para la inicial. ¿Cuánto pagaría al mes?',
+      },
+      { instruction: 'Dale una tasa y un plazo', prompt: '8% TEA a 20 años' },
+      { instruction: 'Cambia un dato y compara', prompt: '¿Y si subo la inicial a S/ 75,000?' },
+      { instruction: 'Guarda el escenario que prefieras con su botón Guardar, o edita un dato en el panel y recalcula' },
+    ] as { instruction: string; prompt?: string }[],
+    done: 'Ese es el recorrido guiado. Sigue explorando con las preguntas que te quedan.',
+    title: 'Modo demo',
+    limitReached: 'Ya usaste las preguntas de la demo. Tus números y escenarios guardados siguen acá.',
+    notInDemo: 'Leer PDFs y links de anuncios no está incluido en la demo.',
   },
 };
 

@@ -7,6 +7,8 @@ import { EmptyState } from './EmptyState';
 import { chatReducer, initialState } from '../state/chatReducer';
 import { readFirstPage } from '../pdf/readPdf';
 import { streamChat } from '../api/streamChat';
+import { grantAccess, lockAccess } from '../api/access';
+import { es } from '../i18n/es';
 
 // The attach flow reads the file and calls the model; neither may run for
 // real in a unit test — no live model calls, no touching an actual PDF.
@@ -148,5 +150,25 @@ describe('EmptyState attach flow', () => {
     await userEvent.upload(mobileInput!, pdf());
 
     expect((await screen.findAllByText('No pude leer ese PDF.')).length).toBeGreaterThan(0);
+  });
+});
+
+describe('EmptyState in demo mode', () => {
+  afterAll(() => lockAccess());
+
+  it('offers the sample and hides the attach control on a demo token', async () => {
+    grantAccess('demo.a.b');
+    const onSubmit = vi.fn();
+    render(<EmptyState onSubmit={onSubmit} state={initialState} dispatch={vi.fn()} />);
+    expect(screen.queryByLabelText('Adjuntar cronograma')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Empezar el ejemplo' }));
+    expect(onSubmit).toHaveBeenCalledWith(es.demo.steps[0]!.prompt);
+  });
+
+  it('shows neither on a normal token', () => {
+    grantAccess('tok');
+    render(<EmptyState onSubmit={vi.fn()} state={initialState} dispatch={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: 'Empezar el ejemplo' })).toBeNull();
+    expect(screen.getAllByLabelText('Adjuntar cronograma').length).toBeGreaterThan(0);
   });
 });

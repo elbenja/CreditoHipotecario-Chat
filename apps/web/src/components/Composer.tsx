@@ -103,9 +103,11 @@ export function Composer({
         />
         <div className="mt-[14px] flex items-center gap-[10px]">
           {attachControl}
-          <span className="text-[11.5px] text-slate-400">
-            {c.attachLine}
-          </span>
+          {onAttach && (
+            <span className="text-[11.5px] text-slate-400">
+              {c.attachLine}
+            </span>
+          )}
           <div className="flex-1" />
           <button
             type="button"

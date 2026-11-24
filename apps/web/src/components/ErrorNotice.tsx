@@ -11,14 +11,17 @@ export function ErrorNotice({
   onRetry: () => void;
   onEdit: () => void;
 }) {
-  const e = useT().errors;
+  const copy = useT();
+  const e = copy.errors;
   const title = error.kind === 'request'
     ? e.titleRequest
     : error.kind === 'limit'
       ? e.titleLimit
       : error.kind === 'listing'
         ? e.titleListing
-        : e.titleApi;
+        : error.kind === 'demo'
+          ? copy.demo.title
+          : e.titleApi;
   const canRetry = error.kind === 'api' || error.kind === 'offline';
 
   return (
@@ -34,25 +37,28 @@ export function ErrorNotice({
           </span>
         </div>
         <p className="mt-2 text-[12.5px] leading-[1.55] text-slate-400">{error.message}</p>
-        <div className="mt-[14px] flex items-center gap-[9px]">
-          {canRetry && error.retry && (
+        {/* Nothing to retry or rephrase: the demo's answer will not change. */}
+        {error.kind !== 'demo' && (
+          <div className="mt-[14px] flex items-center gap-[9px]">
+            {canRetry && error.retry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="flex h-[34px] items-center gap-[7px] rounded-full bg-slate-50 px-[15px] text-[12.5px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px"
+              >
+                <Icon name="refresh" size={14} />
+                {e.retry}
+              </button>
+            )}
             <button
               type="button"
-              onClick={onRetry}
-              className="flex h-[34px] items-center gap-[7px] rounded-full bg-slate-50 px-[15px] text-[12.5px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px"
+              onClick={onEdit}
+              className="flex h-[34px] items-center rounded-full border border-ch-border-hover px-[14px] text-[12.5px] font-medium text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
             >
-              <Icon name="refresh" size={14} />
-              {e.retry}
+              {e.editQuestion}
             </button>
-          )}
-          <button
-            type="button"
-            onClick={onEdit}
-            className="flex h-[34px] items-center rounded-full border border-ch-border-hover px-[14px] text-[12.5px] font-medium text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
-          >
-            {e.editQuestion}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

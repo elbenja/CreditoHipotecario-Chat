@@ -26,7 +26,7 @@ export async function readListing(
       else if (e.event === 'error')
         dispatch({
           type: 'error',
-          kind: data.kind === 'listing' ? 'listing' : 'api',
+          kind: data.kind === 'listing' || data.kind === 'demo' ? data.kind : 'api',
           message: data.message,
           // The pasted message, so "Editar" can seed the composer with it.
           retry: url,

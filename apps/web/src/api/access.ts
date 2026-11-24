@@ -56,3 +56,53 @@ export async function requestUnlock(password: string, fetchImpl: typeof fetch = 
     return { ok: false, reason: 'network' };
   }
 }
+
+/** The public demo hands out its own short-lived tokens, all prefixed. */
+export const isDemo = () => token?.startsWith('demo.') ?? false;
+
+export type DemoResult = { ok: true; token: string; remaining: number } | { ok: false; reason: 'unavailable' | 'network' };
+
+export async function requestDemo(fetchImpl: typeof fetch = fetch): Promise<DemoResult> {
+  try {
+    const res = await fetchImpl(`${API_BASE}/api/demo`, { method: 'POST' });
+    // 429: today's demos are used up. 404: the server has the demo off.
+    if (res.status === 429 || res.status === 404) return { ok: false, reason: 'unavailable' };
+    if (!res.ok) return { ok: false, reason: 'network' };
+    const { token: next, remaining } = (await res.json()) as { token: string; remaining: number };
+    return { ok: true, token: next, remaining };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Questions the demo token has left, as the API last reported them. */
+const REMAINING_KEY = 'dito-demo-remaining-v1';
+
+function readRemaining(): number | null {
+  try {
+    const stored = localStorage.getItem(REMAINING_KEY);
+    return stored === null ? null : Number(stored);
+  } catch {
+    return null;
+  }
+}
+
+let remaining = readRemaining();
+const remainingListeners = new Set<() => void>();
+
+export const getDemoRemaining = () => remaining;
+
+export function setDemoRemaining(next: number) {
+  remaining = next;
+  try {
+    localStorage.setItem(REMAINING_KEY, String(next));
+  } catch {
+    // Private mode: the count lives for this tab only.
+  }
+  remainingListeners.forEach((l) => l());
+}
+
+export function subscribeDemoRemaining(listener: () => void) {
+  remainingListeners.add(listener);
+  return () => remainingListeners.delete(listener);
+}

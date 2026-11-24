@@ -7,6 +7,7 @@ import { Conversation } from './Conversation';
 import { chatReducer, initialState, type Action, type ChatState } from '../state/chatReducer';
 import { PdfReadError, readFirstPage } from '../pdf/readPdf';
 import { streamChat } from '../api/streamChat';
+import { grantAccess, lockAccess } from '../api/access';
 
 // The attach flow reads the file and calls the model; neither may run for
 // real in a unit test — no live model calls, no touching an actual PDF.
@@ -112,7 +113,7 @@ describe('Conversation mobile integration', () => {
     expect(trigger.closest('section')).toHaveClass('relative', 'flex-none', 'w-full');
 
     const metricValue = screen.getByText('S/ 2,400');
-    expect(metricValue.parentElement).toHaveClass('w-[150px]');
+    expect(metricValue.parentElement).toHaveClass('min-w-[150px]');
     expect(metricValue.parentElement?.parentElement).toHaveClass('-mr-5', 'pr-10', 'md:mr-0', 'md:pr-0');
 
     const followUps = screen.getAllByRole('button', { name: '¿Y con 30% de inicial?' });
@@ -483,5 +484,38 @@ describe('listing on the conversation screen', () => {
     expect(screen.getByText('No pude leer el anuncio')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /reintentar/i })).toBeNull();
     expect(screen.getByRole('button', { name: /editar/i })).toBeInTheDocument();
+  });
+});
+
+describe('demo mode on the conversation screen', () => {
+  beforeAll(() => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+  });
+
+  afterAll(() => {
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    lockAccess();
+  });
+
+  it('shows the guide and no attach control on a demo token', () => {
+    grantAccess('demo.a.b');
+    renderConversation(state, { dispatch: vi.fn() });
+    expect(screen.getByText(/Demo · paso \d de 4/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Adjuntar cronograma')).toBeNull();
+  });
+
+  it('shows nothing demo-related on a normal token', () => {
+    grantAccess('tok');
+    renderConversation(state, { dispatch: vi.fn() });
+    expect(screen.queryByText(/Demo/)).toBeNull();
+    expect(screen.getByLabelText('Adjuntar cronograma')).toBeInTheDocument();
+  });
+
+  it('ends the demo without a retry or edit button', () => {
+    grantAccess('demo.a.b');
+    renderConversation({ ...state, status: 'error', error: { kind: 'demo', message: 'Ya usaste las preguntas de la demo.', retry: 'x' } });
+    expect(screen.getByText('Modo demo')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /reintentar/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /editar/i })).toBeNull();
   });
 });
