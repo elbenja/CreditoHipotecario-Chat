@@ -15,6 +15,16 @@ const FEATURES = [
   { icon: 'money-bag-02', text: 'Monthly payment, rent and yield, worked out for you' },
 ];
 
+const SCENE = [
+  { name: 'sofa', w: 110, h: 122 },
+  { name: 'lampara', w: 62, h: 124 },
+];
+
+const QUESTIONS = [
+  { text: 'How do I pay less?', dot: 'bg-ch-accent', place: 'left-[8%] top-[22px] -rotate-2' },
+  { text: 'Does it pay off?', dot: 'bg-green-500', place: 'right-[8%] top-10 rotate-2' },
+];
+
 export function AccessGate() {
   const [pw, setPw] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -52,13 +62,13 @@ export function AccessGate() {
       <header className="flex items-center justify-center px-5 pb-2 pt-8">
         <div className="flex items-center gap-[10px]">
           <img src="/assets/logo-mark.svg" alt="" className="h-8 w-8" />
-          <span className="font-jakarta text-[20px] font-extrabold tracking-[-0.03em]">créditohipotecar.io</span>
+          <span className="font-jakarta text-[20px] font-extrabold tracking-[-0.03em]">creditohipotecar.io</span>
         </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-[1080px] flex-1 flex-wrap items-center justify-center gap-16 px-5 pb-16 pt-10">
         <section className="flex max-w-[460px] flex-[1_1_380px] flex-col gap-6 rounded-2xl border border-ch-border bg-ch-panel p-[clamp(24px,5vw,40px)]">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-ch-accent/15 text-ch-accent">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-ch-accent/15 text-slate-50">
             <Icon name="square-lock-02" size={24} />
           </div>
           <div className="flex flex-col gap-2">
@@ -159,6 +169,34 @@ export function AccessGate() {
         </section>
 
         <aside className="flex max-w-[460px] flex-[1_1_380px] flex-col gap-7">
+          {/* Claude Design: "Auth.dc.html", sign-in scene. Line art drawn as
+              masks so it takes the text color; the questions are decoration. */}
+          <div aria-hidden="true" className="relative h-[260px] overflow-hidden">
+            {QUESTIONS.map((q) => (
+              <span
+                key={q.text}
+                className={`absolute flex h-8 items-center gap-2 rounded-full border border-ch-border-hover bg-ch-panel px-3 text-[13px] text-slate-300 ${q.place}`}
+              >
+                <span className={`h-[6px] w-[6px] rounded-full ${q.dot}`} />
+                {q.text}
+              </span>
+            ))}
+            <div className="absolute inset-x-0 bottom-9 flex items-end justify-center gap-[clamp(8px,3vw,28px)] px-4">
+              {SCENE.map((s) => (
+                <div
+                  key={s.name}
+                  className="min-w-0 shrink bg-slate-200"
+                  style={{
+                    width: s.w,
+                    height: s.h,
+                    mask: `url(/assets/illustrations/${s.name}.svg) bottom/contain no-repeat`,
+                    WebkitMask: `url(/assets/illustrations/${s.name}.svg) bottom/contain no-repeat`,
+                  }}
+                />
+              ))}
+            </div>
+            <div className="absolute inset-x-[12%] bottom-[34px] h-[3px] rounded-sm bg-slate-200" />
+          </div>
           <div className="flex flex-col gap-[14px]">
             <span className="flex h-[30px] items-center gap-2 self-start rounded-full border border-ch-border bg-ch-panel px-3 text-[13px] font-medium text-slate-300">
               <span className="h-[6px] w-[6px] rounded-full bg-ch-accent" />

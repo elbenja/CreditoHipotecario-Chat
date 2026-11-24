@@ -30,7 +30,7 @@ export function TopNav({
         </div>
       ) : (
         <span className="font-jakarta text-[13px] font-bold tracking-[-.02em] text-white md:hidden">
-          créditohipotecar.io
+          creditohipotecar.io
         </span>
       )}
 
