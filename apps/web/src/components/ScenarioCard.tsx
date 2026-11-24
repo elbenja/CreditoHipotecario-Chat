@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Scenario } from '@chat/shared';
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 
 const TONE: Record<Scenario['tone'], string> = {
   good: 'text-ch-pos',
@@ -17,6 +18,7 @@ export function ScenarioCard({
   saved?: boolean;
   onSave?: (id: string) => void;
 }) {
+  const a = useT().answer;
   const [travelling, setTravelling] = useState(false);
 
   // The card travels away on save. If it stops being saved — deleted from the
@@ -57,7 +59,7 @@ export function ScenarioCard({
         className="flex h-8 items-center justify-center gap-[6px] rounded-full border border-ch-border-hover text-[11.5px] font-semibold text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
       >
         <Icon name="bookmark-add-02" size={13} />
-        {saved ? 'Guardado' : 'Guardar'}
+        {saved ? a.saved : a.save}
       </button>
     </div>
   );

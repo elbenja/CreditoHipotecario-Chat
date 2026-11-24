@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { MAX_BYTES } from '../pdf/readPdf';
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 
 /** How long the amber "can't read that" overlay stays after a bad drop. */
 const REJECT_MS = 3000;
@@ -48,6 +49,7 @@ export function DropZone({
   className?: string;
   children: ReactNode;
 }) {
+  const u = useT().upload;
   const [drag, setDrag] = useState<Drag | null>(null);
   const [rejected, setRejected] = useState<string | null>(null);
   // dragenter/dragleave fire for every child crossed; only the outermost
@@ -146,10 +148,10 @@ export function DropZone({
               <Icon name="file-not-found" size={28} className="text-ch-warn" />
               <div className="text-center">
                 <div className="font-jakarta text-[15px] font-bold tracking-[-.02em] text-slate-50">
-                  {bad ? `No puedo leer .${bad} todavía` : 'No puedo leer ese formato todavía'}
+                  {bad ? u.cantReadExt(bad) : u.cantReadFormat}
                 </div>
                 <div className="mt-[5px] text-[12px] text-slate-400">
-                  Exporta el cronograma como PDF y suéltalo de nuevo
+                  {u.exportAsPdf}
                 </div>
               </div>
             </>
@@ -162,10 +164,10 @@ export function DropZone({
               </div>
               <div className="text-center">
                 <div className="font-jakarta text-[15px] font-bold tracking-[-.02em] text-slate-50">
-                  Suelta tu cronograma aquí
+                  {u.dropHere}
                 </div>
                 <div className="mt-[5px] text-[12px] text-slate-400">
-                  PDF del banco · hasta {MAX_BYTES / 1024 / 1024} MB
+                  {u.pdfLimit(MAX_BYTES / 1024 / 1024)}
                 </div>
               </div>
             </>

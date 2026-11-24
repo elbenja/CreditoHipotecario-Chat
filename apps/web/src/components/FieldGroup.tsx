@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 
 /**
  * A collapsible section of the pinned panel: a header with the title, the row
@@ -23,6 +24,7 @@ export function FieldGroup({
   divider?: boolean;
   children: ReactNode;
 }) {
+  const copy = useT();
   const [open, setOpen] = useState(true);
   const [seenRevision, setSeenRevision] = useState(notice?.revision ?? 0);
   // A change that lands while the group is open is seen as it happens — the
@@ -50,7 +52,7 @@ export function FieldGroup({
         {pending && (
           <span className="ch-badge inline-flex items-center gap-[5px] rounded-full bg-ch-accent/15 px-[9px] py-[3px] text-[10.5px] font-semibold text-ch-accent">
             <span className="h-[5px] w-[5px] rounded-full bg-ch-accent" />
-            {notice.count} del PDF
+            {copy.panel.fromPdf(notice.count)}
           </span>
         )}
         <div className="flex-1" />

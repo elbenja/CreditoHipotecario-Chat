@@ -1,5 +1,6 @@
 import type { ChatError } from '../state/chatReducer';
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 
 export function ErrorNotice({
   error,
@@ -10,13 +11,14 @@ export function ErrorNotice({
   onRetry: () => void;
   onEdit: () => void;
 }) {
+  const e = useT().errors;
   const title = error.kind === 'request'
-    ? 'Kimi rechazó la solicitud'
+    ? e.titleRequest
     : error.kind === 'limit'
-      ? 'Kimi no alcanzó a responder'
+      ? e.titleLimit
       : error.kind === 'listing'
-        ? 'No pude leer el anuncio'
-        : 'No pude completar el análisis';
+        ? e.titleListing
+        : e.titleApi;
   const canRetry = error.kind === 'api' || error.kind === 'offline';
 
   return (
@@ -40,7 +42,7 @@ export function ErrorNotice({
               className="flex h-[34px] items-center gap-[7px] rounded-full bg-slate-50 px-[15px] text-[12.5px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px"
             >
               <Icon name="refresh" size={14} />
-              Reintentar
+              {e.retry}
             </button>
           )}
           <button
@@ -48,7 +50,7 @@ export function ErrorNotice({
             onClick={onEdit}
             className="flex h-[34px] items-center rounded-full border border-ch-border-hover px-[14px] text-[12.5px] font-medium text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
           >
-            Editar la pregunta
+            {e.editQuestion}
           </button>
         </div>
       </div>

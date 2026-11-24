@@ -6,6 +6,7 @@ import { FieldGroup } from './FieldGroup';
 import { PinnedFieldRow } from './PinnedField';
 import { SavedScenarios } from './SavedScenarios';
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 
 export function PinnedPanel({
   fields,
@@ -47,6 +48,8 @@ export function PinnedPanel({
   onDismissChanges?: () => void;
   mode?: 'desktop' | 'mobile';
 }) {
+  const copy = useT();
+  const p = copy.panel;
   const fieldsByKey = Object.fromEntries(fields.map((f) => [f.key, f]));
 
   const mobile = mode === 'mobile';
@@ -65,33 +68,33 @@ export function PinnedPanel({
           <span
             className={`${mobile ? 'text-[11px] text-slate-400' : 'text-[10px] text-slate-500'} font-semibold uppercase tracking-[.1em]`}
           >
-            Datos de la operación
+            {p.title}
           </span>
           {/* Both groups count: a panel showing four credit rows under "0 fijados"
               contradicts itself. */}
           <span className="text-[11px] font-medium text-slate-400">
-            {fields.length + mortgage.length} fijados
+            {p.pinnedCount(fields.length + mortgage.length)}
           </span>
         </div>
         <div className={`${mobile ? 'mt-[11px]' : 'mt-3'} flex items-center gap-[14px]`}>
           <span className="flex items-center gap-[6px] text-[11px] font-medium text-slate-400">
             <span className="h-[7px] w-[7px] rounded-full bg-slate-400" />
-            Lo dijiste tú
+            {p.saidByYou}
           </span>
           <span className="flex items-center gap-[6px] text-[11px] font-medium text-ch-accent">
             <span className="h-[7px] w-[7px] rounded-full bg-ch-accent" />
-            Lo asumí yo
+            {p.assumedByMe}
           </span>
           {mortgage.some((f) => f.provenance === 'documento') && (
             <span className="flex items-center gap-[6px] text-[11px] font-medium text-emerald-400">
               <span className="h-[7px] w-[7px] rounded-full bg-emerald-400" />
-              Lo leí del banco
+              {p.readFromBank}
             </span>
           )}
           {fields.some((f) => f.provenance === 'anuncio') && (
             <span className="flex items-center gap-[6px] text-[11px] font-medium text-emerald-400">
               <span className="h-[7px] w-[7px] rounded-full bg-emerald-400" />
-              Lo leí de la página
+              {p.readFromPage}
             </span>
           )}
         </div>
@@ -103,7 +106,7 @@ export function PinnedPanel({
           onRevert={(k) => onRevertChange?.(k)}
           onDismiss={() => onDismissChanges?.()}
         />
-        <FieldGroup title="Propiedad" count={fields.length}>
+        <FieldGroup title={p.property} count={fields.length}>
           {fields.map((f) => (
             <PinnedFieldRow
               key={f.key}
@@ -116,7 +119,7 @@ export function PinnedPanel({
           ))}
         </FieldGroup>
         <FieldGroup
-          title="Hipoteca"
+          title={p.mortgage}
           count={mortgage.length}
           notice={{ count: Object.keys(mortgageChanges).length, revision: mortgageRevision }}
           divider={fields.length > 0}
@@ -147,11 +150,11 @@ export function PinnedPanel({
           className={`flex w-full items-center justify-center gap-2 rounded-full bg-slate-50 font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px ${mobile ? 'h-[50px] text-[14.5px]' : 'h-[46px] text-[13.5px]'}`}
         >
           {mobile && <Icon name="plus-sign" size={17} />}
-          Guardar como propiedad
+          {p.saveProperty}
         </button>
         {!mobile && (
           <p className="mt-2 text-center text-[11px] font-medium text-slate-400">
-            Entra a tu portafolio y podrás amortizar sobre ella.
+            {p.saveHint}
           </p>
         )}
       </div>

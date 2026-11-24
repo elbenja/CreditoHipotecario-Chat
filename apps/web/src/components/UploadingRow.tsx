@@ -1,5 +1,6 @@
 import type { Status } from '../state/chatReducer';
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 
 /** `248 KB` below a megabyte, `2.5 MB` above. */
 export function formatSize(bytes: number): string {
@@ -22,6 +23,7 @@ export function UploadingRow({
   status: Status;
   steps: { label: string; done: boolean }[];
 }) {
+  const u = useT().upload;
   const reading = status === 'thinking';
   const current = steps.find((s) => !s.done)?.label;
   // size 0 is readListing's cue: nothing was read in the browser, so there is
@@ -62,13 +64,13 @@ export function UploadingRow({
           </div>
         )}
         {reading && !link ? (
-          <div className="mt-[7px] text-[11px] font-medium text-slate-400">Leyendo tu cronograma…</div>
+          <div className="mt-[7px] text-[11px] font-medium text-slate-400">{u.reading}</div>
         ) : (
           <div className="mt-[9px] flex flex-col gap-2">
             {!link && (
               <div className="ch-enter flex items-center gap-[9px] text-[12px] text-slate-400">
                 <Icon name="tick-double-01" size={15} className="text-ch-pos" />
-                Primera página leída
+                {u.firstPage}
               </div>
             )}
             {current && (

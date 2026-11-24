@@ -2,6 +2,7 @@ import type { AnalysisEnvelope } from '@chat/shared';
 import { MetricCard } from './MetricCard';
 import { Pill } from './Pill';
 import { ScenarioCard } from './ScenarioCard';
+import { useT } from '../i18n';
 
 export function AssistantAnswer({
   envelope,
@@ -16,6 +17,7 @@ export function AssistantAnswer({
   savedIds?: string[];
   disabled?: boolean;
 }) {
+  const copy = useT();
   if (envelope.kind === 'capture') {
     return <p className="text-[13.5px] leading-[1.6] text-slate-300 md:text-[14.5px]">{envelope.verdict}</p>;
   }
@@ -23,7 +25,7 @@ export function AssistantAnswer({
     <div className="flex min-w-0 flex-col gap-[13px] md:gap-4">
       <div className="flex items-center gap-2">
         <img src="/assets/logo-mark.svg" alt="" className="h-4 w-4" />
-        <span className="text-[11.5px] font-semibold text-slate-500 md:text-[12px]">Análisis</span>
+        <span className="text-[11.5px] font-semibold text-slate-500 md:text-[12px]">{copy.answer.analysis}</span>
       </div>
 
       <h2 className="font-jakarta text-[17px] font-bold leading-[1.35] tracking-[-.02em] text-white md:text-[19px]">
@@ -40,7 +42,7 @@ export function AssistantAnswer({
 
       {envelope.sources.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-medium text-slate-500">Fuentes</span>
+          <span className="text-[11px] font-medium text-slate-500">{copy.answer.sources}</span>
           {envelope.sources.map((s) => (
             <span key={s} className="rounded-full bg-ch-card px-[9px] py-[3px] text-[11px] text-slate-400">
               {s}
@@ -63,10 +65,10 @@ export function AssistantAnswer({
         <>
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">
-              Qué pasa si mueves una palanca
+              {copy.guidance.scenarioBadge}
             </span>
             <div className="h-px flex-1 bg-ch-border" />
-            <span className="text-[11px] font-medium text-slate-400">aproximados, no cotizaciones</span>
+            <span className="text-[11px] font-medium text-slate-400">{copy.answer.approximate}</span>
           </div>
           <div className="flex flex-wrap gap-3">
             {envelope.scenarios.map((s) => (

@@ -1,4 +1,5 @@
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 
 const item =
   'flex h-10 items-center gap-[11px] overflow-hidden whitespace-nowrap rounded-lg px-[10px] text-[14px] font-medium transition-colors duration-180 ease-ch';
@@ -8,11 +9,12 @@ const item =
  * Only Dito exists yet, so the other sections are shown but not offered.
  */
 export function SideNav({ expanded, onNew }: { expanded: boolean; onNew?: () => void }) {
+  const n = useT().nav;
   const label = `transition-opacity duration-180 ease-ch ${expanded ? 'opacity-100' : 'opacity-0'}`;
 
   return (
     <nav
-      aria-label="Principal"
+      aria-label={n.main}
       className={`hidden flex-none flex-col overflow-hidden border-r border-ch-border-hover bg-ch-panel px-2 py-[18px] transition-[width] duration-240 ease-ch md:flex ${
         expanded ? 'w-[224px]' : 'w-14'
       }`}
@@ -31,18 +33,18 @@ export function SideNav({ expanded, onNew }: { expanded: boolean; onNew?: () => 
             type="button"
             onClick={onNew}
             disabled={!onNew}
-            aria-label="Nuevo"
+            aria-label={n.new}
             className={`${item} w-full text-slate-200 hover:bg-ch-card/50 disabled:cursor-default disabled:hover:bg-transparent`}
           >
             <Icon name="plus-sign" size={17} className="flex-none" />
-            <span className={label}>Nuevo</span>
+            <span className={label}>{n.new}</span>
           </button>
         </li>
         <li>
-          <Soon icon="building-03" name="Propiedades" labelClass={label} />
+          <Soon icon="building-03" name={n.properties} soon={n.soon} labelClass={label} />
         </li>
         <li>
-          <Soon icon="dollar-square" name="Valuar un depa" labelClass={label} />
+          <Soon icon="dollar-square" name={n.valuate} soon={n.soon} labelClass={label} />
         </li>
         <li>
           <a href="/" aria-current="page" aria-label="Dito" className={`${item} bg-ch-card text-white`}>
@@ -55,13 +57,13 @@ export function SideNav({ expanded, onNew }: { expanded: boolean; onNew?: () => 
   );
 }
 
-function Soon({ icon, name, labelClass }: { icon: string; name: string; labelClass: string }) {
+function Soon({ icon, name, soon, labelClass }: { icon: string; name: string; soon: string; labelClass: string }) {
   return (
     <button
       type="button"
       aria-disabled="true"
       aria-label={name}
-      title="Próximamente"
+      title={soon}
       className={`${item} w-full cursor-default text-slate-200`}
     >
       <Icon name={icon} size={17} className="flex-none" />

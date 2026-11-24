@@ -28,7 +28,7 @@ function words(s: string): string {
 }
 
 /** A negator close before a number or name means the user was ruling it out. */
-const NEGATOR = /\b(no|ni|tampoco|nunca)\b/;
+const NEGATOR = /\b(no|ni|tampoco|nunca|not|never)\b/;
 
 interface NumberMention {
   value: string;
@@ -57,9 +57,9 @@ function numberMentions(text: string): NumberMention[] {
     out.push({ value: base, before, after });
 
     // "250 mil" also means 250000.
-    const scale = /^\s*(millones?|mil)\b/i.exec(after);
+    const scale = /^\s*(millones?|mil|million|thousand|k)\b/i.exec(after);
     if (scale) {
-      const multiplier = /millon/i.test(scale[1]!) ? 1_000_000 : 1_000;
+      const multiplier = /millon|million/i.test(scale[1]!) ? 1_000_000 : 1_000;
       const scaled = Number(base) * multiplier;
       if (Number.isFinite(scaled)) {
         out.push({ value: normalizeNumber(String(scaled)), before, after });
@@ -76,12 +76,12 @@ function numberMentions(text: string): NumberMention[] {
  */
 const CUE: Record<string, RegExp> = {
   precio:
-    /s\/|soles|dolares|precio|cuesta|cuestan|vale|valen|compra|piden|depa de|casa de|departamento de|dpto de|mil|millon/,
-  area: /m2|m²|metros|area/,
-  tasa: /%|por ciento|tea|tasa|interes/,
-  inicial: /%|por ciento|inicial|adelanto|enganche/,
-  plazo: /a[nñ]os?|plazo|cuotas/,
-  alquiler: /alquil|renta|arriendo|s\/|soles|mes/,
+    /s\/|soles|dolares|precio|cuesta|cuestan|vale|valen|compra|piden|depa de|casa de|departamento de|dpto de|mil|millon|price|costs?|asking|dollars|apartment|thousand/,
+  area: /m2|m²|metros|area|square|sqm|meters|metres/,
+  tasa: /%|por ciento|tea|tasa|interes|percent|rate|interest/,
+  inicial: /%|por ciento|inicial|adelanto|enganche|percent|down/,
+  plazo: /a[nñ]os?|plazo|cuotas|years?|term|installments/,
+  alquiler: /alquil|renta|arriendo|s\/|soles|mes|rent|month/,
 };
 
 function numericMatch(key: string, needle: string, mentions: NumberMention[]): boolean {

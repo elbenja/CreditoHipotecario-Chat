@@ -1,17 +1,16 @@
 import type { PinnedField } from '@chat/shared';
 import { streamChat } from '../api/streamChat';
 import type { Action } from '../state/chatReducer';
+import { t } from '../i18n';
 import { PdfReadError, readFirstPage, type PdfErrorCode } from './readPdf';
 
 // Every failure the reader can throw, in the copy the user actually sees.
 // A password-protected schedule is not "unreadable" — it needs its own line,
 // or the person has no idea what to do next.
-const PDF_ERRORS: Record<PdfErrorCode, string> = {
-  notPdf: 'Eso no es un PDF. Sube el cronograma que te dio el banco.',
-  tooLarge: 'Ese archivo pasa los 20 MB. Sube solo el cronograma.',
-  encrypted: 'Ese PDF tiene contraseña y no puedo abrirlo.',
-  unreadable: 'No pude leer ese PDF.',
-};
+function pdfError(code: PdfErrorCode): string {
+  const e = t().errors;
+  return { notPdf: e.pdfNotPdf, tooLarge: e.pdfTooLarge, encrypted: e.pdfEncrypted, unreadable: e.pdfUnreadable }[code];
+}
 
 /**
  * Reads the PDF in the browser and streams the extraction. Shared by every
@@ -34,13 +33,13 @@ export async function attachSchedule(
     doc = await readFirstPage(file);
   } catch (err) {
     const code = err instanceof PdfReadError ? err.code : 'unreadable';
-    dispatch({ type: 'error', kind: 'api', message: PDF_ERRORS[code], retry: null });
+    dispatch({ type: 'error', kind: 'api', message: pdfError(code), retry: null });
     return;
   }
 
   await streamChat(
     {
-      messages: [{ role: 'user', content: 'Adjunto el cronograma de pagos.' }],
+      messages: [{ role: 'user', content: t().app.attachMessage }],
       fields,
       document: doc,
     },

@@ -1,5 +1,6 @@
 import type { PinnedField } from '@chat/shared';
 import type { DocumentInput } from '../pdf/readPdf';
+import { getLang, t } from '../i18n';
 import { getAccessToken, lockAccess } from './access';
 
 /**
@@ -46,17 +47,18 @@ export async function streamChat(
     res = await fetchImpl(`${API_BASE}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAccessToken() ?? ''}` },
-      body: JSON.stringify(body),
+      // The API writes its own copy, and tells the model, in this language.
+      body: JSON.stringify({ ...body, lang: getLang() }),
     });
   } catch {
-    onEvent({ event: 'error', data: { kind: 'api', message: 'Se cayó la conexión con el modelo.' } });
+    onEvent({ event: 'error', data: { kind: 'api', message: t().errors.connection } });
     return;
   }
 
   // The token no longer opens the API: back to the password gate.
   if (res.status === 401) {
     lockAccess();
-    onEvent({ event: 'error', data: { kind: 'api', message: 'Tu acceso venció. Vuelve a ingresar la contraseña.' } });
+    onEvent({ event: 'error', data: { kind: 'api', message: t().errors.expired } });
     return;
   }
 
@@ -64,8 +66,8 @@ export async function streamChat(
     onEvent({
       event: 'error',
       data: res.status === 400
-        ? { kind: 'request', message: 'La solicitud enviada no fue válida. Edita la pregunta e inténtalo de nuevo.' }
-        : { kind: 'api', message: 'Se cayó la conexión con el modelo.' },
+        ? { kind: 'request', message: t().errors.badRequest }
+        : { kind: 'api', message: t().errors.connection },
     });
     return;
   }
@@ -100,7 +102,7 @@ export async function streamChat(
   if (!sawTerminal) {
     onEvent({
       event: 'error',
-      data: { kind: 'api', message: 'Se cortó la conexión antes de terminar. Intenta de nuevo.' },
+      data: { kind: 'api', message: t().errors.cutOff },
     });
   }
 }

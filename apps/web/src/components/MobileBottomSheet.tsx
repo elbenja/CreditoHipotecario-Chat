@@ -3,6 +3,7 @@ import type { MortgageField, PinnedField, Scenario } from '@chat/shared';
 import type { FieldChange } from '../state/chatReducer';
 import { Icon } from './Icon';
 import { PinnedPanel } from './PinnedPanel';
+import { useT } from '../i18n';
 
 type MobileBottomSheetProps = {
   fields: PinnedField[];
@@ -53,7 +54,9 @@ export function MobileBottomSheet({
   // the panel and ConfirmExtraction already draw.
   const assumedCount = fields.filter((field) => field.provenance === 'assumed' || field.provenance === 'market').length;
   const savedCount = savedScenarios.length;
-  const scenarioLabel = savedCount === 1 ? 'escenario guardado' : 'escenarios guardados';
+  const copy = useT();
+  const s = copy.sheet;
+  const panelTitle = copy.panel.title;
 
   const close = () => setOpen(false);
 
@@ -156,7 +159,7 @@ export function MobileBottomSheet({
           <button
             ref={summaryRef}
             type="button"
-            aria-label="Abrir datos de la operación"
+            aria-label={s.open}
             aria-expanded={open}
             tabIndex={open ? -1 : undefined}
             onClick={() => setOpen(true)}
@@ -168,12 +171,11 @@ export function MobileBottomSheet({
           >
             <span className="mx-auto mb-1 h-1 w-9 rounded-full bg-slate-500" aria-hidden="true" />
             <span className="text-[13px] font-semibold text-white">
-              {fields.length + mortgage.length} datos fijados
+              {s.pinned(fields.length + mortgage.length)}
             </span>
             {' '}
             <span className="text-[11.5px] font-medium text-slate-400">
-              {assumedCount} {assumedCount === 1 ? 'lo asumí yo' : 'los asumí yo'} · {savedCount}{' '}
-              {scenarioLabel}
+              {s.assumed(assumedCount)} · {s.scenarios(savedCount)}
             </span>
           </button>
           <button
@@ -181,7 +183,7 @@ export function MobileBottomSheet({
             tabIndex={open ? -1 : undefined}
             className="absolute right-4 top-[44px] h-9 rounded-full bg-slate-50 px-4 text-[12px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90"
           >
-            Guardar
+            {s.save}
           </button>
       </section>
 
@@ -189,14 +191,14 @@ export function MobileBottomSheet({
         <div className="fixed inset-0 z-40 md:hidden">
           <button
             type="button"
-            aria-label="Cerrar panel"
+            aria-label={s.closePanel}
             className="absolute inset-0 h-full w-full bg-slate-950/60"
             onClick={close}
           />
           <div
             ref={dialogRef}
             role="dialog"
-            aria-label="Datos de la operación"
+            aria-label={panelTitle}
             aria-modal="true"
             tabIndex={-1}
             className="ch-sheet-enter absolute bottom-0 flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[16px] border-t border-ch-border-hover bg-ch-panel outline-none"
@@ -205,7 +207,7 @@ export function MobileBottomSheet({
               <button
                 ref={closeRef}
                 type="button"
-                aria-label="Cerrar datos de la operación"
+                aria-label={s.closeData}
                 onClick={close}
                 onPointerDown={handlePointerDown}
                 onPointerUp={handleExpandedPointerUp}
@@ -217,7 +219,7 @@ export function MobileBottomSheet({
               </button>
               <button
                 type="button"
-                aria-label="Cerrar panel"
+                aria-label={s.closePanel}
                 onClick={close}
                 className="absolute right-3 top-2 grid h-11 w-11 place-items-center rounded-full text-slate-400 transition-colors duration-120 ease-ch hover:bg-ch-card hover:text-white"
               >

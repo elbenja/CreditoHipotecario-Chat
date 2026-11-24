@@ -1,4 +1,5 @@
 import type { FieldKey } from '@chat/shared';
+import { COPY, type Lang } from '../i18n.ts';
 
 export interface Candidate {
   key: FieldKey;
@@ -8,7 +9,6 @@ export interface Candidate {
 
 interface Rule {
   key: FieldKey;
-  label: string;
   pattern: RegExp;
 }
 
@@ -17,22 +17,21 @@ interface Rule {
  * patterns (TEA) must precede looser ones (a bare percentage).
  */
 const RULES: Rule[] = [
-  { key: 'tasa', label: 'Tasa TEA', pattern: /\bTEA\b[^\d%]{0,15}(\d{1,2}(?:\.\d{1,2})?)\s*%/i },
-  { key: 'inicial', label: 'Cuota inicial', pattern: /(\d{1,2})\s*%\s*de\s+inicial/i },
-  { key: 'plazo', label: 'Plazo', pattern: /(\d{1,2})\s*a[ñn]os/i },
-  { key: 'area', label: 'Área', pattern: /(\d{1,4})\s*m(?:2|²)/i },
+  { key: 'tasa', pattern: /\bTEA\b[^\d%]{0,15}(\d{1,2}(?:\.\d{1,2})?)\s*%/i },
+  { key: 'inicial', pattern: /(\d{1,2})\s*%\s*(?:de\s+inicial|down\b)/i },
+  { key: 'plazo', pattern: /(\d{1,2})\s*(?:a[ñn]os|years)/i },
+  { key: 'area', pattern: /(\d{1,4})\s*m(?:2|²)/i },
   {
     key: 'precio',
-    label: 'Precio de compra',
     // Must be cued by purchase vocabulary. Without this, "la cuota baja a
     // S/ 1,434" is offered as a purchase price and the user pins nonsense.
     // Fails safe: an uncued amount yields no chip rather than a wrong one.
     pattern:
-      /(?:precio|cuesta|cuestan|vale|valen|compra|piden|depa de|departamento de)[^.]{0,30}?S\/\.?\s*(\d{1,3}(?:,\d{3})+|\d{5,})/i,
+      /(?:precio|cuesta|cuestan|vale|valen|compra|piden|depa de|departamento de|price|costs?|asking|apartment for)[^.]{0,30}?S\/\.?\s*(\d{1,3}(?:,\d{3})+|\d{5,})/i,
   },
 ];
 
-export function extractCandidates(prose: string): Candidate[] {
+export function extractCandidates(prose: string, lang: Lang = 'es'): Candidate[] {
   const seen = new Set<FieldKey>();
   const out: Candidate[] = [];
 
@@ -41,7 +40,7 @@ export function extractCandidates(prose: string): Candidate[] {
     const m = rule.pattern.exec(prose);
     if (!m || !m[1]) continue;
     seen.add(rule.key);
-    out.push({ key: rule.key, label: rule.label, value: m[1] });
+    out.push({ key: rule.key, label: COPY[lang].fieldLabels[rule.key], value: m[1] });
   }
 
   return out;

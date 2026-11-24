@@ -1,4 +1,5 @@
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 
 export function TruncatedNotice({
   onContinue,
@@ -7,6 +8,7 @@ export function TruncatedNotice({
   onContinue: () => void;
   onShorten: () => void;
 }) {
+  const a = useT().answer;
   return (
     <div className="mt-3 flex flex-col gap-3">
       {/* A fading rule, not an ellipsis: the text above is valid, it just stops. */}
@@ -14,10 +16,10 @@ export function TruncatedNotice({
       <div className="rounded-xl border border-ch-border-hover bg-ch-panel px-[15px] py-[13px]">
         <div className="flex items-center gap-[9px]">
           <Icon name="text-align-left" size={15} className="text-slate-400" />
-          <span className="text-[12.5px] font-semibold text-slate-100">La respuesta se cortó</span>
+          <span className="text-[12.5px] font-semibold text-slate-100">{a.truncatedTitle}</span>
         </div>
         <p className="mt-[7px] text-[12px] leading-[1.5] text-slate-400">
-          Llegó al límite de largo. Lo de arriba es válido.
+          {a.truncatedBody}
         </p>
         <div className="mt-3 flex items-center gap-2">
           <button
@@ -25,14 +27,14 @@ export function TruncatedNotice({
             onClick={onContinue}
             className="flex h-8 items-center rounded-full bg-slate-50 px-[14px] text-[12px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px"
           >
-            Continuar
+            {a.continue}
           </button>
           <button
             type="button"
             onClick={onShorten}
             className="flex h-8 items-center rounded-full border border-ch-border-hover px-[13px] text-[12px] font-medium text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
           >
-            Pídelo más corto
+            {a.shorter}
           </button>
         </div>
       </div>

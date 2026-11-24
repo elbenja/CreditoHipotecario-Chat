@@ -1,4 +1,5 @@
 import type { PinnedField } from '@chat/shared';
+import { ENGLISH_ANSWER_RULE, type Lang } from './i18n.ts';
 
 export interface ChatTurn {
   role: 'user' | 'assistant';
@@ -82,8 +83,9 @@ function renderFields(fields: PinnedField[]): string {
   return `Datos actuales del panel; su procedencia está indicada entre paréntesis. Respétalos salvo que los contradiga explícitamente. Un dato con procedencia "anuncio" fue leído del anuncio de la propiedad, no lo dijo el usuario: trátalo como dato firme del anuncio y nunca lo devuelvas como "user":\n${lines.join('\n')}`;
 }
 
-export function buildMessages(history: ChatTurn[], fields: PinnedField[]): ChatMessage[] {
+export function buildMessages(history: ChatTurn[], fields: PinnedField[], lang: Lang = 'es'): ChatMessage[] {
   const messages: ChatMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }];
+  if (lang === 'en') messages.push({ role: 'system', content: ENGLISH_ANSWER_RULE });
   if (fields.length > 0) {
     messages.push({ role: 'system', content: renderFields(fields) });
   }

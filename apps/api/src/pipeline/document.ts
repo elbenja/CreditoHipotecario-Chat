@@ -6,6 +6,7 @@ import {
   type MortgageField,
   type MortgageKey,
 } from '@chat/shared';
+import { COPY, type Lang } from '../i18n.ts';
 import { runListingPipeline } from './listing.ts';
 
 export type DocumentResult =
@@ -21,17 +22,20 @@ interface Presentation {
 
 /** How each key is shown. The unit lives in prefix/suffix, never inside value —
  *  the same rule the property panel already follows. */
-const PRESENTATION: Record<MortgageKey, Presentation> = {
-  montoFinanciado: { label: 'Monto financiado', prefix: 'S/' },
-  cuota: { label: 'Cuota mensual', prefix: 'S/' },
-  tea: { label: 'TEA', suffix: '%' },
-  tcea: { label: 'TCEA', suffix: '%' },
-  plazoCuotas: { label: 'Plazo', suffix: 'cuotas' },
-  seguroDesgravamen: { label: 'Seguro de desgravamen', suffix: '%' },
-  seguroInmueble: { label: 'Seguro del inmueble', suffix: '%' },
-  valorInmueble: { label: 'Valor del inmueble', prefix: 'S/' },
-  totalAPagar: { label: 'Total a pagar', prefix: 'S/' },
-};
+function presentation(lang: Lang): Record<MortgageKey, Presentation> {
+  const { mortgageLabels: l, installments } = COPY[lang];
+  return {
+    montoFinanciado: { label: l.montoFinanciado, prefix: 'S/' },
+    cuota: { label: l.cuota, prefix: 'S/' },
+    tea: { label: l.tea, suffix: '%' },
+    tcea: { label: l.tcea, suffix: '%' },
+    plazoCuotas: { label: l.plazoCuotas, suffix: installments },
+    seguroDesgravamen: { label: l.seguroDesgravamen, suffix: '%' },
+    seguroInmueble: { label: l.seguroInmueble, suffix: '%' },
+    valorInmueble: { label: l.valorInmueble, prefix: 'S/' },
+    totalAPagar: { label: l.totalAPagar, prefix: 'S/' },
+  };
+}
 
 /** Models wrap JSON in fences often enough to handle it rather than fail. */
 function stripFences(raw: string): string {
@@ -47,7 +51,9 @@ function bareValue(raw: string, p: Presentation): string {
   return v;
 }
 
-export function runDocumentPipeline(raw: string): DocumentResult {
+export function runDocumentPipeline(raw: string, lang: Lang = 'es'): DocumentResult {
+  const copy = COPY[lang];
+  const PRESENTATION = presentation(lang);
   let parsed: unknown;
   try {
     parsed = JSON.parse(stripFences(raw));
@@ -88,10 +94,10 @@ export function runDocumentPipeline(raw: string): DocumentResult {
     const note =
       key === 'tea' && extraction.teaTipo
         ? extraction.teaTipo === 'variable'
-          ? 'Tasa variable — el cronograma es referencial, no vinculante.'
-          : 'Tasa fija.'
+          ? copy.teaVariable
+          : copy.teaFixed
         : alwaysAssumed
-          ? 'Valor asegurado o tasación, no el precio de compra.'
+          ? copy.insuredValue
           : '';
 
     fields.push(

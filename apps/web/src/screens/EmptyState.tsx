@@ -11,6 +11,7 @@ import { PinnedPanel } from '../components/PinnedPanel';
 import { UploadingRow } from '../components/UploadingRow';
 import { attachSchedule } from '../pdf/attachSchedule';
 import type { Action, ChatState } from '../state/chatReducer';
+import { useT } from '../i18n';
 
 export function EmptyState({
   onSubmit,
@@ -28,6 +29,7 @@ export function EmptyState({
   state: ChatState;
   dispatch?: (action: Action) => void;
 }) {
+  const e = useT().empty;
   const [value, setValue] = useState('');
   const busy = state.status !== 'idle' && state.status !== 'error';
 
@@ -58,15 +60,15 @@ export function EmptyState({
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-6 md:px-14">
             <div className="mx-auto my-auto w-full max-w-transcript">
               <h1 className="font-jakarta text-[27px] font-extrabold leading-[1.2] tracking-[-.03em] text-white md:text-[32px]">
-                Cuéntame del depa y su hipoteca
+                {e.title}
               </h1>
               <p className="mt-3 text-[13.5px] leading-[1.6] text-slate-400 md:text-[14.5px]">
-                No necesitas tener todos los datos. Los vamos ordenando mientras conversas.
+                {e.lead}
               </p>
               <div className="my-6 border-l-2 border-ch-border-hover pl-4">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.1em] text-slate-400">Por ejemplo</p>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.1em] text-slate-400">{e.example}</p>
                 <p className="text-[13.5px] leading-[1.7] text-slate-300 md:text-[14.5px]">
-                  “Estoy viendo un depa en Pueblo Libre de S/ 300,000 y 70 m². Tengo S/ 60,000 de inicial y me ofrecen una tasa de 8%”.
+                  {e.exampleText}
                 </p>
               </div>
               <div className="mb-7 hidden md:block">
@@ -75,7 +77,7 @@ export function EmptyState({
                   value={value}
                   onChange={setValue}
                   onSubmit={() => onSubmit(value)}
-                  placeholder="Cuéntame lo que sabes del depa…"
+                  placeholder={e.placeholder}
                   disabled={busy}
                   onAttach={dispatch ? attach : undefined}
                 />
@@ -95,7 +97,7 @@ export function EmptyState({
               value={value}
               onChange={setValue}
               onSubmit={() => onSubmit(value)}
-              placeholder="Cuéntame lo que sabes del depa…"
+              placeholder={e.placeholder}
               disabled={busy}
               onAttach={dispatch ? attach : undefined}
             />
@@ -117,7 +119,7 @@ export function EmptyState({
             />
           ) : (
             <div className="mobile-safe-bottom mt-3 flex min-h-[62px] flex-none items-center gap-3 border-t border-ch-border px-5 text-[12.5px] font-medium text-slate-400 md:hidden">
-              <span className="flex-1">Ningún dato fijado todavía</span>
+              <span className="flex-1">{e.nothingPinned}</span>
               <Icon name="arrow-up-01" size={16} className="text-ch-border-hover" />
             </div>
           )}

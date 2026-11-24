@@ -1,30 +1,16 @@
 import type { PinnedField } from '@chat/shared';
 import { Icon } from './Icon';
-
-/** Spanish articles for the field labels the panel can show. */
-const ARTICLE: Record<string, string> = {
-  ubicacion: 'la ubicación',
-  precio: 'el precio',
-  area: 'el área',
-  tasa: 'la tasa',
-  inicial: 'la cuota inicial',
-  plazo: 'el plazo',
-  alquiler: 'el alquiler',
-};
+import { t, useT } from '../i18n';
 
 export function describeDirty(
   fields: Record<string, PinnedField>,
   dirtyKeys: string[],
 ): string {
-  const names = dirtyKeys.filter((k) => fields[k]).map((k) => ARTICLE[k] ?? fields[k]!.label);
+  const copy = t();
+  // Each name carries its article ("la tasa", "the rate").
+  const names = dirtyKeys.filter((k) => fields[k]).map((k) => copy.panel.dirtyNames[k] ?? fields[k]!.label);
   if (names.length === 0) return '';
-
-  const joined =
-    names.length === 1
-      ? names[0]!
-      : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]!}`;
-
-  return `Cambiaste ${joined}. Los números de arriba son de antes.`;
+  return copy.panel.dirty(copy.list(names));
 }
 
 export function DirtyBand({
@@ -38,6 +24,7 @@ export function DirtyBand({
   onRecalculate: () => void;
   busy?: boolean;
 }) {
+  const copy = useT();
   const message = describeDirty(fields, dirtyKeys);
   if (!message) return null;
 
@@ -54,7 +41,7 @@ export function DirtyBand({
         className="mt-[10px] flex h-10 w-full items-center justify-center gap-2 rounded-full bg-ch-accent text-[13px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px active:opacity-85 disabled:opacity-50"
       >
         <Icon name="refresh" size={15} />
-        Recalcular
+        {copy.panel.recalculate}
       </button>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Scenario } from '@chat/shared';
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 
 export function SavedScenarios({
   scenarios,
@@ -9,6 +10,7 @@ export function SavedScenarios({
   scenarios: Scenario[];
   onDelete: (id: string) => void;
 }) {
+  const p = useT().panel;
   const seen = useRef<string[]>([]);
   const fresh = scenarios.filter((s) => !seen.current.includes(s.id)).map((s) => s.id);
   useEffect(() => {
@@ -29,20 +31,19 @@ export function SavedScenarios({
     <section className="mb-3 mt-4 px-3">
       <div className="mb-3 flex items-center gap-3">
         <span className="text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">
-          Escenarios guardados
+          {p.savedScenarios}
         </span>
         <div className="h-px flex-1 bg-ch-border" />
         {scenarios.length > 0 && (
           <span className="text-[11px] font-medium text-slate-400">
-            {scenarios.length} {scenarios.length === 1 ? 'guardado' : 'guardados'}
+            {p.savedCount(scenarios.length)}
           </span>
         )}
       </div>
 
       {scenarios.length === 0 ? (
         <p className="rounded-[10px] border border-ch-border p-[14px] text-[11.5px] leading-[1.5] text-slate-500">
-          Guarda acá los escenarios que no quieras perder. Se van con la propiedad cuando la
-          guardes.
+          {p.savedEmpty}
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -67,7 +68,7 @@ export function SavedScenarios({
               <button
                 type="button"
                 onClick={() => handleDelete(s.id)}
-                aria-label={`Borrar escenario ${s.cause}`}
+                aria-label={p.deleteScenario(s.cause)}
                 className="grid h-6 w-6 flex-none place-items-center rounded-md text-slate-500 transition-colors duration-120 ease-ch hover:bg-ch-panel hover:text-ch-neg"
               >
                 <Icon name="delete-02" size={14} />

@@ -9,6 +9,7 @@ import {
   type PinnedField,
   type Scenario,
 } from '@chat/shared';
+import { getLang, t } from '../i18n';
 
 export interface Candidate {
   key: string;
@@ -474,12 +475,12 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
       if (inicial && !state.userEdited.includes('inicial')) {
         fields.inicial = {
           key: 'inicial',
-          label: 'Inicial',
+          label: t().reducer.derivedInicialLabel,
           value: inicial,
           prefix: 'S/',
           // Derived, not read: the schedule never states a down payment.
           provenance: 'assumed',
-          note: 'Calculada: precio menos el monto que financia el banco.',
+          note: t().reducer.derivedInicialNote,
         };
       }
 
@@ -501,7 +502,7 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
         messages: [
           ...state.messages,
           { id: nextId(), role: 'user', content: action.content },
-          { id: nextId(), role: 'assistant-note', content: listingRefusal(action.host) },
+          { id: nextId(), role: 'assistant-note', content: listingRefusal(action.host, getLang()) },
         ],
         pendingField: null,
       };
@@ -532,7 +533,7 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
           continue;
         }
         fields[f.key] = f;
-        pinned.push(f.label.toLowerCase());
+        pinned.push(t().fieldLabels[f.key].toLowerCase());
       }
 
       // An estimated rent was for the previous location and area. A typed one
@@ -547,18 +548,18 @@ export function chatReducer(state: ChatState, action: Action): ChatState {
       if (inicial && !state.userEdited.includes('inicial')) {
         fields.inicial = {
           key: 'inicial',
-          label: 'Inicial',
+          label: t().reducer.derivedInicialLabel,
           value: inicial,
           prefix: 'S/',
           provenance: 'assumed',
-          note: 'Calculada: precio menos el monto que financia el banco.',
+          note: t().reducer.derivedInicialNote,
         };
       }
 
       const note =
         pinned.length > 0
-          ? `Fijé ${pinned.join(', ').replace(/, ([^,]*)$/, ' y $1')} del anuncio.`
-          : 'Mantuve tus datos; lo que leí del anuncio quedó como propuesta.';
+          ? t().reducer.pinnedFromListing(t().list(pinned))
+          : t().reducer.keptYours;
 
       return {
         ...state,

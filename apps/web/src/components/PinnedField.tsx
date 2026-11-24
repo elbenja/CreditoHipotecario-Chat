@@ -1,5 +1,6 @@
 import type { MortgageField, PinnedField } from '@chat/shared';
 import { Icon } from './Icon';
+import { fieldLabel, unitLabel, useT } from '../i18n';
 
 export function PinnedFieldRow({
   field,
@@ -32,7 +33,13 @@ export function PinnedFieldRow({
   const notFromUser = field.provenance !== 'user' && !fromDocument && !fromPage;
 
   const dotClass = fromDocument || fromPage ? 'bg-emerald-400' : notFromUser ? 'bg-ch-accent' : 'bg-slate-400';
-  const dotTitle = fromDocument ? 'Lo leí del banco' : fromPage ? 'Lo leí de la página' : notFromUser ? 'Lo asumí yo' : 'Lo dijiste tú';
+  const copy = useT();
+  const p = copy.panel;
+  const dotTitle = fromDocument ? p.readFromBank : fromPage ? p.readFromPage : notFromUser ? p.assumedByMe : p.saidByYou;
+  // Named by key, so the row follows the language picker; the stored label
+  // is only the fallback for a key the panel does not know.
+  const label = fieldLabel(copy, field);
+  const suffix = unitLabel(copy, field.suffix);
 
   return (
     <div
@@ -42,7 +49,7 @@ export function PinnedFieldRow({
     >
       <div className="flex items-center gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-[.1em] text-slate-500 md:text-[10px]">
-          {field.label}
+          {label}
         </span>
         <span
           className={`h-[6px] w-[6px] rounded-full ${dotClass}`}
@@ -60,9 +67,9 @@ export function PinnedFieldRow({
           value={field.value}
           onChange={(e) => onChange(field.key, e.target.value)}
           className="tnum min-w-0 flex-1 border-none bg-transparent p-0 font-jakarta text-[18px] font-bold tracking-[-.02em] text-white outline-none md:text-[17px]"
-          aria-label={field.label}
+          aria-label={label}
         />
-        {field.suffix && <span className="text-[15px] text-slate-400 md:text-[14px]">{field.suffix}</span>}
+        {suffix && <span className="text-[15px] text-slate-400 md:text-[14px]">{suffix}</span>}
       </div>
 
       {field.note && (
@@ -72,7 +79,7 @@ export function PinnedFieldRow({
       {/* Seeing the change is worth more than knowing there was one. */}
       {typeof change === 'string' && (
         <p className="mt-[5px] text-[11px] text-slate-400">
-          antes <s>{change}{field.suffix ? ` ${field.suffix}` : ''}</s> · leído del PDF
+          {p.before} <s>{change}{suffix ? ` ${suffix}` : ''}</s> · {p.readFromPdf}
         </p>
       )}
 
@@ -86,8 +93,7 @@ export function PinnedFieldRow({
         <div className="mt-[9px] rounded-lg border border-ch-border-hover px-[11px] py-[9px]">
           <div className="flex items-center gap-[6px] text-[11px] font-medium text-slate-400">
             <Icon name="information-circle" size={13} />
-            Sugerí {proposal.value}
-            {field.suffix ? ` ${field.suffix}` : ''} · mantuve el tuyo
+            {p.suggested(`${proposal.value}${suffix ? ` ${suffix}` : ''}`)}
           </div>
           <div className="mt-[7px] flex gap-[6px]">
             <button
@@ -95,14 +101,14 @@ export function PinnedFieldRow({
               onClick={() => onAcceptProposal?.(field.key)}
               className="rounded-full border border-ch-border-hover px-[10px] py-[3px] text-[11px] font-semibold text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
             >
-              Usar el suyo
+              {p.useTheirs}
             </button>
             <button
               type="button"
               onClick={() => onRejectProposal?.(field.key)}
               className="rounded-full px-[10px] py-[3px] text-[11px] font-medium text-slate-500 transition-colors duration-180 ease-ch hover:text-slate-300"
             >
-              Descartar
+              {p.discard}
             </button>
           </div>
         </div>

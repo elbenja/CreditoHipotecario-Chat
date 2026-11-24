@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
+import { useT } from '../i18n';
 
 /** Three lines of 22px leading. Past that the box scrolls rather than grows. */
 const MAX_HEIGHT = 66;
@@ -27,6 +28,7 @@ export function Composer({
   suggestionClassName?: string;
   onAttach?: (file: File) => void;
 }) {
+  const c = useT().composer;
   const [focused, setFocused] = useState(false);
   const boxRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -77,8 +79,8 @@ export function Composer({
         type="button"
         onClick={() => fileRef.current?.click()}
         disabled={disabled}
-        aria-label="Adjuntar cronograma"
-        title="Leo solo la primera página. El archivo no se sube ni se guarda. Puedes tapar tus datos personales antes."
+        aria-label={c.attach}
+        title={c.attachHint}
         className="grid h-[34px] w-[34px] flex-none place-items-center rounded-full border border-ch-border-hover text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500 hover:text-white disabled:opacity-40"
       >
         <Icon name="plus-sign" size={16} />
@@ -102,7 +104,7 @@ export function Composer({
         <div className="mt-[14px] flex items-center gap-[10px]">
           {attachControl}
           <span className="text-[11.5px] text-slate-400">
-            Sube un documento o pega el link de un anuncio
+            {c.attachLine}
           </span>
           <div className="flex-1" />
           <button
@@ -110,7 +112,7 @@ export function Composer({
             onClick={submit}
             disabled={disabled}
             className="grid h-[34px] w-[34px] place-items-center rounded-full bg-ch-card text-white transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px active:opacity-85 disabled:opacity-40"
-            aria-label="Enviar"
+            aria-label={c.send}
           >
             <Icon name="arrow-right-01" size={17} />
           </button>
@@ -162,7 +164,7 @@ export function Composer({
           onClick={submit}
           disabled={disabled}
           className="grid h-[34px] w-[34px] flex-none place-items-center rounded-full bg-slate-50 text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px active:opacity-85 disabled:opacity-40"
-          aria-label="Enviar"
+          aria-label={c.send}
         >
           <Icon name="arrow-right-01" size={17} />
         </button>

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FieldKey } from '@chat/shared';
 import { FieldSuggestions } from '../components/FieldSuggestions';
-import { canExploreScenarios, getAnalysisSuggestions, SCENARIO_BADGE_LABEL } from '../state/guidance';
+import { canExploreScenarios, getAnalysisSuggestions } from '../state/guidance';
+import { useT } from '../i18n';
 import { AnalyzeSteps } from '../components/AnalyzeSteps';
 import { AssistantAnswer } from '../components/AssistantAnswer';
 import { Composer } from '../components/Composer';
@@ -76,6 +77,7 @@ export function Conversation({
   const [value, setValue] = useState('');
   const [showUndo, setShowUndo] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const copy = useT();
   const busy = state.status !== 'idle' && state.status !== 'error';
   const lastMessage = state.messages.at(-1);
   const capturing = lastMessage?.role === 'assistant-question' ||
@@ -179,7 +181,7 @@ export function Conversation({
                   {m.candidates.length > 0 && (
                     <div className="rounded-[10px] border border-ch-border p-[14px]">
                       <p className="text-[12px] font-medium text-slate-400">
-                        No pude fijar estos datos solo. ¿Los agrego?
+                        {copy.answer.candidatesAsk}
                       </p>
                       <div className="mt-[10px] flex flex-wrap gap-2">
                         {m.candidates.map((c) => (
@@ -190,7 +192,7 @@ export function Conversation({
                             className="flex items-center gap-[6px] rounded-full border border-ch-border-hover px-[11px] py-[6px] text-[11.5px] font-medium text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
                           >
                             <Icon name="plus-sign" size={12} />
-                            {c.label}: {c.value}
+                            {copy.fieldLabels[c.key as keyof typeof copy.fieldLabels] ?? c.label}: {c.value}
                           </button>
                         ))}
                       </div>
@@ -224,7 +226,7 @@ export function Conversation({
                   <UserBubble content={state.queued} />
                 </div>
                 <span className="self-end text-[11px] font-medium text-slate-400">
-                  Se enviará al reconectar
+                  {copy.conversation.queued}
                 </span>
               </div>
             )}
@@ -234,16 +236,16 @@ export function Conversation({
                 <FieldSuggestions fields={state.fields} onAsk={onAskField} selected={state.pendingField} disabled={state.queued !== null} />
                 {(showScenarioBadge || contextualSuggestions.length > 0) && (
                   <div>
-                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-[.1em] text-slate-400">Ahora puedes preguntar</p>
+                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-[.1em] text-slate-400">{copy.conversation.askNow}</p>
                     <div className="flex flex-wrap gap-2">
                       {showScenarioBadge && (
                         <Pill
-                          onClick={() => send(SCENARIO_BADGE_LABEL)}
+                          onClick={() => send(copy.guidance.scenarioBadge)}
                           disabled={state.queued !== null}
                           className="flex min-h-[44px] items-center gap-2 text-left text-ch-accent"
                         >
                           <Icon name="bookmark-add-02" size={15} className="text-ch-accent" />
-                          {SCENARIO_BADGE_LABEL}
+                          {copy.guidance.scenarioBadge}
                         </Pill>
                       )}
                       {contextualSuggestions.map((suggestion) => (
@@ -278,7 +280,7 @@ export function Conversation({
               value={value}
               onChange={setValue}
               onSubmit={() => send(value)}
-              placeholder={state.offline ? 'Sin conexión…' : capturing ? 'Escribe lo que sabes o haz una pregunta…' : 'Pregunta lo que quieras…'}
+              placeholder={state.offline ? copy.conversation.offline : capturing ? copy.conversation.capturing : copy.conversation.ask}
               // Offline still lets the user type and send once — that's the
               // only way a message reaches the queue. Once something is
               // queued (the single pending slot) the composer locks until
@@ -295,7 +297,7 @@ export function Conversation({
               since that accent is capped at four placements here.
             */}
             <p className="mt-[10px] text-center text-[11px] text-slate-500">
-              números indicativos · POC
+              {copy.conversation.disclaimer}
             </p>
           </div>
         </div>

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { listingToFields, type Listing, type MortgageField, type PinnedField } from '@chat/shared';
+import { fieldLabel, getLang, unitLabel, useT } from '../i18n';
+import type { Copy } from '../i18n/es';
 
 type Props = { onCancel: () => void } & (
   | { variant?: 'cronograma'; fields: MortgageField[]; onConfirm: (fields: MortgageField[]) => void }
@@ -8,24 +10,15 @@ type Props = { onCancel: () => void } & (
 
 type AnyField = MortgageField | PinnedField;
 
-const COPY = {
-  cronograma: {
-    ariaLabel: 'Revisar lo que leí del cronograma',
-    heading: 'Esto leí de tu cronograma',
-    warning:
-      'Dale una mirada antes de fijarlo. Puede leer mal un dígito y verse igual de seguro, y estas cifras son la base de todo lo que calcule después.',
-    firm: 'documento' as const,
-  },
-  anuncio: {
-    ariaLabel: 'Revisar lo que leí del anuncio',
-    heading: 'Leí el anuncio',
-    warning: "Un 'desde' es el precio más bajo del modelo; el tuyo puede ser otro. Revísalo antes de fijar.",
-    firm: 'anuncio' as const,
-  },
-};
+function variantCopy(c: Copy['confirm']) {
+  return {
+    cronograma: { ariaLabel: c.scheduleAria, heading: c.scheduleHeading, warning: c.scheduleWarning, firm: 'documento' as const },
+    anuncio: { ariaLabel: c.listingAria, heading: c.listingHeading, warning: c.listingWarning, firm: 'anuncio' as const },
+  };
+}
 
-function modelLabel(m: Listing['modelos'][number]): string {
-  return [m.nombre, m.area ? `${m.area} m²` : undefined, m.precioDesde ? `desde S/ ${m.precioDesde}` : undefined]
+function modelLabel(m: Listing['modelos'][number], c: Copy['confirm']): string {
+  return [m.nombre, m.area ? `${m.area} m²` : undefined, m.precioDesde ? c.from(m.precioDesde) : undefined]
     .filter(Boolean)
     .join(' · ');
 }
@@ -39,14 +32,16 @@ function modelLabel(m: Listing['modelos'][number]): string {
  */
 export function ConfirmExtraction(props: Props) {
   const variant = props.variant ?? 'cronograma';
-  const copy = COPY[variant];
+  const strings = useT();
+  const c = strings.confirm;
+  const copy = variantCopy(c)[variant];
   const listing = props.variant === 'anuncio' ? props.listing : null;
   const single = listing !== null && listing.modelos.length === 1;
 
   const [chosen, setChosen] = useState<number | null>(single ? 0 : null);
   const [draft, setDraft] = useState<AnyField[]>(() =>
     props.variant === 'anuncio'
-      ? listingToFields(props.listing, single ? props.listing.modelos[0]! : null)
+      ? listingToFields(props.listing, single ? props.listing.modelos[0]! : null, getLang())
       : props.fields,
   );
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -122,7 +117,7 @@ export function ConfirmExtraction(props: Props) {
   const choose = (i: number) => {
     if (!listing) return;
     setChosen(i);
-    setDraft(listingToFields(listing, listing.modelos[i]!));
+    setDraft(listingToFields(listing, listing.modelos[i]!, getLang()));
   };
 
   // Ubicación/Precio/Área always show for a listing, even before a model is
@@ -156,7 +151,7 @@ export function ConfirmExtraction(props: Props) {
         <h2 className="font-jakarta text-[19px] font-extrabold tracking-[-.02em] text-white">{copy.heading}</h2>
         {listing && (
           <p className="mt-1 text-[13px] font-medium text-slate-200">
-            {[listing.proyecto, listing.distrito, listing.constructora, listing.entrega ? `entrega ${listing.entrega}` : undefined]
+            {[listing.proyecto, listing.distrito, listing.constructora, listing.entrega ? c.delivery(listing.entrega) : undefined]
               .filter(Boolean)
               .join(' · ')}
           </p>
@@ -166,11 +161,11 @@ export function ConfirmExtraction(props: Props) {
         {listing && !single && (
           <fieldset className="mt-4">
             <legend className="text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">
-              ¿Cuál modelo estás viendo?
+              {c.whichModel}
             </legend>
             <div className="mt-2 flex flex-col gap-[6px]">
               {listing.modelos.map((m, i) => {
-                const label = modelLabel(m);
+                const label = modelLabel(m, c);
                 return (
                   <label
                     key={`${m.nombre ?? 'modelo'}-${i}`}
@@ -197,27 +192,29 @@ export function ConfirmExtraction(props: Props) {
         <div className="mt-4 flex flex-col gap-[10px]">
           {rows.map((f) => {
             const dudoso = f.provenance !== copy.firm;
+            const label = fieldLabel(strings, f);
+            const suffix = unitLabel(strings, f.suffix);
             return (
               <div
                 key={f.key}
                 className={`rounded-[10px] border px-3 py-[10px] focus-within:border-ch-accent focus-within:shadow-ch-focus ${dudoso ? 'border-ch-accent' : 'border-ch-border'}`}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">{f.label}</span>
-                  {dudoso && f.value && <span className="text-[10px] font-semibold text-ch-accent">revisa este</span>}
+                  <span className="text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">{label}</span>
+                  {dudoso && f.value && <span className="text-[10px] font-semibold text-ch-accent">{c.checkThis}</span>}
                 </div>
                 <div className="mt-[6px] flex items-baseline gap-[5px]">
                   {f.prefix && <span className="text-[14px] font-bold text-slate-500">{f.prefix}</span>}
                   <input
                     value={f.value}
                     onChange={(e) => edit(f.key, e.target.value)}
-                    aria-label={f.label}
+                    aria-label={label}
                     data-dudoso={dudoso}
                     disabled={listing !== null && chosen === null && f.key !== 'ubicacion'}
-                    placeholder={listing && chosen === null && f.key !== 'ubicacion' ? 'elige un modelo' : undefined}
+                    placeholder={listing && chosen === null && f.key !== 'ubicacion' ? c.chooseModel : undefined}
                     className="tnum min-w-0 flex-1 border-none bg-transparent p-0 font-jakarta text-[17px] font-bold tracking-[-.02em] text-white outline-none placeholder:text-slate-600 disabled:opacity-60"
                   />
-                  {f.suffix && <span className="text-[14px] text-slate-400">{f.suffix}</span>}
+                  {suffix && <span className="text-[14px] text-slate-400">{suffix}</span>}
                 </div>
                 {f.note && <p className="mt-[6px] text-[11.5px] text-slate-400">{f.note}</p>}
               </div>
@@ -231,7 +228,7 @@ export function ConfirmExtraction(props: Props) {
             onClick={onCancel}
             className="h-[44px] flex-1 rounded-full border border-ch-border-hover text-[13.5px] font-semibold text-slate-300 transition-colors duration-180 ease-ch hover:border-slate-500"
           >
-            Descartar
+            {c.discard}
           </button>
           <button
             type="button"
@@ -239,7 +236,7 @@ export function ConfirmExtraction(props: Props) {
             disabled={!canConfirm}
             className="h-[44px] flex-1 rounded-full bg-slate-50 text-[13.5px] font-semibold text-ch-bg transition-opacity duration-120 ease-ch hover:opacity-90 active:translate-y-px disabled:opacity-40"
           >
-            Fijar estos datos
+            {c.pin}
           </button>
         </div>
       </div>

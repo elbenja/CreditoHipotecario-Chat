@@ -6,6 +6,7 @@ import {
   normalizeSoles,
   type AnalysisEnvelope,
 } from '@chat/shared';
+import { COPY, type Lang } from '../i18n.ts';
 import { extractCandidates, type Candidate } from './fallback.ts';
 import { enforceProvenance } from './provenance.ts';
 
@@ -25,9 +26,6 @@ function stripFences(raw: string): string {
   const fenced = /```(?:json)?\s*([\s\S]*?)\s*```/.exec(raw);
   return (fenced?.[1] ?? raw).trim();
 }
-
-const SCHEMA_FALLBACK =
-  'Tengo el análisis pero no pude estructurarlo esta vez. Puedes fijar los datos a mano acá abajo.';
 
 /** Rescue the readable parts of an envelope that failed validation. */
 function salvageProse(parsed: unknown): string | null {
@@ -60,23 +58,25 @@ function repairAmount(value: string): string {
   return normalizeSoles(value) ?? value;
 }
 
-const AFFIRMATIVE = /^(s[ií]|ok|acepto|de acuerdo|dale|correcto)(?:\s|[.!]|$)/i;
+const AFFIRMATIVE = /^(s[ií]|ok|acepto|de acuerdo|dale|correcto|yes|yeah|sure|correct|agreed)(?:\s|[.!]|$)/i;
 
-function extractExplicitCaptureFields(userTurn: string): AnalysisEnvelope['fields'] {
+function extractExplicitCaptureFields(userTurn: string, lang: Lang = 'es'): AnalysisEnvelope['fields'] {
   const text = userTurn.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   const fields: AnalysisEnvelope['fields'] = [];
   const initial = /(?:([\d]{1,2}(?:[.,]\d+)?)\s*%\s*(?:de\s+)?(?:cuota\s+)?inicial\b|\b(?:cuota\s+)?inicial(?:\s+de|\s*:)?\s*([\d]{1,2}(?:[.,]\d+)?)\s*%)/.exec(text);
-  const term = /\b(?:(?:a|en)\s+|plazo(?:\s+de|\s*:)?\s*)(\d{1,2})\s+anos?\b/.exec(text);
+  const term = /\b(?:(?:a|en)\s+|plazo(?:\s+de|\s*:)?\s*)(\d{1,2})\s+anos?\b/.exec(text)
+    ?? /\b(?:(?:over|in|for)\s+|term(?:\s+of|\s*:)?\s*)(\d{1,2})\s+years?\b/.exec(text);
+  const labels = COPY[lang].fieldLabels;
 
   if (initial) {
     fields.push({
-      key: 'inicial', label: 'Cuota inicial', value: (initial[1] ?? initial[2]!).replace(',', '.'),
+      key: 'inicial', label: labels.inicial, value: (initial[1] ?? initial[2]!).replace(',', '.'),
       suffix: '%', provenance: 'user', note: '',
     });
   }
   if (term?.[1]) {
     fields.push({
-      key: 'plazo', label: 'Plazo', value: term[1], suffix: 'años', provenance: 'user', note: '',
+      key: 'plazo', label: labels.plazo, value: term[1], suffix: COPY[lang].years, provenance: 'user', note: '',
     });
   }
   return fields;
@@ -101,19 +101,20 @@ function acceptedProposal(
   return valueWasProposed && fieldWasNamed && field.provenance !== 'user';
 }
 
-export function runPipeline(raw: string, userTurns: string[], previousAssistant = ''): PipelineResult {
+export function runPipeline(raw: string, userTurns: string[], previousAssistant = '', lang: Lang = 'es'): PipelineResult {
+  const copy = COPY[lang];
   // 1. Parse and validate.
   let parsed: unknown;
   try {
     parsed = JSON.parse(stripFences(raw));
   } catch {
-    return { ok: false, prose: raw, candidates: extractCandidates(raw) };
+    return { ok: false, prose: raw, candidates: extractCandidates(raw, lang) };
   }
 
   if (typeof parsed === 'object' && parsed !== null && 'kind' in parsed && (parsed.kind === 'capture' || parsed.kind === 'clarification')) {
     const capture = CaptureEnvelopeSchema.safeParse(parsed);
     if (!capture.success) {
-      return { ok: false, prose: 'No pude registrar esos datos. ¿Puedes escribirlos de nuevo?', candidates: [] };
+      return { ok: false, prose: copy.captureInvalid, candidates: [] };
     }
     // Capture explicit facts and estimates the user just accepted. Other
     // guesses stay out of the panel.
@@ -122,7 +123,7 @@ export function runPipeline(raw: string, userTurns: string[], previousAssistant 
       .map((field) => ({ ...field, value: groupFieldValue(stripAffixes(field)) }));
     const fieldKeys = new Set(fields.map((field) => field.key));
     const latestUser = userTurns.at(-1) ?? '';
-    const recovered = enforceProvenance(extractExplicitCaptureFields(latestUser), [latestUser])
+    const recovered = enforceProvenance(extractExplicitCaptureFields(latestUser, lang), [latestUser])
       .filter((field) => field.provenance === 'user')
       .filter((field) => !fieldKeys.has(field.key));
     fields.push(...recovered);
@@ -132,11 +133,11 @@ export function runPipeline(raw: string, userTurns: string[], previousAssistant 
     // A successful capture has a product-owned acknowledgement. The model
     // must not smuggle unsolicited advice into the confirmation sentence.
     const verdict = completedCapture || completedRepeatedQuestion
-      ? 'Listo, recibí los datos de la propiedad.'
+      ? copy.captureDone
       : repeatedQuestion
-        ? 'No pude identificar el dato en tu respuesta. ¿Puedes escribirlo otra vez con su unidad?'
+        ? copy.captureRepeated
         : capture.data.kind === 'capture' && capture.data.fields.length > 0
-          ? 'No pude confirmar esos datos. ¿Puedes precisarlos?'
+          ? copy.captureUnconfirmed
           : capture.data.reply;
     return { ok: true, envelope: {
       kind: 'capture', verdict,
@@ -153,8 +154,8 @@ export function runPipeline(raw: string, userTurns: string[], previousAssistant 
     const salvaged = salvageProse(parsed);
     return {
       ok: false,
-      prose: salvaged ?? SCHEMA_FALLBACK,
-      candidates: extractCandidates(salvaged ?? ''),
+      prose: salvaged ?? copy.schemaFallback,
+      candidates: extractCandidates(salvaged ?? '', lang),
     };
   }
 

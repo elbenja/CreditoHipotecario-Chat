@@ -11,6 +11,7 @@ import { loadState, saveState } from './state/persistence';
 import { toTurns } from './state/guidance';
 import { findListingUrl, isListingHost, type FieldKey, type PinnedField, type Scenario } from '@chat/shared';
 import { readListing } from './listing/readListing';
+import { useT } from './i18n';
 
 export default function App() {
   const [state, dispatch] = useReducer(chatReducer, undefined, loadState);
@@ -21,6 +22,7 @@ export default function App() {
   // back. Outside the reducer on purpose: it must not reach localStorage.
   const [beforeReset, setBeforeReset] = useState<ChatState | null>(null);
   const [navExpanded, setNavExpanded] = useState(true);
+  const copy = useT();
 
   // Mirror every mutation so a reload does not lose the draft.
   useEffect(() => {
@@ -102,8 +104,8 @@ export default function App() {
 
   const recalculate = useCallback(async () => {
     dispatch({ type: 'recalculate' });
-    await request([...toTurns(state.messages), { role: 'user', content: 'Recalcula el último análisis solicitado con los datos actuales del panel.' }], Object.values(state.fields));
-  }, [state.messages, state.fields, request]);
+    await request([...toTurns(state.messages), { role: 'user', content: copy.app.recalculate }], Object.values(state.fields));
+  }, [state.messages, state.fields, request, copy]);
 
   const retry = useCallback(async () => {
     dispatch({ type: 'clearError' });
@@ -186,9 +188,9 @@ export default function App() {
   // first message counts: without this, a PDF-only session had no way back.
   const context =
     state.messages.length > 0
-      ? `${state.fields.ubicacion?.value ?? 'Tu propiedad'} · sin guardar`
+      ? `${state.fields.ubicacion?.value ?? copy.app.yourProperty} · ${copy.app.unsaved}`
       : Object.keys(state.mortgage).length > 0
-        ? 'Cronograma leído · sin guardar'
+        ? `${copy.app.scheduleRead} · ${copy.app.unsaved}`
         : undefined;
 
   return (
@@ -239,8 +241,8 @@ export default function App() {
             onDismissChanges={dismissChanges}
             onRetry={retry}
             onEditQuestion={editQuestion}
-            onContinue={() => send('Continúa desde donde te quedaste.')}
-            onShorten={() => send('Resúmelo más corto, por favor.')}
+            onContinue={() => send(copy.app.continue)}
+            onShorten={() => send(copy.app.shorten)}
             composerSeed={composerSeed}
             dispatch={dispatch}
           />
@@ -254,7 +256,7 @@ export default function App() {
         <div className="absolute inset-x-0 bottom-0 md:right-panel">
           <UndoBar
             visible={beforeReset !== null}
-            label="Conversación reiniciada"
+            label={copy.app.resetDone}
             onUndo={undoReset}
             onExpire={() => setBeforeReset(null)}
           />

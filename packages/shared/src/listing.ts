@@ -90,8 +90,13 @@ export function isListingHost(host: string): boolean {
   return (LISTING_HOSTS as readonly string[]).includes(host.toLowerCase());
 }
 
-export function listingRefusal(host: string): string {
-  return `De ${host} no puedo leer el anuncio. Pégame los datos o el link de Nexo — o guarda la página como PDF y súbela aquí.`;
+/** The two languages the app speaks; Spanish is the default everywhere. */
+export type Lang = 'es' | 'en';
+
+export function listingRefusal(host: string, lang: Lang = 'es'): string {
+  return lang === 'en'
+    ? `I can't read listings from ${host}. Paste the details or a Nexo link — or save the page as a PDF and upload it here.`
+    : `De ${host} no puedo leer el anuncio. Pégame los datos o el link de Nexo — o guarda la página como PDF y súbela aquí.`;
 }
 
 /**
@@ -100,7 +105,8 @@ export function listingRefusal(host: string): string {
  * A key in `dudosos` arrives `assumed`, never `anuncio`: the same rule that
  * keeps a misread digit from presenting as read-from-the-bank.
  */
-export function listingToFields(listing: Listing, model: ListingModel | null): PinnedField[] {
+export function listingToFields(listing: Listing, model: ListingModel | null, lang: Lang = 'es'): PinnedField[] {
+  const en = lang === 'en';
   const dudosos = new Set(listing.dudosos);
   const out: PinnedField[] = [];
 
@@ -112,15 +118,15 @@ export function listingToFields(listing: Listing, model: ListingModel | null): P
       : (direccion ?? distrito);
   out.push({
     key: 'ubicacion',
-    label: 'Ubicación',
+    label: en ? 'Location' : 'Ubicación',
     value: ubicacion,
     prefix: undefined,
     suffix: undefined,
     provenance: dudosos.has('distrito') || dudosos.has('direccion') ? 'assumed' : 'anuncio',
     note: [
-      `Proyecto ${listing.proyecto}`,
+      `${en ? 'Project' : 'Proyecto'} ${listing.proyecto}`,
       listing.constructora,
-      listing.entrega ? `entrega ${listing.entrega}` : undefined,
+      listing.entrega ? `${en ? 'delivery' : 'entrega'} ${listing.entrega}` : undefined,
     ]
       .filter(Boolean)
       .join(' · '),
@@ -131,19 +137,21 @@ export function listingToFields(listing: Listing, model: ListingModel | null): P
   if (model.precioDesde) {
     out.push({
       key: 'precio',
-      label: 'Precio',
+      label: en ? 'Price' : 'Precio',
       value: model.precioDesde,
       prefix: 'S/',
       suffix: undefined,
       provenance: dudosos.has('precioDesde') ? 'assumed' : 'anuncio',
-      note: model.nombre ? `Precio 'desde' del modelo ${model.nombre}` : 'Precio del anuncio',
+      note: model.nombre
+        ? en ? `'From' price for model ${model.nombre}` : `Precio 'desde' del modelo ${model.nombre}`
+        : en ? 'Listing price' : 'Precio del anuncio',
     });
   }
 
   if (model.area) {
     out.push({
       key: 'area',
-      label: 'Área',
+      label: en ? 'Area' : 'Área',
       value: model.area,
       prefix: undefined,
       suffix: 'm²',

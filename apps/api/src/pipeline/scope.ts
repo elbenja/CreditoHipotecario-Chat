@@ -1,4 +1,5 @@
 import type { AnalysisEnvelope } from '@chat/shared';
+import { COPY, type Lang } from '../i18n.ts';
 
 /**
  * Vocabulary that marks a message as belonging to this product. Deliberately
@@ -14,6 +15,10 @@ const IN_SCOPE = [
   'comprar', 'compra', 'vender', 'venta', 'invertir en un', 'inversion inmobil',
   'distrito', 'lima', 'miraflores', 'surco', 'pueblo libre', 'jesus maria', 'magdalena',
   'mivivienda', 'techo propio', 'bono', 'deposito a plazo', 'depósito a plazo',
+  // English, for people reading the app in English.
+  'apartment', 'flat', 'house', 'home', 'property', 'mortgage', 'loan', 'bank',
+  'down payment', 'interest rate', 'rent', 'tenant', 'buy', 'sell', 'invest in a',
+  'square met', 'district', 'term deposit', 'prepay',
 ];
 
 /** High-precision markers for topics this product does not cover. */
@@ -25,6 +30,8 @@ const OUT_OF_SCOPE = [
   'me duele', 'pastilla', 'medicamento', 's[ií]ntoma', 'diagn[oó]stico',
   'elecciones', 'presidente del per', 'partido pol[ií]tico',
   'ignora .{0,25}instruc', 'olvida .{0,25}instruc', 'system prompt', 'act[uú]a como',
+  'stock market', 'write .{0,12}code', 'recipe', 'joke', 'poem', 'song lyrics',
+  'symptom', 'diagnos', 'election', 'ignore .{0,25}instruc', 'act as',
 ];
 
 function normalize(s: string): string {
@@ -50,15 +57,16 @@ export function isOutOfScope(text: string): boolean {
 }
 
 /** E5, shaped as a valid envelope so the transcript renders it like any answer. */
-export const REFUSAL_ENVELOPE: AnalysisEnvelope = {
-  verdict: 'De eso no sé — solo veo hipotecas y propiedades en Perú.',
-  fields: [],
-  metrics: [],
-  scenarios: [],
-  sources: [],
-  prose: [],
-  followUps: [
-    'Comparar tu depa contra un depósito a plazo',
-    'Ver si amortizar rinde más',
-  ],
-};
+export function refusalEnvelope(lang: Lang = 'es'): AnalysisEnvelope {
+  return {
+    verdict: COPY[lang].refusalVerdict,
+    fields: [],
+    metrics: [],
+    scenarios: [],
+    sources: [],
+    prose: [],
+    followUps: [...COPY[lang].refusalFollowUps],
+  };
+}
+
+export const REFUSAL_ENVELOPE: AnalysisEnvelope = refusalEnvelope('es');

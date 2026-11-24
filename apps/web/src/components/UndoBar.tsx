@@ -1,16 +1,18 @@
 import { useEffect } from 'react';
+import { useT } from '../i18n';
 
 export function UndoBar({
   visible,
   onUndo,
   onExpire,
-  label = 'Escenario borrado',
+  label,
 }: {
   visible: boolean;
   onUndo: () => void;
   onExpire: () => void;
   label?: string;
 }) {
+  const p = useT().panel;
   useEffect(() => {
     if (!visible) return;
     const t = setTimeout(onExpire, 5000);
@@ -25,13 +27,13 @@ export function UndoBar({
     <div
       className="ch-line absolute inset-x-0 bottom-4 z-10 mx-auto flex w-fit items-center gap-3 rounded-full border border-ch-border bg-ch-card px-4 py-[10px] shadow-lg"
     >
-      <span className="text-[12px] text-slate-300">{label}</span>
+      <span className="text-[12px] text-slate-300">{label ?? p.scenarioDeleted}</span>
       <button
         type="button"
         onClick={onUndo}
         className="text-[12px] font-semibold text-slate-50 underline underline-offset-2 transition-opacity duration-120 ease-ch hover:opacity-90"
       >
-        Deshacer
+        {p.undo}
       </button>
     </div>
   );

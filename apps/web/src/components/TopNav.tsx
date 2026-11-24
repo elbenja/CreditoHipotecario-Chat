@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { lockAccess } from '../api/access';
 import { Icon } from './Icon';
+import { LANG_NAMES, LANGS, setLang, useLang, useT } from '../i18n';
 
 export function TopNav({
   context,
@@ -13,8 +14,9 @@ export function TopNav({
   navExpanded?: boolean;
   onToggleNav?: () => void;
 }) {
+  const n = useT().nav;
   const [mobileTitle, mobileSubtitle] = context?.split(' · ') ?? [];
-  const navLabel = navExpanded ? 'Colapsar navegación' : 'Expandir navegación';
+  const navLabel = navExpanded ? n.collapse : n.expand;
 
   return (
     <header className="mobile-safe-top flex min-h-[60px] flex-none items-center gap-[9px] border-b border-ch-border px-5 md:h-nav md:gap-7 md:px-6">
@@ -56,7 +58,7 @@ export function TopNav({
         <button
           type="button"
           onClick={onReset}
-          aria-label="Nueva consulta"
+          aria-label={n.newQuery}
           className="flex items-center gap-[6px] rounded-full border border-ch-border px-3 py-[6px] text-[11.5px] font-medium text-slate-400 transition-colors duration-180 ease-ch hover:border-ch-border-hover hover:text-slate-200 md:hidden"
         >
           <Icon name="plus-sign" size={13} />
@@ -67,20 +69,20 @@ export function TopNav({
       <button
         type="button"
         aria-disabled="true"
-        title="Próximamente"
+        title={n.soon}
         className="hidden cursor-default items-center gap-[7px] text-[14px] font-medium text-slate-200 md:flex"
       >
         <Icon name="search-01" size={16} />
-        Buscar
+        {n.search}
       </button>
       <button
         type="button"
         aria-disabled="true"
-        title="Próximamente"
+        title={n.soon}
         className="hidden cursor-default items-center gap-[7px] text-[14px] font-medium text-slate-200 md:flex"
       >
         <Icon name="globe-02" size={16} />
-        Ayuda
+        {n.help}
       </button>
 
       <AccountMenu />
@@ -111,6 +113,8 @@ function PanelIcon({ closing }: { closing: boolean }) {
 }
 
 function AccountMenu() {
+  const n = useT().nav;
+  const lang = useLang();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -122,7 +126,7 @@ function AccountMenu() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const soon = 'Próximamente';
+  const soon = n.soon;
   const row =
     'flex h-[38px] w-full items-center gap-[10px] whitespace-nowrap rounded-lg px-[10px] text-[13.5px] font-medium text-slate-200 transition-colors duration-180 ease-ch';
 
@@ -131,8 +135,8 @@ function AccountMenu() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label="Tu cuenta"
-        title="Tu cuenta"
+        aria-label={n.account}
+        title={n.account}
         aria-haspopup="menu"
         aria-expanded={open}
         className={`flex items-center gap-[6px] rounded-full p-[3px] transition-colors duration-180 ease-ch md:pr-[6px] md:hover:bg-ch-panel ${
@@ -154,14 +158,14 @@ function AccountMenu() {
           <div className="fixed inset-0 z-[1]" onClick={() => setOpen(false)} aria-hidden="true" />
           <div
             role="menu"
-            aria-label="Tu cuenta"
+            aria-label={n.account}
             className="ch-drop absolute right-0 top-[calc(100%+8px)] z-[2] min-w-[212px] rounded-xl border border-ch-border-hover bg-ch-panel p-[6px] shadow-[0_20px_60px_rgba(0,0,0,.55)]"
           >
             {(
               [
-                ['user', 'Mi cuenta'],
-                ['credit-card', 'Plan y facturación'],
-                ['settings-01', 'Configuración'],
+                ['user', n.myAccount],
+                ['credit-card', n.plan],
+                ['settings-01', n.settings],
               ] as const
             ).map(([icon, name]) => (
               <button key={name} type="button" role="menuitem" aria-disabled="true" title={soon} className={`${row} cursor-default`}>
@@ -170,10 +174,33 @@ function AccountMenu() {
               </button>
             ))}
             <div className="mx-1 my-[6px] h-px bg-ch-border-hover" />
+            {/* Applies at once and is remembered in this browser. Each name is
+                written in its own language, so either reader can find theirs. */}
+            <div role="group" aria-label={n.language}>
+              <div className="flex items-center gap-[10px] px-[10px] pb-1 pt-[6px] text-[11px] font-semibold uppercase tracking-[.1em] text-slate-500">
+                <Icon name="globe-02" size={14} />
+                {n.language}
+              </div>
+              {LANGS.map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={lang === code}
+                  lang={code}
+                  onClick={() => setLang(code)}
+                  className={`${row} pl-[37px] hover:bg-ch-card`}
+                >
+                  <span className="flex-1 text-left">{LANG_NAMES[code]}</span>
+                  {lang === code && <Icon name="tick-02" size={16} className="text-ch-accent" />}
+                </button>
+              ))}
+            </div>
+            <div className="mx-1 my-[6px] h-px bg-ch-border-hover" />
             {/* The only real session here is the prototype password: forget it. */}
             <button type="button" role="menuitem" onClick={lockAccess} className={`${row} hover:bg-ch-card`}>
               <Icon name="logout-03" size={17} className="text-slate-400" />
-              Cerrar sesión
+              {n.signOut}
             </button>
           </div>
         </>
