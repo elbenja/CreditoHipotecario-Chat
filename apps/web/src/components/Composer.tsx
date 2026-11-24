@@ -88,7 +88,7 @@ export function Composer({
 
   if (variant === 'empty') {
     return (
-      <div className="rounded-xl border border-ch-border bg-ch-panel px-[18px] pb-[14px] pt-[18px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-[0_0_0_3px_rgba(244,188,68,.35)] hover:border-ch-border-hover">
+      <div className="rounded-xl border border-ch-border bg-ch-panel px-[18px] pb-[14px] pt-[18px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-ch-focus hover:border-ch-border-hover">
         <textarea
           ref={boxRef}
           rows={1}
@@ -138,7 +138,7 @@ export function Composer({
         </div>
       )}
       <div
-        className={`flex items-end gap-[14px] rounded-xl border border-ch-border bg-ch-panel px-[15px] py-[15px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-[0_0_0_3px_rgba(244,188,68,.35)] hover:border-ch-border-hover ${
+        className={`flex items-end gap-[14px] rounded-xl border border-ch-border bg-ch-panel px-[15px] py-[15px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-ch-focus hover:border-ch-border-hover ${
           disabled ? 'opacity-50' : ''
         }`}
       >

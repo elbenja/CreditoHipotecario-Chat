@@ -200,7 +200,7 @@ export function ConfirmExtraction(props: Props) {
             return (
               <div
                 key={f.key}
-                className={`rounded-[10px] border px-3 py-[10px] ${dudoso ? 'border-ch-accent' : 'border-ch-border'}`}
+                className={`rounded-[10px] border px-3 py-[10px] focus-within:border-ch-accent focus-within:shadow-ch-focus ${dudoso ? 'border-ch-accent' : 'border-ch-border'}`}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-semibold uppercase tracking-[.1em] text-slate-500">{f.label}</span>

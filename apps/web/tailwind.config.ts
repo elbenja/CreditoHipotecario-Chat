@@ -20,6 +20,9 @@ export default {
         jakarta: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         inter: ['Inter', 'system-ui', 'sans-serif'],
       },
+      // The halo a text field wears while focused; controls get the
+      // `:focus-visible` outline in index.css instead.
+      boxShadow: { 'ch-focus': '0 0 0 3px rgba(244,188,68,.35)' },
       transitionTimingFunction: { ch: 'cubic-bezier(.2,.7,.2,1)' },
       transitionDuration: { 120: '120ms', 180: '180ms', 240: '240ms' },
       maxWidth: { transcript: '640px' },

@@ -70,7 +70,7 @@ export function AccessGate() {
                   autoFocus
                   autoComplete="current-password"
                   aria-invalid={state === 'wrong'}
-                  className={`h-11 flex-1 rounded-[10px] border bg-[#020617] pl-[14px] pr-11 text-[15px] text-[#f8fafc] outline-none placeholder:text-slate-500 focus:border-ch-accent focus:shadow-[0_0_0_3px_rgba(244,188,68,0.25)] ${state === 'wrong' ? 'border-[#ef4444]' : 'border-[#1e293b]'}`}
+                  className={`h-11 flex-1 rounded-[10px] border bg-[#020617] pl-[14px] pr-11 text-[15px] text-[#f8fafc] outline-none placeholder:text-slate-500 focus:border-ch-accent focus:shadow-ch-focus ${state === 'wrong' ? 'border-[#ef4444]' : 'border-[#1e293b]'}`}
                 />
                 <button
                   type="button"

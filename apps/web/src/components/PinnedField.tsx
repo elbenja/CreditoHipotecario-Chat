@@ -36,7 +36,7 @@ export function PinnedFieldRow({
 
   return (
     <div
-      className={`rounded-[10px] border border-transparent px-3 py-[11px] transition-colors duration-180 ease-ch hover:border-ch-border ${
+      className={`rounded-[10px] border border-transparent px-3 py-[11px] transition-colors duration-180 ease-ch focus-within:border-ch-accent focus-within:shadow-ch-focus hover:border-ch-border ${
         change !== undefined ? 'ch-wash' : ''
       }`}
     >

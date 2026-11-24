@@ -12,6 +12,13 @@
     @apply bg-ch-bg font-inter text-[14.5px] leading-relaxed text-slate-300 antialiased;
     margin: 0;
   }
+  /* One focus ring for every control, shown to keyboard users only. Text
+     fields opt out with `outline-none` and light their wrapper instead
+     (border + `shadow-ch-focus`), so the ring never doubles up. */
+  :focus-visible {
+    outline: 2px solid theme('colors.ch-accent');
+    outline-offset: 2px;
+  }
   /* All numerics are tabular so columns of figures do not shift. */
   .tnum {
     font-variant-numeric: tabular-nums;
