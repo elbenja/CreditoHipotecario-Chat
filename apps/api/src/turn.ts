@@ -181,8 +181,30 @@ export async function* runTurn(
   yield { event: 'status', data: { phase: 'analyzing' } };
 
   try {
-    const { content, truncated } = await callModel(buildMessages(messages, fields, lang), 'chat');
-    if (!content.trim()) {
+    const userTurns = messages.filter((m) => m.role === 'user').map((m) => m.content);
+    const previousAssistant = messages.filter((m) => m.role === 'assistant').at(-1)?.content ?? '';
+    const prompt = buildMessages(messages, fields, lang);
+    let { content, truncated } = await callModel(prompt, 'chat');
+    let result = content.trim() ? runPipeline(content, userTurns, previousAssistant, lang) : null;
+    // The figures are the system's to produce. A marker it could not fill, or
+    // an amount the model typed by hand, is the model's slip and not the
+    // user's problem: ask once more, saying what was wrong.
+    const slip = result && !result.ok && result.retryable
+      ? 'Tu respuesta anterior usó un marcador que no existe o una entrada de "calculos" incompleta. Respóndela de nuevo usando solo los marcadores documentados.'
+      : result?.ok && result.unverified
+        ? `Tu respuesta anterior escribió a mano estas cifras: ${result.unverified.join(', ')}. Respóndela de nuevo: toda cifra de la hipoteca va con un marcador de "calculos", nunca escrita ni calculada por ti.`
+        : null;
+    if (slip) {
+      const again = await callModel([...prompt, { role: 'system', content: slip }], 'chat');
+      const second = again.content.trim() ? runPipeline(again.content, userTurns, previousAssistant, lang) : null;
+      // An answer that held the contract the first time is not traded for a
+      // second one that broke it.
+      if (second?.ok || !result?.ok) {
+        result = second;
+        ({ content, truncated } = again);
+      }
+    }
+    if (!result) {
       yield {
         event: 'error',
         data: truncated
@@ -191,10 +213,6 @@ export async function* runTurn(
       };
       return;
     }
-    const userTurns = messages.filter((m) => m.role === 'user').map((m) => m.content);
-    const previousAssistant = messages.filter((m) => m.role === 'assistant').at(-1)?.content ?? '';
-    const result = runPipeline(content, userTurns, previousAssistant, lang);
-
     yield { event: 'status', data: { phase: 'streaming' } };
     if (result.ok) {
       yield { event: 'envelope', data: { envelope: result.envelope, truncated } };

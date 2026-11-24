@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ProvenanceSchema } from './envelope.ts';
 import { groupFieldValue } from './format.ts';
+import { parseAmount } from './payment.ts';
 
 /** The credit, as opposed to the property. Kept separate from FIELD_KEYS on
  *  purpose: sharing one flat record is what forces an enum to grow forever. */
@@ -53,15 +54,6 @@ export const ExtractionSchema = z.object({
 
 export type Extraction = z.infer<typeof ExtractionSchema>;
 
-function toNumber(raw: string | undefined): number | null {
-  if (!raw) return null;
-  const bare = raw.replace(/S\/\.?/gi, '').replace(/[^\d.,-]/g, '').trim();
-  if (!bare) return null;
-  // Strip thousands separators, then treat any remaining comma as a decimal point.
-  const n = Number(bare.replace(/[.,](?=\d{3}(?!\d))/g, '').replace(/,/g, '.'));
-  return Number.isFinite(n) ? n : null;
-}
-
 /**
  * The down payment is what the buyer covers that the bank did not. Subtracts the
  * financed amount (banco-stated) from the price (user-stated). When they are equal,
@@ -74,8 +66,8 @@ export function deriveInicial(
   precio: string | undefined,
   montoFinanciado: string | undefined,
 ): string | null {
-  const p = toNumber(precio);
-  const m = toNumber(montoFinanciado);
+  const p = parseAmount(precio);
+  const m = parseAmount(montoFinanciado);
   if (p === null || m === null) return null;
   const diff = p - m;
   if (diff <= 0) return null;

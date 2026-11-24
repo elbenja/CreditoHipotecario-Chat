@@ -7,12 +7,13 @@ import {
   type AnalysisEnvelope,
 } from '@chat/shared';
 import { COPY, type Lang } from '../i18n.ts';
+import { applyCalcs } from './calc.ts';
 import { extractCandidates, type Candidate } from './fallback.ts';
 import { enforceProvenance } from './provenance.ts';
 
 export type PipelineResult =
-  | { ok: true; envelope: AnalysisEnvelope }
-  | { ok: false; prose: string; candidates: Candidate[] };
+  | { ok: true; envelope: AnalysisEnvelope; /** Amounts the model typed that nothing computed backs. */ unverified?: string[] }
+  | { ok: false; prose: string; candidates: Candidate[]; /** Worth one more model call. */ retryable?: boolean };
 
 const MAX_PROSE = 1;
 const MAX_FOLLOW_UPS = 2;
@@ -66,11 +67,18 @@ function extractExplicitCaptureFields(userTurn: string, lang: Lang = 'es'): Anal
   const initial = /(?:([\d]{1,2}(?:[.,]\d+)?)\s*%\s*(?:de\s+)?(?:cuota\s+)?inicial\b|\b(?:cuota\s+)?inicial(?:\s+de|\s*:)?\s*([\d]{1,2}(?:[.,]\d+)?)\s*%)/.exec(text);
   const term = /\b(?:(?:a|en)\s+|plazo(?:\s+de|\s*:)?\s*)(\d{1,2})\s+anos?\b/.exec(text)
     ?? /\b(?:(?:over|in|for)\s+|term(?:\s+of|\s*:)?\s*)(\d{1,2})\s+years?\b/.exec(text);
+  const rate = /(\d{1,2}(?:[.,]\d+)?)\s*%\s*(?:de\s+)?tea\b|\btea(?:\s+(?:de|del|of|at))?\s*:?\s*(\d{1,2}(?:[.,]\d+)?)\s*%/.exec(text);
   const labels = COPY[lang].fieldLabels;
 
   if (initial) {
     fields.push({
       key: 'inicial', label: labels.inicial, value: (initial[1] ?? initial[2]!).replace(',', '.'),
+      suffix: '%', provenance: 'user', note: '',
+    });
+  }
+  if (rate) {
+    fields.push({
+      key: 'tasa', label: labels.tasa, value: (rate[1] ?? rate[2]!).replace(',', '.'),
       suffix: '%', provenance: 'user', note: '',
     });
   }
@@ -110,6 +118,11 @@ export function runPipeline(raw: string, userTurns: string[], previousAssistant 
   } catch {
     return { ok: false, prose: raw, candidates: extractCandidates(raw, lang) };
   }
+
+  // The mortgage figures are computed here, never by the model.
+  const filled = applyCalcs(parsed, userTurns);
+  if (!filled.ok) return { ok: false, retryable: true, prose: copy.calcFailed, candidates: [] };
+  parsed = filled.value;
 
   if (typeof parsed === 'object' && parsed !== null && 'kind' in parsed && (parsed.kind === 'capture' || parsed.kind === 'clarification')) {
     const capture = CaptureEnvelopeSchema.safeParse(parsed);
@@ -168,6 +181,13 @@ export function runPipeline(raw: string, userTurns: string[], previousAssistant 
     ...f,
     value: groupFieldValue(stripAffixes(f)),
   }));
+  // A rate or term the user just wrote is theirs to see in the panel even
+  // when the model only used it inside "calculos". Seen live: "8% TEA over
+  // 20 years" answered with the right payment and nothing pinned.
+  const latestUser = userTurns.at(-1) ?? '';
+  const pinned = new Set(fields.map((f) => f.key));
+  fields.push(...enforceProvenance(extractExplicitCaptureFields(latestUser, lang), [latestUser])
+    .filter((f) => f.provenance === 'user' && !pinned.has(f.key)));
 
   // 3. Cap. The cards carry the numbers, so truncate silently.
   const prose = envelope.prose.slice(0, MAX_PROSE);
@@ -181,5 +201,9 @@ export function runPipeline(raw: string, userTurns: string[], previousAssistant 
   }));
   const scenarios = envelope.scenarios.map((s) => ({ ...s, value: repairAmount(s.value) }));
 
-  return { ok: true, envelope: { ...envelope, fields, metrics, scenarios, prose, followUps } };
+  return {
+    ok: true,
+    envelope: { ...envelope, fields, metrics, scenarios, prose, followUps },
+    ...(filled.unverified.length > 0 ? { unverified: filled.unverified } : {}),
+  };
 }

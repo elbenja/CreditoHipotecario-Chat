@@ -7,9 +7,10 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/Per[úu]/);
   });
 
-  it('specifies the TEA convention rather than dividing by twelve', () => {
-    expect(SYSTEM_PROMPT).toMatch(/TEA/);
-    expect(SYSTEM_PROMPT).toMatch(/1\/12/);
+  it('hands the mortgage arithmetic to the system instead of the model', () => {
+    expect(SYSTEM_PROMPT).toMatch(/NO haces la aritmética/);
+    expect(SYSTEM_PROMPT).toContain('"calculos"');
+    expect(SYSTEM_PROMPT).toContain('{{actual.cuota}}');
   });
 
   it('limits output to what was requested without requiring three metrics', () => {

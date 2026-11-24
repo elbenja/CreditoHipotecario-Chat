@@ -22,6 +22,7 @@ const es = {
   errLimit: 'Kimi agotó el límite antes de producir una respuesta. Prueba una pregunta más concreta.',
   errEmpty: 'Kimi no devolvió una respuesta. Intenta de nuevo.',
   schemaFallback: 'Tengo el análisis pero no pude estructurarlo esta vez. Puedes fijar los datos a mano acá abajo.',
+  calcFailed: 'No pude hacer las cuentas esta vez. Pregúntame de nuevo y lo reintento.',
   captureInvalid: 'No pude registrar esos datos. ¿Puedes escribirlos de nuevo?',
   captureDone: 'Listo, recibí los datos de la propiedad.',
   captureRepeated: 'No pude identificar el dato en tu respuesta. ¿Puedes escribirlo otra vez con su unidad?',
@@ -71,6 +72,7 @@ const en: ApiCopy = {
   errLimit: 'Kimi hit its limit before producing an answer. Try a more specific question.',
   errEmpty: "Kimi didn't return an answer. Try again.",
   schemaFallback: "I have the analysis but couldn't structure it this time. You can pin the details by hand below.",
+  calcFailed: "I couldn't run the numbers this time. Ask again and I'll retry.",
   captureInvalid: "I couldn't save those details. Could you write them again?",
   captureDone: 'Done, I got the property details.',
   captureRepeated: "I couldn't find the value in your answer. Could you write it again with its unit?",
@@ -115,4 +117,5 @@ export const ENGLISH_ANSWER_RULE = `LANGUAGE OVERRIDE
 - The person is reading in English. Write every human-readable string in English: "reply", "verdict", field "label", "note" and "suffix" (e.g. "years"), metric "label" and "context", scenario "cause", "unit" and "note", "prose", "followUps" (still in the user's first person) and the out-of-scope line ("I can't help with that — I only cover mortgages and property in Peru.").
 - "What if I pull a lever" is the English for "Qué pasa si mueves una palanca": answer it with 2 to 3 scenarios under the same rule.
 - Keep every JSON key and enum value exactly as the schema says ("ubicacion", "precio", "user", "assumed", "tradeoff"…).
+- The {{id.figure}} markers and everything inside "calculos" stay exactly as specified: never translate a marker's name.
 - Amounts stay in soles in the house format: "S/ 1,750". Peruvian terms such as TEA, TCEA, Mivivienda and Techo Propio keep their names.`;
