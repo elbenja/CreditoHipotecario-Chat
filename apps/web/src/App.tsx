@@ -12,6 +12,12 @@ import { toTurns } from './state/guidance';
 import { findListingUrl, isListingHost, type FieldKey, type PinnedField, type Scenario } from '@chat/shared';
 import { readListing } from './listing/readListing';
 import { fieldLabel, unitLabel, useT } from './i18n';
+import { track } from './analytics';
+
+function isRefusedLink(text: string) {
+  const link = findListingUrl(text);
+  return link !== null && !isListingHost(link.host);
+}
 
 export default function App() {
   const [state, dispatch] = useReducer(chatReducer, undefined, loadState);
@@ -81,6 +87,11 @@ export default function App() {
       if (state.offline) {
         dispatch({ type: 'queue', content: text });
         return;
+      }
+      // Read from the transcript, which survives reloads and retries; a reset
+      // empties it, starting a new conversation. Refused links never counted.
+      if (!state.messages.some((m) => m.role === 'user' && !isRefusedLink(m.content))) {
+        track('chat-first-question');
       }
       dispatch({ type: 'send', content: text });
       if (link) {

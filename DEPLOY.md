@@ -52,6 +52,10 @@ service, because Nixpacks does not reliably resolve the `>=22.6` range in
   `https://creditohipotecario-chat-api.onrender.com`. Vite inlines `VITE_*`
   variables at **build** time, so changing this value requires a redeploy,
   not just a restart.
+- `VITE_GOATCOUNTER_URL` — optional. The GoatCounter count endpoint, e.g.
+  `https://MYCODE.goatcounter.com/count`. Unset, no analytics are sent. Only
+  the events `chat-opened` and `chat-first-question` are sent; there are no
+  page views. Build-time, like `VITE_API_URL`.
 
 ## Deploy order
 

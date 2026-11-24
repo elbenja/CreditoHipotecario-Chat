@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { grantAccess, requestDemo, requestUnlock, setDemoRemaining } from '../api/access';
+import { track } from '../analytics';
 import { Icon } from '../components/Icon';
 import { useT } from '../i18n';
 
@@ -41,6 +42,7 @@ export function AccessGate() {
       return;
     }
     setDemoRemaining(result.remaining);
+    track('chat-opened');
     grantAccess(result.token);
   }
 
@@ -54,6 +56,7 @@ export function AccessGate() {
       return;
     }
     setState('ok');
+    track('chat-opened');
     setTimeout(() => grantAccess(result.token), OPEN_DELAY_MS);
   }
 
