@@ -146,9 +146,11 @@ function AccountMenu() {
           open ? 'md:bg-ch-panel' : ''
         }`}
       >
-        <span className="grid h-7 w-7 place-items-center rounded-md bg-ch-border-hover text-[11px] font-bold text-white md:h-8 md:w-8 md:rounded-full md:text-[12px]">
-          JC
-        </span>
+        <img
+          src="/assets/avatar.jpg"
+          alt=""
+          className="h-7 w-7 rounded-md bg-ch-border-hover object-cover md:h-8 md:w-8 md:rounded-full"
+        />
         <Icon
           name="arrow-down-01"
           size={15}
