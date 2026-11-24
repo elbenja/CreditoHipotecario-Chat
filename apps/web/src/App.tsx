@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useState } from 'react';
 import { streamChat } from './api/streamChat';
+import { SideNav } from './components/SideNav';
 import { TopNav } from './components/TopNav';
 import { UndoBar } from './components/UndoBar';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
@@ -19,6 +20,7 @@ export default function App() {
   // The whole conversation, held only long enough for the undo bar to offer it
   // back. Outside the reducer on purpose: it must not reach localStorage.
   const [beforeReset, setBeforeReset] = useState<ChatState | null>(null);
+  const [navExpanded, setNavExpanded] = useState(true);
 
   // Mirror every mutation so a reload does not lose the draft.
   useEffect(() => {
@@ -190,65 +192,73 @@ export default function App() {
         : undefined;
 
   return (
-    <div className="relative flex h-full flex-col">
-      <TopNav context={context} onReset={reset} />
-      {state.messages.length === 0 ? (
-        <EmptyState
-          onSubmit={send}
-          onAskField={(key: FieldKey) => dispatch({ type: 'askField', key })}
-          state={state}
-          dispatch={dispatch}
+    <div className="flex h-full">
+      <SideNav expanded={navExpanded} onNew={context ? reset : undefined} />
+      <div className="relative flex min-w-0 flex-1 flex-col">
+        <TopNav
+          context={context}
+          onReset={reset}
+          navExpanded={navExpanded}
+          onToggleNav={() => setNavExpanded((v) => !v)}
         />
-      ) : (
-        <Conversation
-          state={state}
-          onAskField={(key: FieldKey) => dispatch({ type: 'askField', key })}
-          onSend={send}
-          onEdit={edit}
-          onEditMortgage={editMortgage}
-          onAcceptProposal={acceptProposal}
-          onRejectProposal={rejectProposal}
-          onPinCandidate={pinCandidate}
-          savedIds={state.savedScenarios.map((s) => s.id)}
-          onSaveScenario={(id) => {
-            // The model reuses scenario ids across turns, so search from the
-            // most recent message backwards to grab the current values.
-            for (let i = state.messages.length - 1; i >= 0; i -= 1) {
-              const m = state.messages[i]!;
-              if (m.role !== 'assistant') continue;
-              const scenario = m.envelope.scenarios.find((s) => s.id === id);
-              if (scenario) {
-                saveScenario(scenario);
-                break;
+        {state.messages.length === 0 ? (
+          <EmptyState
+            onSubmit={send}
+            onAskField={(key: FieldKey) => dispatch({ type: 'askField', key })}
+            state={state}
+            dispatch={dispatch}
+          />
+        ) : (
+          <Conversation
+            state={state}
+            onAskField={(key: FieldKey) => dispatch({ type: 'askField', key })}
+            onSend={send}
+            onEdit={edit}
+            onEditMortgage={editMortgage}
+            onAcceptProposal={acceptProposal}
+            onRejectProposal={rejectProposal}
+            onPinCandidate={pinCandidate}
+            savedIds={state.savedScenarios.map((s) => s.id)}
+            onSaveScenario={(id) => {
+              // The model reuses scenario ids across turns, so search from the
+              // most recent message backwards to grab the current values.
+              for (let i = state.messages.length - 1; i >= 0; i -= 1) {
+                const m = state.messages[i]!;
+                if (m.role !== 'assistant') continue;
+                const scenario = m.envelope.scenarios.find((s) => s.id === id);
+                if (scenario) {
+                  saveScenario(scenario);
+                  break;
+                }
               }
-            }
-          }}
-          onDeleteScenario={deleteScenario}
-          onUndoDelete={undoDelete}
-          onRecalculate={recalculate}
-          onRevertChange={revertChange}
-          onDismissChanges={dismissChanges}
-          onRetry={retry}
-          onEditQuestion={editQuestion}
-          onContinue={() => send('Continúa desde donde te quedaste.')}
-          onShorten={() => send('Resúmelo más corto, por favor.')}
-          composerSeed={composerSeed}
-          dispatch={dispatch}
-        />
-      )}
+            }}
+            onDeleteScenario={deleteScenario}
+            onUndoDelete={undoDelete}
+            onRecalculate={recalculate}
+            onRevertChange={revertChange}
+            onDismissChanges={dismissChanges}
+            onRetry={retry}
+            onEditQuestion={editQuestion}
+            onContinue={() => send('Continúa desde donde te quedaste.')}
+            onShorten={() => send('Resúmelo más corto, por favor.')}
+            composerSeed={composerSeed}
+            dispatch={dispatch}
+          />
+        )}
 
-      {/*
-        Lives here, not in Conversation: a reset unmounts that screen. The
-        wrapper keeps it centred over the transcript rather than the whole
-        app, so it never lands under the pinned panel.
-      */}
-      <div className="absolute inset-x-0 bottom-0 md:right-panel">
-        <UndoBar
-          visible={beforeReset !== null}
-          label="Conversación reiniciada"
-          onUndo={undoReset}
-          onExpire={() => setBeforeReset(null)}
-        />
+        {/*
+          Lives here, not in Conversation: a reset unmounts that screen. The
+          wrapper keeps it centred over the transcript rather than the whole
+          app, so it never lands under the pinned panel.
+        */}
+        <div className="absolute inset-x-0 bottom-0 md:right-panel">
+          <UndoBar
+            visible={beforeReset !== null}
+            label="Conversación reiniciada"
+            onUndo={undoReset}
+            onExpire={() => setBeforeReset(null)}
+          />
+        </div>
       </div>
     </div>
   );

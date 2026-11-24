@@ -22,3 +22,22 @@ describe('TopNav', () => {
     expect(onReset).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('TopNav navigation', () => {
+  it('collapses and expands the side nav', async () => {
+    const onToggleNav = vi.fn();
+    const { rerender } = render(<TopNav navExpanded onToggleNav={onToggleNav} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Colapsar navegación' }));
+    expect(onToggleNav).toHaveBeenCalledTimes(1);
+    rerender(<TopNav navExpanded={false} onToggleNav={onToggleNav} />);
+    expect(screen.getByRole('button', { name: 'Expandir navegación' }).getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('opens the account menu and closes it with Escape', async () => {
+    render(<TopNav />);
+    await userEvent.click(screen.getByRole('button', { name: 'Tu cuenta' }));
+    expect(screen.getByRole('menuitem', { name: 'Cerrar sesión' })).toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+});
