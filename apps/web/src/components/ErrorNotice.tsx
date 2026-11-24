@@ -26,7 +26,7 @@ export function ErrorNotice({
       <div className="flex-1 rounded-xl border border-ch-border-hover bg-ch-panel px-4 py-[14px]">
         <div className="flex items-center gap-[9px]">
           {/* Amber, never red: red in a money app reads as "you lost money". */}
-          <Icon name="alert-02" size={16} className="text-[#f59e0b]" />
+          <Icon name="alert-02" size={16} className="text-ch-warn" />
           <span className="text-[13.5px] font-semibold text-slate-100">
             {title}
           </span>

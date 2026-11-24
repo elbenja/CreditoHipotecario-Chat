@@ -33,7 +33,7 @@ export function AccessGate() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#020617] font-inter text-[#f8fafc]">
+    <div className="flex min-h-screen flex-col bg-slate-950 font-inter text-slate-50">
       <header className="flex items-center justify-center px-5 pb-2 pt-8">
         <div className="flex items-center gap-[10px]">
           <img src="/assets/logo-mark.svg" alt="" className="h-8 w-8" />
@@ -42,12 +42,12 @@ export function AccessGate() {
       </header>
 
       <main className="mx-auto flex w-full max-w-[1080px] flex-1 flex-wrap items-center justify-center gap-16 px-5 pb-16 pt-10">
-        <section className="flex max-w-[460px] flex-[1_1_380px] flex-col gap-6 rounded-2xl border border-[#1e293b] bg-[#0f172a] p-[clamp(24px,5vw,40px)]">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(244,188,68,0.15)] text-ch-accent">
+        <section className="flex max-w-[460px] flex-[1_1_380px] flex-col gap-6 rounded-2xl border border-ch-border bg-ch-panel p-[clamp(24px,5vw,40px)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-ch-accent/15 text-ch-accent">
             <Icon name="square-lock-02" size={24} />
           </div>
           <div className="flex flex-col gap-2">
-            <h1 className="m-0 font-jakarta text-[32px] font-bold leading-tight tracking-[-0.025em] text-[#f8fafc]">
+            <h1 className="m-0 font-jakarta text-[32px] font-bold leading-tight tracking-[-0.025em] text-slate-50">
               Private prototype
             </h1>
             <p className="m-0 text-[15px] leading-normal text-slate-400 [text-wrap:pretty]">
@@ -70,7 +70,7 @@ export function AccessGate() {
                   autoFocus
                   autoComplete="current-password"
                   aria-invalid={state === 'wrong'}
-                  className={`h-11 flex-1 rounded-[10px] border bg-[#020617] pl-[14px] pr-11 text-[15px] text-[#f8fafc] outline-none placeholder:text-slate-500 focus:border-ch-accent focus:shadow-ch-focus ${state === 'wrong' ? 'border-[#ef4444]' : 'border-[#1e293b]'}`}
+                  className={`h-11 flex-1 rounded-[10px] border bg-slate-950 pl-[14px] pr-11 text-[15px] text-slate-50 outline-none placeholder:text-slate-500 focus:border-ch-accent focus:shadow-ch-focus ${state === 'wrong' ? 'border-red-500' : 'border-ch-border'}`}
                 />
                 <button
                   type="button"
@@ -84,19 +84,19 @@ export function AccessGate() {
             </label>
 
             {state === 'wrong' && (
-              <span role="alert" className="flex items-center gap-[6px] text-[13px] text-[#ef4444]">
+              <span role="alert" className="flex items-center gap-[6px] text-[13px] text-red-500">
                 <Icon name="alert-circle" />
                 Incorrect password. Please try again.
               </span>
             )}
             {state === 'network' && (
-              <span role="alert" className="flex items-center gap-[6px] text-[13px] text-[#f59e0b]">
+              <span role="alert" className="flex items-center gap-[6px] text-[13px] text-ch-warn">
                 <Icon name="alert-02" />
                 Couldn't reach the server. Please try again.
               </span>
             )}
             {state === 'ok' && (
-              <span role="status" className="flex items-center gap-[6px] text-[13px] text-[#22c55e]">
+              <span role="status" className="flex items-center gap-[6px] text-[13px] text-green-500">
                 <Icon name="checkmark-circle-02" />
                 Access granted. Opening prototype…
               </span>
@@ -105,25 +105,25 @@ export function AccessGate() {
             <button
               type="submit"
               disabled={state === 'checking'}
-              className="flex h-[46px] items-center justify-center gap-2 rounded-lg border-0 bg-[#f8fafc] text-[15px] font-semibold text-[#020617] hover:opacity-90 active:translate-y-px active:opacity-85 disabled:opacity-60"
+              className="flex h-[46px] items-center justify-center gap-2 rounded-lg border-0 bg-slate-50 text-[15px] font-semibold text-slate-950 hover:opacity-90 active:translate-y-px active:opacity-85 disabled:opacity-60"
             >
               Unlock
               <Icon name="arrow-right-01" />
             </button>
           </form>
 
-          <p className="m-0 border-t border-[#1e293b] pt-5 text-[13px] leading-normal text-slate-400">
+          <p className="m-0 border-t border-ch-border pt-5 text-[13px] leading-normal text-slate-400">
             Don't have a password? Ask the person who shared this link with you.
           </p>
         </section>
 
         <aside className="flex max-w-[460px] flex-[1_1_380px] flex-col gap-7">
           <div className="flex flex-col gap-[14px]">
-            <span className="flex h-[30px] items-center gap-2 self-start rounded-full border border-[#1e293b] bg-[#0f172a] px-3 text-[13px] font-medium text-slate-300">
+            <span className="flex h-[30px] items-center gap-2 self-start rounded-full border border-ch-border bg-ch-panel px-3 text-[13px] font-medium text-slate-300">
               <span className="h-[6px] w-[6px] rounded-full bg-ch-accent" />
               Prototype · AI Chat
             </span>
-            <h2 className="m-0 font-jakarta text-[clamp(32px,4.2vw,44px)] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#f8fafc] [text-wrap:pretty]">
+            <h2 className="m-0 font-jakarta text-[clamp(32px,4.2vw,44px)] font-extrabold leading-[1.08] tracking-[-0.03em] text-slate-50 [text-wrap:pretty]">
               Ask anything about your <span className="text-ch-accent">mortgage</span>.
             </h2>
             <p className="m-0 text-base leading-[1.55] text-slate-400 [text-wrap:pretty]">
@@ -142,7 +142,7 @@ export function AccessGate() {
         </aside>
       </main>
 
-      <footer className="flex justify-center border-t border-[#1e293b] px-[clamp(20px,4vw,40px)] py-5 text-[13px] text-slate-500">
+      <footer className="flex justify-center border-t border-ch-border px-[clamp(20px,4vw,40px)] py-5 text-[13px] text-slate-500">
         Confidential — for review purposes only
       </footer>
     </div>

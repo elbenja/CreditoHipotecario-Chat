@@ -15,6 +15,9 @@ export default {
         'ch-accent': '#F4BC44',
         'ch-pos': '#4ade80',
         'ch-neg': '#f87171',
+        // Errors and warnings are amber, never red: red in a money app reads
+        // as "you lost money".
+        'ch-warn': '#f59e0b',
       },
       fontFamily: {
         jakarta: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],

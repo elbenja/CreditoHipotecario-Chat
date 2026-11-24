@@ -48,7 +48,7 @@ export function FieldGroup({
         </span>
         <CrossfadeCount value={count} />
         {pending && (
-          <span className="ch-badge inline-flex items-center gap-[5px] rounded-full bg-[rgba(244,188,68,.15)] px-[9px] py-[3px] text-[10.5px] font-semibold text-ch-accent">
+          <span className="ch-badge inline-flex items-center gap-[5px] rounded-full bg-ch-accent/15 px-[9px] py-[3px] text-[10.5px] font-semibold text-ch-accent">
             <span className="h-[5px] w-[5px] rounded-full bg-ch-accent" />
             {notice.count} del PDF
           </span>

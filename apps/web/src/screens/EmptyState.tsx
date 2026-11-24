@@ -81,7 +81,7 @@ export function EmptyState({
                 />
                 {progress}
                 {state.status === 'error' && state.error && (
-                  <p className="mt-2 text-[12px] font-medium text-[#f59e0b]">{state.error.message}</p>
+                  <p className="mt-2 text-[12px] font-medium text-ch-warn">{state.error.message}</p>
                 )}
               </div>
               {onAskField && (
@@ -101,7 +101,7 @@ export function EmptyState({
             />
             {progress}
             {state.status === 'error' && state.error && (
-              <p className="mt-2 text-[12px] font-medium text-[#f59e0b]">{state.error.message}</p>
+              <p className="mt-2 text-[12px] font-medium text-ch-warn">{state.error.message}</p>
             )}
           </div>
 

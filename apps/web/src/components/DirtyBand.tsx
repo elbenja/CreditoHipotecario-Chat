@@ -44,7 +44,7 @@ export function DirtyBand({
   return (
     <div className="ch-line mb-3">
       {/* One of the four permitted resting uses of the accent. */}
-      <div className="rounded-[10px] border border-[rgba(244,188,68,.22)] bg-[rgba(244,188,68,.09)] px-[14px] py-[13px]">
+      <div className="rounded-[10px] border border-ch-accent/[.22] bg-ch-accent/[.09] px-[14px] py-[13px]">
         <p className="text-[12px] font-medium leading-[1.5] text-ch-accent">{message}</p>
       </div>
       <button

@@ -86,7 +86,7 @@
   }
   @keyframes ch-flash {
     0% {
-      border-color: #f4bc44;
+      border-color: theme('colors.ch-accent');
     }
     100% {
       border-color: rgba(255, 255, 255, 0.06);
@@ -219,10 +219,10 @@
      decays in 900ms — enough to find it, not enough to stay. */
   @keyframes ch-wash {
     from {
-      background-color: rgba(244, 188, 68, 0.12);
+      background-color: theme('colors.ch-accent / 12%');
     }
     to {
-      background-color: rgba(244, 188, 68, 0);
+      background-color: theme('colors.ch-accent / 0%');
     }
   }
   .ch-count-out {

@@ -137,13 +137,13 @@ export function DropZone({
           data-variant={bad !== false ? 'bad' : 'ok'}
           className={`ch-veil pointer-events-none absolute inset-2 z-20 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed ${
             bad !== false
-              ? 'border-[rgba(245,158,11,.5)] bg-[rgba(11,15,26,.78)]'
-              : 'border-slate-500 bg-[rgba(11,15,26,.72)]'
+              ? 'border-ch-warn/50 bg-ch-bg/[.78]'
+              : 'border-slate-500 bg-ch-bg/[.72]'
           }`}
         >
           {bad !== false ? (
             <>
-              <Icon name="file-not-found" size={28} className="text-[#f59e0b]" />
+              <Icon name="file-not-found" size={28} className="text-ch-warn" />
               <div className="text-center">
                 <div className="font-jakarta text-[15px] font-bold tracking-[-.02em] text-slate-50">
                   {bad ? `No puedo leer .${bad} todavía` : 'No puedo leer ese formato todavía'}

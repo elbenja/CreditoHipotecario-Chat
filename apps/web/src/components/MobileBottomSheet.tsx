@@ -151,7 +151,7 @@ export function MobileBottomSheet({
     <>
       <section
         aria-hidden={open}
-        className={`mobile-safe-bottom relative z-30 mt-3 min-h-[96px] w-full flex-none rounded-t-[16px] border-t border-[#1e293b] bg-[#0f172a] px-4 pt-3 transition-opacity duration-120 ease-ch md:hidden ${open ? 'pointer-events-none opacity-0' : ''}`}
+        className={`mobile-safe-bottom relative z-30 mt-3 min-h-[96px] w-full flex-none rounded-t-[16px] border-t border-ch-border bg-ch-panel px-4 pt-3 transition-opacity duration-120 ease-ch md:hidden ${open ? 'pointer-events-none opacity-0' : ''}`}
       >
           <button
             ref={summaryRef}
@@ -190,7 +190,7 @@ export function MobileBottomSheet({
           <button
             type="button"
             aria-label="Cerrar panel"
-            className="absolute inset-0 h-full w-full bg-[rgba(2,6,23,.6)]"
+            className="absolute inset-0 h-full w-full bg-slate-950/60"
             onClick={close}
           />
           <div
@@ -199,7 +199,7 @@ export function MobileBottomSheet({
             aria-label="Datos de la operación"
             aria-modal="true"
             tabIndex={-1}
-            className="ch-sheet-enter absolute bottom-0 flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[16px] border-t border-[#334155] bg-[#0f172a] outline-none"
+            className="ch-sheet-enter absolute bottom-0 flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[16px] border-t border-ch-border-hover bg-ch-panel outline-none"
           >
             <div className="flex h-[50px] flex-none items-center justify-between px-5">
               <button
