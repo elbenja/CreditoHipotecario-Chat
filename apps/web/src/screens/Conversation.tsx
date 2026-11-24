@@ -105,7 +105,9 @@ export function Conversation({
   };
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // No `behavior` here: an explicit 'smooth' would override the CSS, and
+    // the container's `scroll-smooth` is what reduced motion can switch off.
+    endRef.current?.scrollIntoView();
   }, [state.messages.length, state.status]);
 
   const send = (text: string) => {
@@ -137,7 +139,7 @@ export function Conversation({
           on the right does not. Only wired when attaching is. */}
       <DropZone onDrop={attach} disabled={busy || !dispatch} className="flex min-w-0 flex-1 flex-col">
         {state.offline && <OfflineBanner />}
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-2 md:px-14 md:pt-8">
+        <div className="min-h-0 flex-1 overflow-y-auto scroll-smooth px-5 pt-2 md:px-14 md:pt-8">
           <div className="mx-auto flex w-full max-w-transcript flex-col gap-[18px] md:gap-[26px]">
             {state.messages.map((m) => {
               if (m.role === 'user') {
