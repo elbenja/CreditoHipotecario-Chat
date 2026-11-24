@@ -33,9 +33,9 @@ export function AssistantAnswer({
       </h2>
 
       {envelope.metrics.length > 0 && (
-        <div className="ch-scrollbar-none -mr-5 flex min-w-0 gap-[9px] overflow-x-auto pr-10 md:mr-0 md:grid md:grid-cols-3 md:gap-3 md:overflow-visible md:pr-0">
-          {envelope.metrics.map((m) => (
-            <MetricCard key={m.label} metric={m} />
+        <div className="ch-scrollbar-none -mr-5 flex min-w-0 gap-[9px] overflow-x-auto pr-10 md:mr-0 md:grid md:grid-cols-[repeat(auto-fit,minmax(190px,1fr))] md:gap-3 md:overflow-visible md:pr-0">
+          {envelope.metrics.map((m, i) => (
+            <MetricCard key={m.label} metric={m} index={i} />
           ))}
         </div>
       )}
@@ -71,13 +71,16 @@ export function AssistantAnswer({
             <span className="text-[11px] font-medium text-slate-400">{copy.answer.approximate}</span>
           </div>
           <div className="flex flex-wrap gap-3">
-            {envelope.scenarios.map((s) => (
-              <ScenarioCard
-                key={s.id}
-                scenario={s}
-                saved={savedIds.includes(s.id)}
-                onSave={onSaveScenario}
-              />
+            {envelope.scenarios.map((s, i) => (
+              // The stagger lives on a wrapper: the card animates its own
+              // transform when it is saved, and a keyframed one would win.
+              <div key={s.id} className="ch-rise" style={{ animationDelay: `${i * 60}ms` }}>
+                <ScenarioCard
+                  scenario={s}
+                  saved={savedIds.includes(s.id)}
+                  onSave={onSaveScenario}
+                />
+              </div>
             ))}
           </div>
         </>
